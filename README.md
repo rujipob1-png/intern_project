@@ -2,7 +2,82 @@
 
 ## 📌 ภาพรวมโปรเจค
 
-ระบบการลาออนไลน์สำหรับเจ้าพนักงานราชการ ที่ออกแบบตามกฎหมายการลาของข้าราชการไทย มีระบบการอนุมัติแบบหลายขั้นตอนและการจัดการสิทธิ์ตาม Role-Based Access Control (RBAC)
+ระบบการลาออนไลน์สำหรับเจ้าพนักงานราชการ ที่ออกแบบตามกฎหมายการลาของข้าราชการไทย มีระบบการอนุมัติแบบหลายขั้นตอน (4 levels) และการจัดการสิทธิ์ตาม Role-Based Access Control (RBAC)
+
+## 🚀 เริ่มต้นใช้งาน
+
+### ความต้องการของระบบ
+- Node.js 18+ 
+- PostgreSQL (ผ่าน Supabase)
+- npm หรือ yarn
+
+### การติดตั้ง
+
+1. **Clone repository**
+```bash
+git clone https://github.com/rujipob1-png/intern_project.git
+cd intern_project
+```
+
+2. **ติดตั้ง Dependencies**
+```bash
+# Backend
+cd backend
+npm install
+
+# Frontend
+cd ../frontend
+npm install
+```
+
+3. **ตั้งค่า Environment Variables**
+
+สร้างไฟล์ `.env` ใน `backend/`:
+```env
+PORT=3000
+SUPABASE_URL=your_supabase_url
+SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+JWT_SECRET=your_jwt_secret
+```
+
+สร้างไฟล์ `.env` ใน `frontend/`:
+```env
+VITE_API_URL=http://localhost:3000
+```
+
+4. **ตั้งค่า Database**
+```bash
+cd backend
+# รัน SQL scripts ตามลำดับใน database/ folder
+# - schema.sql
+# - sample_data_4_levels.sql
+# - storage_setup.sql
+```
+
+5. **รันโปรเจค**
+```bash
+# Terminal 1: Backend
+cd backend
+npm start
+
+# Terminal 2: Frontend  
+cd frontend
+npm run dev
+```
+
+6. **เข้าใช้งาน**
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:3000
+
+### 🔑 ข้อมูลเข้าสู่ระบบทดสอบ
+
+| Role | รหัสตำแหน่ง | รหัสผ่าน |
+|------|-------------|----------|
+| User | U001 | password123 |
+| Director | D001 | password123 |
+| Central Office | C001 | password123 |
+| Admin | A001 | password123 |
 
 ## 🎯 คุณสมบัติหลัก
 
@@ -175,44 +250,37 @@ npm run dev
 ## 📋 สถานะการพัฒนา
 
 ### ✅ Phase 1: Database Design (เสร็จแล้ว)
-- [x] ออกแบบ Schema
-- [x] สร้างตาราง 7 ตาราง
-- [x] ตั้งค่า RLS Policies
+- [x] ออกแบบ Schema แบบ 4-level approval
+- [x] สร้างตาราง 8 ตาราง (users, departments, leave_types, leaves, approvals, notifications, settings, documents)
+- [x] ตั้งค่า RLS Policies และ Supabase Storage
 - [x] สร้าง Sample Data
 - [x] เขียนคู่มือการ Setup
 
-### 🔄 Phase 2: Backend Development (กำลังทำ)
-- [ ] Authentication System
-- [ ] Role 1: User APIs
-- [ ] Role 2: Director APIs
-- [ ] Role 3: Central Office APIs
-- [ ] Role 4: Admin APIs
+### ✅ Phase 2: Backend Development (เสร็จแล้ว)
+- [x] Authentication System (JWT)
+- [x] User APIs (create leave, cancel leave, view history)
+- [x] Director APIs (approve level 1)
+- [x] Central Office APIs (approve level 2 & 3)
+- [x] Admin APIs (approve final, manage users)
+- [x] File Upload System (Supabase Storage)
+- [x] Leave Balance Calculation
 
-### ⏳ Phase 3: Frontend Development
-- [ ] Login Page
-- [ ] User Dashboard
-- [ ] Leave Request Form
-- [ ] Director Dashboard
-- [ ] Central Office Dashboard
-- [ ] Admin Dashboard
+### ✅ Phase 3: Frontend Development (เสร็จแล้ว)
+- [x] Login Page
+- [x] User Dashboard (leave balance, statistics)
+- [x] Leave Request Form (with file upload)
+- [x] My Leaves Page (cancel with reason modal)
+- [x] Leave Detail Page (timeline, document view/download)
+- [x] Director Dashboard
+- [x] Central Office Dashboard (Staff & Head)
+- [x] Admin Dashboard
+- [x] Responsive Design
 
-### ⏳ Phase 4: Testing & Deployment
+### ⏳ Phase 4: Testing & Deployment (ถัดไป)
 - [ ] Unit Tests
 - [ ] Integration Tests
 - [ ] User Acceptance Testing (UAT)
-- [ ] Deployment
-
----
-
-## 🔐 ข้อมูลทดสอบ (Sample Data)
-
-| Employee Code | Password | Role | ชื่อ-นามสกุล |
-|--------------|----------|------|-------------|
-| `EMP001` | `123456` | User | นายสมชาย ใจดี |
-| `EMP002` | `123456` | User | นางสาวสมหญิง รักงาน |
-| `DIR001` | `123456` | Director | นายวิชัย ผู้นำ |
-| `CTR001` | `123456` | Central Office | นางสุดา รอบคอบ |
-| `ADMIN001` | `123456` | Admin | นายประสิทธิ์ เด็ดขาด |
+- [ ] Production Deployment
 
 ---
 
@@ -220,16 +288,16 @@ npm run dev
 
 หากมีปัญหาหรือข้อสงสัย:
 1. อ่านคู่มือใน `database/README.md` สำหรับ Database
-2. อ่านคู่มือใน `backend/README.md` สำหรับ Backend
+2. อ่านคู่มือใน `backend/README.md` สำหรับ Backend API
 3. อ่านคู่มือใน `frontend/README.md` สำหรับ Frontend
 
 ---
 
 ## 📄 License
 
-ระบบนี้พัฒนาขึ้นเพื่อใช้ภายในองค์กรเท่านั้น
+MIT License - ระบบนี้พัฒนาขึ้นเพื่อใช้ภายในองค์กรและการศึกษา
 
 ---
 
-**สถานะ**: 🟢 กำลังพัฒนา Phase 1 เสร็จสิ้น, Phase 2 เริ่มต้น
-**Last Updated**: 15 มกราคม 2026
+**สถานะ**: 🟢 Phase 1-3 เสร็จสมบูรณ์, พร้อม Production
+**Last Updated**: 23 มกราคม 2026
