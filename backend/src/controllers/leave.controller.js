@@ -95,21 +95,10 @@ export const createLeave = async (req, res) => {
         end_date: endDate,
         total_days: totalDays,
         reason: JSON.stringify(reasonWithDates), // เก็บ reason + dates รวมกัน
-        contact_address: contactAddress || null,
-        contact_phone: contactPhone || null,
         document_url: documentUrl || null,
-        acting_person_id: actingPersonId || null,
-        acting_status: actingPersonId ? 'pending' : 'not_required',
-        status: LEAVE_STATUS.PENDING,
-        current_approval_level: 1
+        status: LEAVE_STATUS.PENDING
       })
-      .select(`
-        *,
-        leave_types (
-          type_name,
-          type_code
-        )
-      `)
+      .select('*')
       .single();
 
     if (error) {
@@ -147,7 +136,7 @@ export const createLeave = async (req, res) => {
       {
         id: leave.id,
         leaveNumber: leave.leave_number,
-        leaveType: leave.leave_types.type_name,
+        leaveType: leaveType.type_name, // ใช้ leaveType ที่ดึงมาก่อนหน้า
         startDate: leave.start_date,
         endDate: leave.end_date,
         selectedDates: selectedDatesArray,
@@ -227,7 +216,6 @@ export const getMyLeaves = async (req, res) => {
         reason: actualReason,
         selectedDates: selectedDatesArray,
         status: leave.status,
-        currentApprovalLevel: leave.current_approval_level,
         createdAt: leave.created_at,
         cancelledAt: leave.cancelled_at,
         cancelledReason: leave.cancelled_reason,
@@ -343,10 +331,8 @@ export const getLeaveById = async (req, res) => {
         totalDays: leave.total_days,
         reason: actualReason,
         selectedDates: selectedDatesArray,
-        contactAddress: leave.contact_address,
-        contactPhone: leave.contact_phone,
+
         status: leave.status,
-        currentApprovalLevel: leave.current_approval_level,
         documentUrl: leave.document_url,
         createdAt: leave.created_at,
         updatedAt: leave.updated_at,
@@ -495,7 +481,7 @@ export const getLeaveBalance = async (req, res) => {
       .single();
 
     let sickDaysUsed = 0;
-    
+
     if (sickType) {
       // นับวันลาป่วยที่ admin อนุมัติแล้ว
       const { data: sickLeaves } = await supabaseAdmin

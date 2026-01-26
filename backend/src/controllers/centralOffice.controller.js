@@ -56,8 +56,6 @@ export const getPendingLeavesStaff = async (req, res) => {
         endDate: leave.end_date,
         totalDays: leave.total_days,
         reason: leave.reason,
-        contactAddress: leave.contact_address,
-        contactPhone: leave.contact_phone,
         documentUrl: leave.document_url,
         createdAt: leave.created_at,
         employee: {
