@@ -103,74 +103,86 @@ export const DashboardPage = () => {
     {
       title: 'ลาป่วย (ป)',
       value: leaveBalance?.sick || 0,
-      total: null, // ไม่มีโควต้า แสดงแค่วันที่ลาไปแล้ว
+      total: null,
       suffix: 'วัน',
       icon: AlertCircle,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
+      color: 'text-slate-700',
+      bgColor: 'bg-slate-50',
+      borderColor: 'border-slate-200',
     },
     {
       title: 'ลาพักผ่อน (พ)',
       value: leaveBalance?.vacation || 0,
       total: 10,
       icon: Calendar,
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
+      color: 'text-blue-700',
+      bgColor: 'bg-blue-50',
+      borderColor: 'border-blue-200',
     },
     {
       title: 'ลากิจ (ก)',
       value: leaveBalance?.personal || 0,
       total: 3,
       icon: Clock,
-      color: 'text-yellow-600',
-      bgColor: 'bg-yellow-50',
+      color: 'text-gray-700',
+      bgColor: 'bg-gray-50',
+      borderColor: 'border-gray-300',
     },
     {
       title: 'คำขอทั้งหมด',
       value: 0,
       icon: FileText,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
+      color: 'text-slate-700',
+      bgColor: 'bg-slate-50',
+      borderColor: 'border-slate-200',
     },
   ];
 
   return (
     <MainLayout>
       <div className="max-w-7xl mx-auto">
-        {/* Welcome Section */}
-        <div className="mb-6">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            สวัสดี, {user?.firstName} 👋
-          </h2>
-          <p className="text-gray-600">
-            {user?.position} - {user?.department}
-          </p>
+        {/* Header Section */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-slate-800 mb-1">
+                ระบบการลาออนไลน์
+              </h1>
+              <p className="text-slate-600 text-sm">
+                {user?.firstName} {user?.lastName} - {user?.position}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-slate-500">กองหน้าที่ของคุณ</p>
+              <p className="text-sm font-semibold text-slate-700">{user?.department}</p>
+            </div>
+          </div>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
           {stats.map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <Card key={index}>
-                <CardContent className="p-6">
+              <Card key={index} className={`border-l-4 ${stat.borderColor} hover:shadow-lg transition-shadow duration-200`}>
+                <CardContent className="p-5">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600 mb-1">{stat.title}</p>
+                    <div className="flex-1">
+                      <p className="text-xs font-medium text-slate-600 mb-2 uppercase tracking-wide">{stat.title}</p>
                       {stat.suffix ? (
-                        <p className="text-lg font-semibold text-gray-900">
-                          ลามาแล้ว {stat.value} {stat.suffix}
+                        <p className="text-2xl font-bold text-slate-800">
+                          {stat.value} <span className="text-sm font-normal text-slate-600">{stat.suffix}</span>
                         </p>
                       ) : (
-                        <p className="text-3xl font-bold text-gray-900">
+                        <p className="text-3xl font-bold text-slate-800">
                           {stat.value}
                           {stat.total && (
-                            <span className="text-lg text-gray-400"> / {stat.total}</span>
+                            <span className="text-lg text-slate-400"> / {stat.total}</span>
                           )}
                         </p>
                       )}
                     </div>
-                    <div className={`${stat.bgColor} p-3 rounded-full`}>
+                    <div className={`${stat.bgColor} p-3 rounded-xl border ${stat.borderColor}`}>
                       <Icon className={`w-6 h-6 ${stat.color}`} />
                     </div>
                   </div>
@@ -181,48 +193,48 @@ export const DashboardPage = () => {
         </div>
 
         {/* Quick Actions */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>เมนูด่วน</CardTitle>
+        <Card className="mb-8 border-0 shadow-md">
+          <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 border-b">
+            <CardTitle className="text-slate-800">เมนูด่วน</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <button 
                 onClick={() => navigate('/create-leave')}
-                className="flex items-center gap-3 p-4 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors"
+                className="flex items-center gap-4 p-5 bg-white border-2 border-blue-100 hover:border-blue-300 hover:shadow-md rounded-xl transition-all duration-200 group"
               >
-                <div className="bg-primary-600 p-2 rounded-lg">
-                  <FileText className="w-5 h-5 text-white" />
+                <div className="bg-blue-600 p-3 rounded-lg group-hover:bg-blue-700 transition-colors">
+                  <FileText className="w-6 h-6 text-white" />
                 </div>
                 <div className="text-left">
-                  <p className="font-medium text-gray-900">สร้างคำขอลา</p>
-                  <p className="text-sm text-gray-600">ยื่นคำขอลาใหม่</p>
+                  <p className="font-semibold text-slate-800">สร้างคำขอลา</p>
+                  <p className="text-sm text-slate-600">ยื่นคำขอลาใหม่</p>
                 </div>
               </button>
 
               <button 
                 onClick={() => navigate('/my-leaves')}
-                className="flex items-center gap-3 p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
+                className="flex items-center gap-4 p-5 bg-white border-2 border-slate-100 hover:border-slate-300 hover:shadow-md rounded-xl transition-all duration-200 group"
               >
-                <div className="bg-green-600 p-2 rounded-lg">
-                  <CheckCircle className="w-5 h-5 text-white" />
+                <div className="bg-slate-600 p-3 rounded-lg group-hover:bg-slate-700 transition-colors">
+                  <CheckCircle className="w-6 h-6 text-white" />
                 </div>
                 <div className="text-left">
-                  <p className="font-medium text-gray-900">คำขอของฉัน</p>
-                  <p className="text-sm text-gray-600">ดูรายการคำขอลา</p>
+                  <p className="font-semibold text-slate-800">คำขอของฉัน</p>
+                  <p className="text-sm text-slate-600">ดูรายการคำขอลา</p>
                 </div>
               </button>
 
               <button 
                 onClick={() => navigate('/leave-history')}
-                className="flex items-center gap-3 p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                className="flex items-center gap-4 p-5 bg-white border-2 border-gray-100 hover:border-gray-300 hover:shadow-md rounded-xl transition-all duration-200 group"
               >
-                <div className="bg-blue-600 p-2 rounded-lg">
-                  <Calendar className="w-5 h-5 text-white" />
+                <div className="bg-gray-600 p-3 rounded-lg group-hover:bg-gray-700 transition-colors">
+                  <Calendar className="w-6 h-6 text-white" />
                 </div>
                 <div className="text-left">
-                  <p className="font-medium text-gray-900">ประวัติการลา</p>
-                  <p className="text-sm text-gray-600">ประวัติการลา</p>
+                  <p className="font-semibold text-slate-800">ประวัติการลา</p>
+                  <p className="text-sm text-slate-600">ดูประวัติการลา</p>
                 </div>
               </button>
             </div>

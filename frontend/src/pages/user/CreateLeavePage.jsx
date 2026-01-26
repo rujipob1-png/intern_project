@@ -4,6 +4,7 @@ import { MainLayout } from '../../components/layout/MainLayout';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
+import { ActingPersonSelect } from '../../components/leave/ActingPersonSelect';
 import { leaveAPI } from '../../api/leave.api';
 import { calculateDays } from '../../utils/formatDate';
 import { LEAVE_TYPE_NAMES, STORAGE_KEYS } from '../../utils/constants';
@@ -23,6 +24,7 @@ export const CreateLeavePage = () => {
     reason: '',
     contactAddress: '',
     contactPhone: '',
+    actingPersonId: null,
   });
 
   const [files, setFiles] = useState([]);
@@ -356,6 +358,13 @@ export const CreateLeavePage = () => {
                   required
                 />
               </div>
+
+              {/* Acting Person */}
+              <ActingPersonSelect
+                value={formData.actingPersonId}
+                onChange={(value) => setFormData(prev => ({ ...prev, actingPersonId: value }))}
+                required={false}
+              />
 
               {/* File Upload */}
               <div>

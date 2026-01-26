@@ -46,7 +46,8 @@ export const createLeave = async (req, res) => {
       reason,
       contactAddress,
       contactPhone,
-      documentUrl
+      documentUrl,
+      actingPersonId
     } = req.body;
 
     // Validate input
@@ -97,6 +98,8 @@ export const createLeave = async (req, res) => {
         contact_address: contactAddress || null,
         contact_phone: contactPhone || null,
         document_url: documentUrl || null,
+        acting_person_id: actingPersonId || null,
+        acting_status: actingPersonId ? 'pending' : 'not_required',
         status: LEAVE_STATUS.PENDING,
         current_approval_level: 1
       })

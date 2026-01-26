@@ -8,6 +8,7 @@ import centralOfficeRoutes from './routes/centralOffice.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import uploadRoutes from './routes/upload.routes.js';
 import reportsRoutes from './routes/reports.routes.js';
+import actingRoutes from './routes/acting.routes.js';
 import { errorResponse } from './utils/response.js';
 import { HTTP_STATUS } from './config/constants.js';
 
@@ -42,6 +43,7 @@ app.use('/api/central-office', centralOfficeRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/api/acting', actingRoutes);
 
 // 404 Handler
 app.use((req, res) => {

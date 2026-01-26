@@ -156,26 +156,26 @@ export const Sidebar = () => {
       {/* Sidebar */}
       <aside
         className={`
-          fixed top-0 left-0 h-screen bg-white border-r border-gray-200 
-          transition-all duration-300 z-40
+          fixed top-0 left-0 h-screen bg-gradient-to-b from-slate-800 to-slate-900 border-r border-slate-700
+          transition-all duration-300 z-40 shadow-xl
           ${isOpen ? 'w-64' : 'w-0 lg:w-20'}
         `}
       >
         <div className="flex flex-col h-full">
           {/* Logo & User */}
-          <div className="p-4 border-b border-gray-200">
+          <div className="p-4 border-b border-slate-700">
             <div className={`flex items-center gap-3 ${!isOpen && 'lg:justify-center'}`}>
-              <div className="w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-white font-bold">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-md">
+                <span className="text-white font-bold text-lg">
                   {user?.firstName?.charAt(0) || 'U'}
                 </span>
               </div>
               {isOpen && (
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900 truncate">
+                  <p className="font-semibold text-white truncate">
                     {user?.fullName || user?.firstName}
                   </p>
-                  <p className="text-xs text-gray-500 truncate">
+                  <p className="text-xs text-slate-400 truncate">
                     {user?.position}
                   </p>
                 </div>
@@ -194,15 +194,15 @@ export const Sidebar = () => {
                       <button
                         onClick={() => toggleSection(section.id)}
                         className={`
-                          w-full flex items-center gap-3 px-3 py-2 rounded-lg
-                          transition-colors duration-200 text-gray-700 hover:bg-gray-50
+                          w-full flex items-center gap-3 px-3 py-2.5 rounded-lg
+                          transition-all duration-200 text-white bg-slate-700/30 hover:bg-slate-600/50 font-bold
                           ${!isOpen && 'lg:justify-center'}
                         `}
                       >
                         <section.icon className="w-5 h-5 flex-shrink-0" />
                         {isOpen && (
                           <>
-                            <span className="flex-1 text-left font-medium">{section.title}</span>
+                            <span className="flex-1 text-left font-medium text-sm">{section.title}</span>
                             {openSections[section.id] ? (
                               <ChevronDown className="w-4 h-4" />
                             ) : (
@@ -223,16 +223,16 @@ export const Sidebar = () => {
                                   onClick={() => navigate(item.path)}
                                   className={`
                                     w-full flex items-center gap-3 px-3 py-2 rounded-lg
-                                    transition-colors duration-200
+                                    transition-all duration-200
                                     ${isActive(item.path)
-                                      ? 'bg-primary-50 text-primary-600 font-medium' 
-                                      : 'text-gray-600 hover:bg-gray-50'
+                                      ? 'bg-blue-600 text-white font-bold shadow-md' 
+                                      : 'text-white bg-slate-700/20 hover:bg-slate-600/40 font-semibold'
                                     }
                                   `}
                                 >
                                   {ItemIcon && <ItemIcon className="w-4 h-4 flex-shrink-0" />}
                                   <span className="flex-1 text-left text-sm">{item.title}</span>
-                                  {isActive(item.path) && <div className="w-1.5 h-1.5 bg-primary-600 rounded-full" />}
+                                  {isActive(item.path) && <div className="w-2 h-2 bg-white rounded-full" />}
                                 </button>
                               </li>
                             );
@@ -249,11 +249,11 @@ export const Sidebar = () => {
                           key={item.path}
                           onClick={() => navigate(item.path)}
                           className={`
-                            w-full flex items-center gap-3 px-3 py-2 rounded-lg
-                            transition-colors duration-200
+                            w-full flex items-center gap-3 px-3 py-2.5 rounded-lg
+                            transition-all duration-200
                             ${isActive(item.path)
-                              ? 'bg-primary-50 text-primary-600' 
-                              : 'text-gray-700 hover:bg-gray-50'
+                              ? 'bg-blue-600 text-white font-bold shadow-md' 
+                              : 'text-white bg-slate-700/30 hover:bg-slate-600/50 font-semibold'
                             }
                             ${!isOpen && 'lg:justify-center'}
                           `}
@@ -261,7 +261,7 @@ export const Sidebar = () => {
                           <Icon className="w-5 h-5 flex-shrink-0" />
                           {isOpen && (
                             <>
-                              <span className="flex-1 text-left">{item.title}</span>
+                              <span className="flex-1 text-left text-sm">{item.title}</span>
                               {isActive(item.path) && <ChevronRight className="w-4 h-4" />}
                             </>
                           )}
@@ -275,17 +275,17 @@ export const Sidebar = () => {
           </nav>
 
           {/* Logout */}
-          <div className="p-4 border-t border-gray-200">
+          <div className="p-4 border-t border-slate-700">
             <button
               onClick={handleLogout}
               className={`
-                w-full flex items-center gap-3 px-3 py-2 rounded-lg
-                text-red-600 hover:bg-red-50 transition-colors duration-200
+                w-full flex items-center gap-3 px-3 py-2.5 rounded-lg
+                text-white bg-red-600/30 hover:bg-red-600 hover:shadow-lg transition-all duration-200 font-semibold
                 ${!isOpen && 'lg:justify-center'}
               `}
             >
               <LogOut className="w-5 h-5 flex-shrink-0" />
-              {isOpen && <span>ออกจากระบบ</span>}
+              {isOpen && <span className="text-sm font-medium">ออกจากระบบ</span>}
             </button>
           </div>
         </div>

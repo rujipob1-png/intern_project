@@ -8,6 +8,7 @@ import { CreateLeavePage } from './pages/user/CreateLeavePage';
 import { MyLeavesPage } from './pages/user/MyLeavesPage';
 import { LeaveDetailPage } from './pages/user/LeaveDetailPage';
 import { LeaveHistoryPage } from './pages/user/LeaveHistoryPage';
+import { ActingRequestsPage } from './pages/user/ActingRequestsPage';
 import DashboardDirector from './pages/director/DashboardDirector';
 import CentralOfficeStaffDashboard from './pages/centralOffice/CentralOfficeStaffDashboard';
 import CentralOfficeHeadDashboard from './pages/centralOffice/CentralOfficeHeadDashboard';
@@ -56,6 +57,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <LeaveHistoryPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/acting-requests" 
+            element={
+              <ProtectedRoute>
+                <ActingRequestsPage />
               </ProtectedRoute>
             } 
           />
