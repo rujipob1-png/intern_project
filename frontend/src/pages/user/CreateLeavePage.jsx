@@ -16,7 +16,7 @@ export const CreateLeavePage = () => {
   const [loading, setLoading] = useState(false);
   const [leaveTypes, setLeaveTypes] = useState([]);
   const [leaveBalance, setLeaveBalance] = useState(null);
-  
+
   const [formData, setFormData] = useState({
     leaveTypeId: '',
     selectedDates: [],
@@ -41,6 +41,8 @@ export const CreateLeavePage = () => {
         leaveAPI.getLeaveTypes(),
         leaveAPI.getLeaveBalance(),
       ]);
+
+      console.log('Leave Types:', typesRes);
 
       if (typesRes.success) {
         setLeaveTypes(typesRes.data);
@@ -126,15 +128,15 @@ export const CreateLeavePage = () => {
 
       if (response.success) {
         const leaveId = response.data.id;
-        
+
         // Upload file if any
         if (files.length > 0) {
           const uploadToast = toast.loading('กำลังอัพโหลดเอกสาร...');
-          
+
           try {
             const formDataUpload = new FormData();
             formDataUpload.append('document', files[0]); // Upload first file only
-            
+
             const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
             const uploadResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/uploads/leaves/${leaveId}/document`, {
               method: 'POST',
@@ -143,9 +145,9 @@ export const CreateLeavePage = () => {
               },
               body: formDataUpload
             });
-            
+
             const uploadResult = await uploadResponse.json();
-            
+
             if (uploadResult.success) {
               toast.dismiss(uploadToast);
               toast.success('อัพโหลดเอกสารสำเร็จ');
@@ -159,7 +161,7 @@ export const CreateLeavePage = () => {
             toast.error('เกิดข้อผิดพลาดในการอัพโหลด');
           }
         }
-        
+
         toast.success('สร้างคำขอลาสำเร็จ');
         navigate('/my-leaves');
       } else {
@@ -236,13 +238,17 @@ export const CreateLeavePage = () => {
                   name="leaveTypeId"
                   value={formData.leaveTypeId}
                   onChange={handleInputChange}
-                  className="input-field"
+                  className={`input-field ${!formData.leaveTypeId ? 'text-black' : 'text-black'
+                    }`}
                   required
                 >
-                  <option value="">-- เลือกประเภทการลา --</option>
+                  <option value="" disabled>
+                    -- เลือกประเภทการลา --
+                  </option>
+
                   {leaveTypes.map(type => (
                     <option key={type.id} value={type.id}>
-                      {LEAVE_TYPE_NAMES[type.type_code] || type.type_name}
+                      {LEAVE_TYPE_NAMES[type.type_name_th]|| type.type_name_th}
                     </option>
                   ))}
                 </select>
@@ -331,7 +337,7 @@ export const CreateLeavePage = () => {
                           ⚠️ คำเตือน: ลาป่วยเกิน 15 วัน
                         </p>
                         <p className="text-sm text-yellow-800">
-                          ท่านลาป่วย <span className="font-bold">{formData.totalDays} วัน</span> ซึ่งเกิน 15 วัน 
+                          ท่านลาป่วย <span className="font-bold">{formData.totalDays} วัน</span> ซึ่งเกิน 15 วัน
                           <br />
                           <span className="font-semibold">วันที่ {formData.totalDays - 15} วัน ที่เกินจะไม่ได้รับการพิจารณาเงินเดือน</span>
                         </p>

@@ -56,6 +56,8 @@
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   }
 
+  
+
   select.input-field:focus {
     background-color: #ffffff !important;
     color: #000000 !important;
@@ -67,6 +69,7 @@
   
   .card {
     @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
+    overflow: visible;
   }
 }
 

@@ -295,7 +295,7 @@ export const LeaveHistoryPage = () => {
         </div>
       </div>
 {/* Leave History List */}
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-lg">
+      <div className="bg-white border border-slate-200 rounded-xl overflow-visible shadow-lg">
         <div className="bg-gradient-to-r from-slate-700 to-slate-800 px-6 py-4 border-b-2 border-slate-600">
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
             <FileText className="w-5 h-5" />
