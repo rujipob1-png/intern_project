@@ -105,29 +105,38 @@ export const LoginPage = () => {
           {/* Demo Accounts */}
           <div className="mt-6 pt-6 border-t border-slate-200 px-6 pb-6">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-medium text-slate-700">บัญชีทดสอบ (Demo):</p>
+              <p className="text-sm font-medium text-slate-700">บัญชีทดลอง (Demo):</p>
               <div className="flex items-center gap-1.5">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                 <span className="text-xs text-slate-500">Backend: http://localhost:3000</span>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-3 rounded-lg border border-blue-300 hover:shadow-md transition-shadow">
-                <p className="font-semibold text-blue-800">พนักงาน</p>
-                <p className="text-slate-700 mt-1">EMP001 / 123456</p>
+              <div className="bg-white p-3 rounded-lg border-2 border-slate-300 hover:border-slate-400 hover:shadow-md transition-all">
+                <p className="font-semibold text-slate-900">พนักงาน IT</p>
+                <p className="text-slate-600 mt-1">2001 / 123456</p>
               </div>
-              <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-3 rounded-lg border border-slate-300 hover:shadow-md transition-shadow">
-                <p className="font-semibold text-slate-800">ผู้อำนวยการ</p>
-                <p className="text-slate-700 mt-1">DIR001 / 123456</p>
+              <div className="bg-slate-50 p-3 rounded-lg border-2 border-slate-300 hover:border-slate-400 hover:shadow-md transition-all">
+                <p className="font-semibold text-slate-900">ผู้อำนวยการ</p>
+                <p className="text-slate-600 mt-1">3001 / 123456</p>
               </div>
-              <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-3 rounded-lg border border-gray-300 hover:shadow-md transition-shadow">
-                <p className="font-semibold text-gray-800">กองกลาง</p>
-                <p className="text-slate-700 mt-1">CTR001 / 123456</p>
+              <div className="bg-white p-3 rounded-lg border-2 border-slate-300 hover:border-slate-400 hover:shadow-md transition-all">
+                <p className="font-semibold text-slate-900">พนักงาน FIN</p>
+                <p className="text-slate-600 mt-1">4001 / 123456</p>
               </div>
-              <div className="bg-gradient-to-br from-slate-100 to-slate-200 p-3 rounded-lg border border-slate-400 hover:shadow-md transition-shadow">
-                <p className="font-semibold text-slate-900">Admin</p>
-                <p className="text-slate-700 mt-1">ADMIN001 / 123456</p>
+              <div className="bg-slate-50 p-3 rounded-lg border-2 border-slate-300 hover:border-slate-400 hover:shadow-md transition-all">
+                <p className="font-semibold text-slate-900">พนักงาน HR</p>
+                <p className="text-slate-600 mt-1">5001 / 123456</p>
               </div>
+              <div className="bg-white p-3 rounded-lg border-2 border-slate-300 hover:border-slate-400 hover:shadow-md transition-all col-span-2">
+                <p className="font-semibold text-slate-900">สำนักงานกลาง</p>
+                <p className="text-slate-600 mt-1">6001 / 123456</p>
+              </div>
+            </div>
+            <div className="mt-3 text-xs text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-200">
+              <span className="font-semibold">💡 ทุกบัญชีใช้รหัสผ่าน: 123456</span>
+              <br />
+              ฝ่าย IT (2001-2009), ADMIN (3001-3005), FIN (4001-4008), HR (5001-5007), CENTRAL (6001-6003)
             </div>
             <p className="text-xs text-red-600 mt-3 bg-red-50 p-2 rounded-lg border border-red-200">
               ⚠️ หาก Login ไม่ได้ กรุณาเปิด Backend server ที่ Terminal ก่อน: <code className="bg-white px-2 py-0.5 rounded font-mono">npm run dev</code>

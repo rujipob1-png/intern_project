@@ -48,14 +48,22 @@ export const authenticate = async (req, res, next) => {
         )
       `)
       .eq('id', decoded.userId)
-      .eq('is_active', true)
-      .single();
+      .maybeSingle();
 
     if (error || !user) {
       return errorResponse(
         res,
         HTTP_STATUS.UNAUTHORIZED,
-        'Invalid token or user not found'
+        'User account no longer exists or has been deleted'
+      );
+    }
+    
+    // ตรวจสอบว่า account ถูกปิดใช้งานหรือไม่
+    if (!user.is_active) {
+      return errorResponse(
+        res,
+        HTTP_STATUS.FORBIDDEN,
+        'Your account has been deactivated'
       );
     }
 

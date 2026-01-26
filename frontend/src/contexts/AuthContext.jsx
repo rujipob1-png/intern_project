@@ -11,13 +11,22 @@ export const AuthProvider = ({ children }) => {
 
   // Initialize auth from localStorage
   useEffect(() => {
-    const initAuth = () => {
+    const initAuth = async () => {
       const storedToken = localStorage.getItem(STORAGE_KEYS.TOKEN);
       const storedUser = localStorage.getItem(STORAGE_KEYS.USER);
 
       if (storedToken && storedUser) {
-        setToken(storedToken);
-        setUser(JSON.parse(storedUser));
+        // Validate token with backend
+        try {
+          await authAPI.getProfile(); // Call API to check if token is still valid
+          setToken(storedToken);
+          setUser(JSON.parse(storedUser));
+        } catch (error) {
+          // Token invalid - clear localStorage
+          console.log('Token invalid, clearing auth...');
+          localStorage.removeItem(STORAGE_KEYS.TOKEN);
+          localStorage.removeItem(STORAGE_KEYS.USER);
+        }
       }
       setLoading(false);
     };

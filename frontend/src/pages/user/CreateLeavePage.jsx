@@ -320,6 +320,25 @@ export const CreateLeavePage = () => {
                     className="bg-gray-50"
                   />
                 </div>
+
+                {/* Warning for sick leave > 15 days */}
+                {selectedLeaveType?.type_code === 'SICK' && formData.totalDays > 15 && (
+                  <div className="mt-4 p-4 bg-yellow-50 border border-yellow-300 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-semibold text-yellow-900 mb-1">
+                          ⚠️ คำเตือน: ลาป่วยเกิน 15 วัน
+                        </p>
+                        <p className="text-sm text-yellow-800">
+                          ท่านลาป่วย <span className="font-bold">{formData.totalDays} วัน</span> ซึ่งเกิน 15 วัน 
+                          <br />
+                          <span className="font-semibold">วันที่ {formData.totalDays - 15} วัน ที่เกินจะไม่ได้รับการพิจารณาเงินเดือน</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Reason */}

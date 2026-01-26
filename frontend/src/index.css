@@ -27,7 +27,43 @@
   
   .input-field {
     @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+    color: #000000 !important;
+    background-color: #ffffff !important;
+    font-weight: 500;
   }
+
+  select.input-field {
+    color: #1e293b !important;
+    background-color: #ffffff !important;
+    font-weight: 600 !important;
+    font-size: 16px !important;
+    border: 2px solid #e2e8f0 !important;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%233b82f6' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.75rem center;
+    background-repeat: no-repeat;
+    background-size: 1.25em 1.25em;
+    padding-right: 2.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  select.input-field:hover {
+    border-color: #3b82f6 !important;
+    background-color: #f8fafc !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  select.input-field:focus {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  }
+
+  /* ปล่อยให้ OS จัดการ option เอง - ตัวหนังสือจะชัดแน่นอน */
   
   .card {
     @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
