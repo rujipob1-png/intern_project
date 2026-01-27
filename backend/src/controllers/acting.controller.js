@@ -74,26 +74,57 @@ export const approveActingRequest = async (req, res) => {
     const { comment } = req.body;
     const actingPersonId = req.user.id;
 
-    // เรียกใช้ function ใน database
-    const { data, error } = await supabase.rpc('approve_acting_person', {
-      p_leave_id: leaveId,
-      p_acting_person_id: actingPersonId,
-      p_comment: comment || null
-    });
+    // ตรวจสอบว่าคำขอนี้เป็นของ user นี้หรือไม่
+    const { data: leave, error: findError } = await supabase
+      .from('leaves')
+      .select('id, user_id, acting_person_id, leave_number')
+      .eq('id', leaveId)
+      .eq('acting_person_id', actingPersonId)
+      .single();
 
-    if (error) throw error;
-
-    if (data.success) {
-      res.json({
-        success: true,
-        message: data.message
-      });
-    } else {
-      res.status(400).json({
+    if (findError || !leave) {
+      return res.status(404).json({
         success: false,
-        message: data.message
+        message: 'ไม่พบคำขอนี้หรือคุณไม่มีสิทธิ์อนุมัติ'
       });
     }
+
+    // อัพเดท acting_approved เป็น true
+    const { error: updateError } = await supabase
+      .from('leaves')
+      .update({
+        acting_approved: true,
+        acting_approved_at: new Date().toISOString()
+      })
+      .eq('id', leaveId);
+
+    if (updateError) throw updateError;
+
+    // ดึงข้อมูลผู้ปฏิบัติหน้าที่แทน
+    const { data: actingPerson } = await supabase
+      .from('users')
+      .select('employee_code, title, first_name, last_name')
+      .eq('id', actingPersonId)
+      .single();
+
+    const actingName = `${actingPerson?.title || ''}${actingPerson?.first_name} ${actingPerson?.last_name}`.trim();
+
+    // สร้าง notification ให้ผู้ยื่นคำขอ
+    await supabase
+      .from('notifications')
+      .insert({
+        user_id: leave.user_id,
+        type: 'acting_approved',
+        title: 'ยินยอมปฏิบัติหน้าที่แทน',
+        message: `${actingName} (${actingPerson?.employee_code}) ยินยอมปฏิบัติหน้าที่แทนคุณแล้ว`,
+        reference_id: leave.id,
+        reference_type: 'leave'
+      });
+
+    res.json({
+      success: true,
+      message: 'ยินยอมปฏิบัติหน้าที่แทนเรียบร้อยแล้ว'
+    });
   } catch (error) {
     console.error('Error approving acting request:', error);
     res.status(500).json({
@@ -238,7 +269,7 @@ export const getActingRequests = async (req, res) => {
         end_date,
         total_days,
         reason,
-        acting_status,
+        acting_approved,
         created_at,
         users!leaves_user_id_fkey (
           employee_code,
@@ -246,12 +277,12 @@ export const getActingRequests = async (req, res) => {
           first_name,
           last_name,
           position,
-          departments (department_name)
+          department
         ),
         leave_types (type_name)
       `)
       .eq('acting_person_id', userId)
-      .eq('acting_status', 'pending')
+      .eq('acting_approved', false)
       .order('created_at', { ascending: false });
 
     if (error) throw error;

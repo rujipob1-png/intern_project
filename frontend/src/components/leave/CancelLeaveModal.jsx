@@ -282,7 +282,11 @@ export function CancelLeaveModal({ leave, onClose, onSubmit }) {
                 <ul className="text-sm text-amber-800 space-y-1.5">
                   <li className="flex items-start gap-2">
                     <span className="text-amber-600 font-bold">•</span>
-                    <span>คำขอยกเลิกจะต้อง<strong>ผ่านการอนุมัติ 4 ระดับ</strong> (หัวหน้างาน → กองกลาง → ผู้บริหาร → อนุมัติสุดท้าย)</span>
+                    <span>คำขอยกเลิกจะ<strong>ไม่ยกเลิกทันที</strong> แต่จะเปลี่ยนสถานะเป็น "รอพิจารณายกเลิก"</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-amber-600 font-bold">•</span>
+                    <span>ต้อง<strong>ผ่านการอนุมัติ 4 ระดับ</strong> เหมือนการยื่นคำขอลา (ผอ.กลุ่มงาน → หัวหน้าฝ่ายบริหาร → ผอ.กลุ่มงานอำนวยการ → ผอ.ศูนย์)</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-amber-600 font-bold">•</span>
@@ -290,11 +294,7 @@ export function CancelLeaveModal({ leave, onClose, onSubmit }) {
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-amber-600 font-bold">•</span>
-                    <span>สามารถยกเลิกได้เฉพาะคำขอที่<strong>สถานะรออนุมัติเท่านั้น</strong></span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-amber-600 font-bold">•</span>
-                    <span>คำขอที่<strong>อนุมัติแล้ว หรือ ไม่อนุมัติ</strong> จะไม่สามารถยกเลิกได้</span>
+                    <span>สามารถยกเลิกได้ทั้งคำขอที่ <strong>รออนุมัติ และ อนุมัติแล้ว</strong></span>
                   </li>
                 </ul>
               </div>

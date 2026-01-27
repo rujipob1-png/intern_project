@@ -23,7 +23,12 @@ export const LEAVE_STATUS = {
   APPROVED_LEVEL3: 'approved_level3', // Central Office Head approved
   APPROVED_FINAL: 'approved_final',   // Admin approved (final)
   REJECTED: 'rejected',
-  CANCELLED: 'cancelled'
+  CANCELLED: 'cancelled',
+  // สถานะสำหรับการยกเลิก (ต้องผ่านขั้นตอนอนุมัติ)
+  PENDING_CANCEL: 'pending_cancel',           // รอพิจารณาการยกเลิก (ผอ.กลุ่มงาน)
+  CANCEL_LEVEL1: 'cancel_level1',             // ผอ.กลุ่มงานอนุมัติยกเลิก - รอหัวหน้าฝ่ายบริหาร
+  CANCEL_LEVEL2: 'cancel_level2',             // หัวหน้าฝ่ายบริหารอนุมัติยกเลิก - รอ ผอ.กลุ่มงานอำนวยการ
+  CANCEL_LEVEL3: 'cancel_level3',             // ผอ.กลุ่มงานอำนวยการอนุมัติยกเลิก - รอ ผอ.ศูนย์
 };
 
 // Leave Status Descriptions
@@ -34,7 +39,11 @@ export const LEAVE_STATUS_DESCRIPTIONS = {
   approved_level3: 'หัวหน้ากองกลางอนุมัติแล้ว - รอผู้บริหารสูงสุด',
   approved_final: 'อนุมัติทั้งหมดแล้ว',
   rejected: 'ไม่อนุมัติ',
-  cancelled: 'ยกเลิกแล้ว'
+  cancelled: 'ยกเลิกแล้ว',
+  pending_cancel: 'รอพิจารณายกเลิก (ผอ.กลุ่มงาน)',
+  cancel_level1: 'ผอ.กลุ่มงานอนุมัติยกเลิก - รอหัวหน้าฝ่ายบริหาร',
+  cancel_level2: 'หัวหน้าฝ่ายบริหารอนุมัติยกเลิก - รอ ผอ.กลุ่มงานอำนวยการ',
+  cancel_level3: 'ผอ.กลุ่มงานอำนวยการอนุมัติยกเลิก - รอ ผอ.ศูนย์',
 };
 
 // Approval Actions

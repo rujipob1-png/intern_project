@@ -107,16 +107,21 @@ export const uploadDocument = async (req, res) => {
       throw updateError;
     }
 
-    // บันทึก history
-    await supabaseAdmin
-      .from('leave_history')
-      .insert({
-        user_id: userId,
-        leave_id: leaveId,
-        action: 'document_uploaded',
-        action_by: userId,
-        remarks: `อัพโหลดเอกสาร: ${file.originalname} (${formatFileSize(file.size)})`
-      });
+    // บันทึก history (optional - skip if table doesn't exist)
+    try {
+      await supabaseAdmin
+        .from('leave_history')
+        .insert({
+          user_id: userId,
+          leave_id: leaveId,
+          action: 'document_uploaded',
+          action_by: userId,
+          remarks: `อัพโหลดเอกสาร: ${file.originalname} (${formatFileSize(file.size)})`
+        });
+    } catch (historyError) {
+      // Ignore if leave_history table doesn't exist
+      console.log('leave_history insert skipped:', historyError.message);
+    }
 
     return successResponse(
       res,

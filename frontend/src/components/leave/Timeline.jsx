@@ -2,7 +2,43 @@ import { Check, X, Clock, User } from 'lucide-react';
 import { formatDateTime } from '../../utils/formatDate';
 
 export const Timeline = ({ approvals, status }) => {
-  const steps = [
+  // ตรวจสอบว่าเป็นสถานะยกเลิกหรือไม่
+  const isCancelFlow = status?.startsWith('pending_cancel') || status?.startsWith('cancel_level');
+
+  const steps = isCancelFlow ? [
+    // ขั้นตอนสำหรับการยกเลิก
+    {
+      level: 0,
+      title: 'ขอยกเลิก',
+      description: 'ส่งคำขอยกเลิกการลาเข้าสู่ระบบ',
+      status: 'completed',
+    },
+    {
+      level: 1,
+      title: 'ผู้บังคับบัญชา (ผอ.กลุ่มงาน)',
+      description: 'รอพิจารณายกเลิกจากผู้บังคับบัญชา',
+      approvalKey: 'cancel_level_1',
+    },
+    {
+      level: 2,
+      title: 'หัวหน้าฝ่ายบริหารทั่วไป',
+      description: 'รอพิจารณายกเลิกจากหัวหน้าฝ่ายบริหารทั่วไป',
+      approvalKey: 'cancel_level_2',
+    },
+    {
+      level: 3,
+      title: 'ผอ.กลุ่มงานอำนวยการ',
+      description: 'รอพิจารณายกเลิกจากผู้อำนวยการกลุ่มงานอำนวยการ',
+      approvalKey: 'cancel_level_3',
+    },
+    {
+      level: 4,
+      title: 'ผอ.ศูนย์เทคโนโลยีสารสนเทศฯ สป.',
+      description: 'อนุมัติยกเลิกขั้นสุดท้ายจากผู้อำนวยการศูนย์ฯ',
+      approvalKey: 'cancel_level_4',
+    },
+  ] : [
+    // ขั้นตอนสำหรับการยื่นคำขอลาปกติ
     {
       level: 0,
       title: 'ยื่นคำขอ',
@@ -11,21 +47,27 @@ export const Timeline = ({ approvals, status }) => {
     },
     {
       level: 1,
-      title: 'หัวหน้างาน',
-      description: 'รอการอนุมัติจากหัวหน้างาน',
+      title: 'ผู้บังคับบัญชา (ผอ.กลุ่มงาน)',
+      description: 'รอการอนุมัติจากผู้บังคับบัญชา',
       approvalKey: 'level_1',
     },
     {
       level: 2,
-      title: 'กองกลาง',
-      description: 'รอการอนุมัติจากกองกลาง',
+      title: 'หัวหน้าฝ่ายบริหารทั่วไป',
+      description: 'รอการอนุมัติจากหัวหน้าฝ่ายบริหารทั่วไป',
       approvalKey: 'level_2',
     },
     {
       level: 3,
-      title: 'ผู้ดูแลระบบ',
-      description: 'อนุมัติขั้นสุดท้ายและหักวันลา',
+      title: 'ผอ.กลุ่มงานอำนวยการ',
+      description: 'รอการอนุมัติจากผู้อำนวยการกลุ่มงานอำนวยการ',
       approvalKey: 'level_3',
+    },
+    {
+      level: 4,
+      title: 'ผอ.ศูนย์เทคโนโลยีสารสนเทศฯ สป.',
+      description: 'อนุมัติขั้นสุดท้ายจากผู้อำนวยการศูนย์ฯ',
+      approvalKey: 'level_4',
     },
   ];
 
@@ -34,6 +76,19 @@ export const Timeline = ({ approvals, status }) => {
     if (status === 'rejected') return 'rejected';
     if (step.level === 0) return 'completed';
 
+    // สำหรับ flow ยกเลิก
+    if (isCancelFlow) {
+      if (status === 'pending_cancel' && step.level === 1) return 'waiting';
+      if (status === 'cancel_level1' && step.level === 1) return 'completed';
+      if (status === 'cancel_level1' && step.level === 2) return 'waiting';
+      if (status === 'cancel_level2' && step.level <= 2) return 'completed';
+      if (status === 'cancel_level2' && step.level === 3) return 'waiting';
+      if (status === 'cancel_level3' && step.level <= 3) return 'completed';
+      if (status === 'cancel_level3' && step.level === 4) return 'waiting';
+      return 'pending';
+    }
+
+    // สำหรับ flow ปกติ
     const approval = approvals?.find(a => a.approval_level === step.level);
     
     if (approval) {
@@ -44,6 +99,7 @@ export const Timeline = ({ approvals, status }) => {
     if (step.level === 1 && status === 'pending') return 'waiting';
     if (step.level === 2 && status === 'level_1_approved') return 'waiting';
     if (step.level === 3 && status === 'level_2_approved') return 'waiting';
+    if (step.level === 4 && status === 'level_3_approved') return 'waiting';
 
     return 'pending';
   };

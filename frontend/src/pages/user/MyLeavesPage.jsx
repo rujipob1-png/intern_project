@@ -134,6 +134,11 @@ export const MyLeavesPage = () => {
         icon: CheckCircle,
         className: 'bg-green-100 text-green-800 border-green-200',
       },
+      approved_final: {
+        label: 'อนุมัติแล้ว',
+        icon: CheckCircle,
+        className: 'bg-green-100 text-green-800 border-green-200',
+      },
       rejected: {
         label: 'ไม่อนุมัติ',
         icon: XCircle,
@@ -143,6 +148,26 @@ export const MyLeavesPage = () => {
         label: 'ยกเลิกแล้ว',
         icon: AlertCircle,
         className: 'bg-gray-100 text-gray-800 border-gray-200',
+      },
+      pending_cancel: {
+        label: 'รอพิจารณายกเลิก',
+        icon: Clock,
+        className: 'bg-orange-100 text-orange-800 border-orange-200',
+      },
+      cancel_level1: {
+        label: 'รอพิจารณายกเลิก',
+        icon: Clock,
+        className: 'bg-orange-100 text-orange-800 border-orange-200',
+      },
+      cancel_level2: {
+        label: 'รอพิจารณายกเลิก',
+        icon: Clock,
+        className: 'bg-orange-100 text-orange-800 border-orange-200',
+      },
+      cancel_level3: {
+        label: 'รอพิจารณายกเลิก',
+        icon: Clock,
+        className: 'bg-orange-100 text-orange-800 border-orange-200',
       },
     };
 
@@ -298,12 +323,13 @@ export const MyLeavesPage = () => {
                           <div className="text-sm text-gray-900">
                             {leave.leaveType || 
                              leave.leaveTypes?.typeName || 
+                             leave.leave_types?.type_name_th ||
                              leave.leave_types?.type_name || 
                              'ไม่ระบุ'}
                           </div>
                           <div className="text-xs text-gray-500">
                             {(leave.leaveTypeCode || leave.leaveTypes?.typeCode || leave.leave_types?.type_code) && 
-                              `(${LEAVE_TYPE_CODES[leave.leaveTypeCode || leave.leaveTypes?.typeCode || leave.leave_types?.type_code]})`
+                              `(${LEAVE_TYPE_CODES[(leave.leaveTypeCode || leave.leaveTypes?.typeCode || leave.leave_types?.type_code).toLowerCase()] || ''})`
                             }
                           </div>
                         </td>

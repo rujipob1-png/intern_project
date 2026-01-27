@@ -28,6 +28,11 @@ export const LEAVE_STATUS = {
   APPROVED: 'approved_final',
   REJECTED: 'rejected',
   CANCELLED: 'cancelled',
+  // สถานะสำหรับการยกเลิก
+  PENDING_CANCEL: 'pending_cancel',
+  CANCEL_LEVEL1: 'cancel_level1',
+  CANCEL_LEVEL2: 'cancel_level2',
+  CANCEL_LEVEL3: 'cancel_level3',
 };
 
 export const LEAVE_STATUS_TEXT = {
@@ -38,6 +43,11 @@ export const LEAVE_STATUS_TEXT = {
   approved_final: 'อนุมัติแล้ว',
   rejected: 'ไม่อนุมัติ',
   cancelled: 'ยกเลิกแล้ว',
+  // สถานะการยกเลิก
+  pending_cancel: 'รอพิจารณายกเลิก (ผอ.กลุ่มงาน)',
+  cancel_level1: 'ผอ.กลุ่มงานอนุมัติยกเลิก - รอหัวหน้าฝ่ายบริหาร',
+  cancel_level2: 'หัวหน้าฝ่ายบริหารอนุมัติยกเลิก - รอผอ.กลุ่มงานอำนวยการ',
+  cancel_level3: 'ผอ.กลุ่มงานอำนวยการอนุมัติยกเลิก - รอผอ.ศูนย์',
 };
 
 export const LEAVE_STATUS_COLOR = {
@@ -48,6 +58,11 @@ export const LEAVE_STATUS_COLOR = {
   approved_final: 'green',
   rejected: 'red',
   cancelled: 'gray',
+  // สีสถานะการยกเลิก
+  pending_cancel: 'orange',
+  cancel_level1: 'orange',
+  cancel_level2: 'orange',
+  cancel_level3: 'orange',
 };
 
 // Alias for backwards compatibility
@@ -64,9 +79,11 @@ export const LEAVE_TYPES = {
   MILITARY: 'military',            // ต = ลาเข้ารับการตรวจเลือก
   LATE: 'late',                    // ส = มาสาย
   ABSENT: 'absent',                // ข = ขาดราชการ
+  PATERNITY: 'paternity',          // ช = ลาช่วยภรรยาคลอดบุตร
 };
 
 export const LEAVE_TYPE_NAMES = {
+  // key เป็น type_code (lowercase)
   sick: 'ลาป่วย (ป)',
   personal: 'ลากิจส่วนตัว (ก)',
   vacation: 'ลาพักผ่อน (พ)',
@@ -76,6 +93,18 @@ export const LEAVE_TYPE_NAMES = {
   military: 'ลาเข้ารับการตรวจเลือก (ต)',
   late: 'มาสาย (ส)',
   absent: 'ขาดราชการ (ข)',
+  paternity: 'ลาช่วยภรรยาคลอดบุตร (ช)',
+  // key เป็น type_name_th (ชื่อไทย)
+  'ลาป่วย': 'ลาป่วย (ป)',
+  'ลากิจส่วนตัว': 'ลากิจส่วนตัว (ก)',
+  'ลาพักผ่อน': 'ลาพักผ่อน (พ)',
+  'ลาคลอดบุตร': 'ลาคลอดบุตร (ค)',
+  'ลาอุปสมบท': 'ลาอุปสมบท (บ)',
+  'ลาประกอบพิธีฮัจย์': 'ลาประกอบพิธีฮัจย์ (ฮ)',
+  'ลาเข้ารับการตรวจเลือก': 'ลาเข้ารับการตรวจเลือก (ต)',
+  'มาสาย': 'มาสาย (ส)',
+  'ขาดราชการ': 'ขาดราชการ (ข)',
+  'ลาช่วยภรรยาคลอดบุตร': 'ลาช่วยภรรยาคลอดบุตร (ช)',
 };
 
 export const LEAVE_TYPE_CODES = {
@@ -88,6 +117,7 @@ export const LEAVE_TYPE_CODES = {
   military: 'ต',
   late: 'ส',
   absent: 'ข',
+  paternity: 'ช',
 };
 
 export const LEAVE_TYPE_COLORS = {
@@ -100,6 +130,7 @@ export const LEAVE_TYPE_COLORS = {
   military: 'orange',
   late: 'amber',
   absent: 'red',
+  paternity: 'teal',
 };
 
 // Local Storage Keys

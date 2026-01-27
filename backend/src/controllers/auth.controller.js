@@ -95,10 +95,10 @@ export const login = async (req, res) => {
         user: {
           id: user.id,
           employeeCode: user.employee_code,
-          title: user.title,
+          title: user.title || '',
           firstName: user.first_name,
           lastName: user.last_name,
-          fullName: `${user.title}${user.first_name} ${user.last_name}`,
+          fullName: `${user.title || ''}${user.first_name} ${user.last_name}`.trim(),
           position: user.position,
           department: user.department,
           phone: user.phone,

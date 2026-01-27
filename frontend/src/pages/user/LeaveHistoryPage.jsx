@@ -93,6 +93,11 @@ export const LeaveHistoryPage = () => {
         className: 'bg-green-100 text-green-800',
         icon: CheckCircle 
       },
+      approved_final: { 
+        label: 'อนุมัติแล้ว', 
+        className: 'bg-green-100 text-green-800',
+        icon: CheckCircle 
+      },
       rejected: { 
         label: 'ไม่อนุมัติ', 
         className: 'bg-red-100 text-red-800',
@@ -106,6 +111,27 @@ export const LeaveHistoryPage = () => {
       pending: { 
         label: 'รออนุมัติ', 
         className: 'bg-yellow-100 text-yellow-800',
+        icon: Clock 
+      },
+      // สถานะการยกเลิก
+      pending_cancel: { 
+        label: 'รอพิจารณายกเลิก', 
+        className: 'bg-orange-100 text-orange-800',
+        icon: Clock 
+      },
+      cancel_level1: { 
+        label: 'รอพิจารณายกเลิก', 
+        className: 'bg-orange-100 text-orange-800',
+        icon: Clock 
+      },
+      cancel_level2: { 
+        label: 'รอพิจารณายกเลิก', 
+        className: 'bg-orange-100 text-orange-800',
+        icon: Clock 
+      },
+      cancel_level3: { 
+        label: 'รอพิจารณายกเลิก', 
+        className: 'bg-orange-100 text-orange-800',
         icon: Clock 
       },
     };
@@ -134,10 +160,12 @@ export const LeaveHistoryPage = () => {
   };
 
   const getLeaveTypeCode = (leave) => {
-    return leave.leaveTypeCode || 
+    const code = leave.leaveTypeCode || 
            leave.leaveTypes?.typeCode || 
            leave.leave_types?.type_code ||
            '';
+    // แปลงเป็นตัวย่อภาษาไทย
+    return LEAVE_TYPE_CODES[code.toLowerCase()] || code;
   };
 
   const viewDetail = (id) => {
@@ -350,7 +378,7 @@ export const LeaveHistoryPage = () => {
                       <td className="px-8 py-5">
                         <div className="flex items-center gap-2">
                           <span className="inline-flex items-center justify-center w-9 h-9 bg-blue-100 text-blue-700 border border-blue-200 rounded-lg font-bold text-sm">
-                            {LEAVE_TYPE_CODES[getLeaveTypeCode(leave)] || getLeaveTypeCode(leave)}
+                            {getLeaveTypeCode(leave)}
                           </span>
                           <span className="text-sm text-slate-700 font-medium">{getLeaveTypeName(leave)}</span>
                         </div>

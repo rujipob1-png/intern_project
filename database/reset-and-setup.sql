@@ -45,7 +45,57 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 -- ============================================
--- STEP 3: Insert 32 users (2001-6003)
+-- STEP 3: สร้าง leave_types table
+-- ============================================
+CREATE TABLE IF NOT EXISTS leave_types (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  type_code VARCHAR(10) UNIQUE NOT NULL,
+  type_name VARCHAR(100) NOT NULL,
+  type_name_th VARCHAR(100) NOT NULL,
+  type_name_en VARCHAR(100),
+  description TEXT,
+  max_days_per_year INTEGER,
+  requires_document BOOLEAN DEFAULT false,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+INSERT INTO leave_types (type_code, type_name, type_name_th, type_name_en, max_days_per_year, requires_document) VALUES
+('SICK', 'ลาป่วย', 'ลาป่วย', 'Sick Leave', 30, true),
+('PERSONAL', 'ลากิจ', 'ลากิจ', 'Personal Leave', 10, false),
+('VACATION', 'ลาพักผ่อน', 'ลาพักผ่อน', 'Vacation Leave', 10, false)
+ON CONFLICT (type_code) DO NOTHING;
+
+-- ============================================
+-- STEP 4: สร้าง leaves table
+-- ============================================
+CREATE TABLE IF NOT EXISTS leaves (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  leave_number VARCHAR(50) UNIQUE NOT NULL,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  leave_type_id UUID REFERENCES leave_types(id),
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  total_days INTEGER NOT NULL,
+  reason TEXT NOT NULL,
+  document_url TEXT,
+  status VARCHAR(20) DEFAULT 'pending',
+  acting_person_id UUID REFERENCES users(id),
+  acting_approved BOOLEAN DEFAULT false,
+  acting_approved_at TIMESTAMPTZ,
+  director_approved BOOLEAN,
+  director_approved_at TIMESTAMPTZ,
+  director_approved_by UUID REFERENCES users(id),
+  central_approved BOOLEAN,
+  central_approved_at TIMESTAMPTZ,
+  central_approved_by UUID REFERENCES users(id),
+  rejection_reason TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================
+-- STEP 5: Insert 32 users (2001-6003)
 -- Password สำหรับทุกคน: 123456
 -- ============================================
 INSERT INTO users (employee_code, password_hash, first_name, last_name, department, role_id) VALUES
@@ -92,7 +142,7 @@ INSERT INTO users (employee_code, password_hash, first_name, last_name, departme
 ('6003', '$2b$10$DmslwEVkoBKz6sfURIIxleVUGyuyHt3iNa/ibfh5htIT4hj.LrqJm', 'พันธารัตน์', 'แสงทอง', 'CENTRAL', (SELECT id FROM roles WHERE role_name = 'central_office_staff'));
 
 -- ============================================
--- STEP 4: ตรวจสอบผลลัพธ์
+-- STEP 6: ตรวจสอบผลลัพธ์
 -- ============================================
 SELECT department, COUNT(*) as total, COUNT(CASE WHEN is_active = true THEN 1 END) as active
 FROM users 

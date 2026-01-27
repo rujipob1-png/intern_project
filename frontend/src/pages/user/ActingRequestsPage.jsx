@@ -116,7 +116,7 @@ export const ActingRequestsPage = () => {
                         {request.users?.title}{request.users?.first_name} {request.users?.last_name}
                       </h3>
                       <p className="text-sm text-slate-600">
-                        {request.users?.position} • {request.users?.departments?.department_name}
+                        {request.users?.position} • {request.users?.department}
                       </p>
                     </div>
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">

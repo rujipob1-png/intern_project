@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MainLayout } from '../../components/layout/MainLayout';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Timeline } from '../../components/leave/Timeline';
+import { CancelLeaveFormPDF } from '../../components/leave/CancelLeaveFormPDF';
 import { leaveAPI } from '../../api/leave.api';
 import { formatDate, formatDateTime } from '../../utils/formatDate';
 import { LEAVE_TYPE_NAMES, LEAVE_STATUS_TEXT } from '../../utils/constants';
+import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
 import {
   ArrowLeft,
@@ -18,15 +20,28 @@ import {
   XCircle,
   Download,
   Eye,
+  UserCheck,
+  CheckCircle,
+  X,
 } from 'lucide-react';
 
 export const LeaveDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const pdfFormRef = useRef();
   const [loading, setLoading] = useState(true);
   const [leave, setLeave] = useState(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
+  const [showPDFPreview, setShowPDFPreview] = useState(false);
+
+  // ฟังก์ชันดาวน์โหลด PDF
+  const handleDownloadPDF = async () => {
+    if (pdfFormRef.current) {
+      await pdfFormRef.current.downloadPDF();
+    }
+  };
 
   useEffect(() => {
     loadLeaveDetail();
@@ -82,8 +97,14 @@ export const LeaveDetailPage = () => {
       level_1_approved: { label: 'ผ่านหัวหน้า', className: 'bg-blue-100 text-blue-800' },
       level_2_approved: { label: 'ผ่านกองกลาง', className: 'bg-indigo-100 text-indigo-800' },
       approved: { label: 'อนุมัติ', className: 'bg-green-100 text-green-800' },
+      approved_final: { label: 'อนุมัติแล้ว', className: 'bg-green-100 text-green-800' },
       rejected: { label: 'ไม่อนุมัติ', className: 'bg-red-100 text-red-800' },
       cancelled: { label: 'ยกเลิกแล้ว', className: 'bg-gray-100 text-gray-800' },
+      // สถานะการยกเลิก
+      pending_cancel: { label: 'รอพิจารณายกเลิก', className: 'bg-orange-100 text-orange-800' },
+      cancel_level1: { label: 'รอพิจารณายกเลิก', className: 'bg-orange-100 text-orange-800' },
+      cancel_level2: { label: 'รอพิจารณายกเลิก', className: 'bg-orange-100 text-orange-800' },
+      cancel_level3: { label: 'รอพิจารณายกเลิก', className: 'bg-orange-100 text-orange-800' },
     };
 
     const { label, className } = config[status] || config.pending;
@@ -251,14 +272,51 @@ export const LeaveDetailPage = () => {
                   </div>
                 </div>
 
-                {/* Cancelled Reason - show if status is cancelled */}
-                {leave.status === 'cancelled' && (leave.cancelledReason || leave.cancelled_reason) && (
-                  <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <label className="text-sm font-medium text-red-700 block mb-2">
+                {/* Cancelled Reason - show if status is cancelled or pending cancellation */}
+                {(leave.status === 'cancelled' || 
+                  leave.status === 'pending_cancel' || 
+                  leave.status?.startsWith('cancel_level')) && 
+                  (leave.cancelledReason || leave.cancelled_reason) && (
+                  <div className={`mt-4 p-4 border rounded-lg ${
+                    leave.status === 'cancelled' 
+                      ? 'bg-gray-50 border-gray-200' 
+                      : 'bg-orange-50 border-orange-200'
+                  }`}>
+                    <label className={`text-sm font-medium block mb-2 ${
+                      leave.status === 'cancelled' 
+                        ? 'text-gray-700' 
+                        : 'text-orange-700'
+                    }`}>
                       <FileText className="w-4 h-4 inline mr-1" />
-                      เหตุผลการยกเลิก
+                      {leave.status === 'cancelled' ? 'เหตุผลที่ยกเลิก' : 'เหตุผลที่ขอยกเลิก'}
                     </label>
-                    <p className="text-red-900 whitespace-pre-line">{leave.cancelledReason || leave.cancelled_reason}</p>
+                    <p className={`whitespace-pre-line ${
+                      leave.status === 'cancelled' 
+                        ? 'text-gray-900' 
+                        : 'text-orange-900'
+                    }`}>{leave.cancelledReason || leave.cancelled_reason}</p>
+                    {leave.status !== 'cancelled' && (
+                      <p className="mt-2 text-xs text-orange-600">
+                        ⏳ กำลังรอการพิจารณายกเลิกจากผู้บังคับบัญชา
+                      </p>
+                    )}
+                    {/* ปุ่มดาวน์โหลด PDF แบบฟอร์มยกเลิก */}
+                    <div className="flex gap-2 mt-3">
+                      <button
+                        onClick={() => setShowPDFPreview(true)}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+                      >
+                        <Eye className="w-4 h-4" />
+                        ดูตัวอย่าง
+                      </button>
+                      <button
+                        onClick={handleDownloadPDF}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                      >
+                        <Download className="w-4 h-4" />
+                        ดาวน์โหลด PDF
+                      </button>
+                    </div>
                   </div>
                 )}
 
@@ -268,6 +326,52 @@ export const LeaveDetailPage = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Acting Person */}
+            {(leave.actingPerson || leave.acting_person) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <UserCheck className="w-5 h-5" />
+                    ผู้ปฏิบัติหน้าที่แทน
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                        {(leave.actingPerson?.name || leave.acting_person?.first_name)?.charAt(0) || 'U'}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">
+                          {leave.actingPerson?.name || 
+                           `${leave.acting_person?.title || ''}${leave.acting_person?.first_name || ''} ${leave.acting_person?.last_name || ''}`.trim()}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {leave.actingPerson?.position || leave.acting_person?.position || 'ไม่ระบุตำแหน่ง'}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          รหัสพนักงาน: {leave.actingPerson?.employeeCode || leave.acting_person?.employee_code}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      {(leave.actingApproved || leave.acting_approved) ? (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                          <CheckCircle className="w-4 h-4" />
+                          ยอมรับแล้ว
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">
+                          <Clock className="w-4 h-4" />
+                          รอการยืนยัน
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Documents */}
             {(leave.documentUrl || leave.document_url) && (
@@ -456,6 +560,44 @@ export const LeaveDetailPage = () => {
           </div>
         </div>
       )}
+
+      {/* PDF Preview Modal */}
+      {showPDFPreview && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b bg-gray-50">
+              <h3 className="text-lg font-semibold text-gray-900">ตัวอย่างแบบฟอร์มยกเลิกวันลา</h3>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleDownloadPDF}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                >
+                  <Download className="w-4 h-4" />
+                  ดาวน์โหลด PDF
+                </button>
+                <button
+                  onClick={() => setShowPDFPreview(false)}
+                  className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+            {/* Content */}
+            <div className="overflow-auto max-h-[calc(90vh-80px)] bg-gray-200 p-4">
+              <div className="shadow-lg mx-auto" style={{ width: 'fit-content' }}>
+                <CancelLeaveFormPDF ref={pdfFormRef} leave={leave} user={user} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Hidden PDF Form for download */}
+      <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+        <CancelLeaveFormPDF ref={pdfFormRef} leave={leave} user={user} />
+      </div>
     </MainLayout>
   );
 };

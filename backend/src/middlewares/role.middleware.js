@@ -85,3 +85,8 @@ export const centralOfficeHeadAndAbove = authorizeLevel(4);
  * Middleware สำหรับตรวจสอบว่าเป็น Admin เท่านั้น
  */
 export const adminOnly = requireRole(['admin']);
+
+/**
+ * Middleware สำหรับตรวจสอบว่าเป็นผู้มีอำนาจอนุมัติ
+ */
+export const approverOnly = requireRole(['director', 'central_office_staff', 'central_office_head', 'admin']);

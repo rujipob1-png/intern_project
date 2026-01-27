@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS leave_types (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   type_code VARCHAR(10) UNIQUE NOT NULL,
+  type_name VARCHAR(100) NOT NULL,
   type_name_th VARCHAR(100) NOT NULL,
   type_name_en VARCHAR(100),
   description TEXT,
@@ -55,10 +56,10 @@ CREATE TABLE IF NOT EXISTS leave_types (
 );
 
 -- 5. Insert leave types
-INSERT INTO leave_types (type_code, type_name_th, type_name_en, max_days_per_year, requires_document) VALUES
-  ('SICK', 'ลาป่วย', 'Sick Leave', 30, true),
-  ('PERSONAL', 'ลากิจ', 'Personal Leave', 10, false),
-  ('VACATION', 'ลาพักผ่อน', 'Vacation Leave', 10, false)
+INSERT INTO leave_types (type_code, type_name, type_name_th, type_name_en, max_days_per_year, requires_document) VALUES
+  ('SICK', 'ลาป่วย', 'ลาป่วย', 'Sick Leave', 30, true),
+  ('PERSONAL', 'ลากิจ', 'ลากิจ', 'Personal Leave', 10, false),
+  ('VACATION', 'ลาพักผ่อน', 'ลาพักผ่อน', 'Vacation Leave', 10, false)
 ON CONFLICT (type_code) DO NOTHING;
 
 -- 6. สร้าง leaves table

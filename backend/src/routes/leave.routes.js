@@ -4,11 +4,12 @@ import {
   getMyLeaves,
   getLeaveById,
   cancelLeave,
+  approveCancelLeave,
   getLeaveBalance,
   getLeaveTypes
 } from '../controllers/leave.controller.js';
 import { authenticate } from '../middlewares/auth.middleware.js';
-import { userOnly } from '../middlewares/role.middleware.js';
+import { userOnly, approverOnly } from '../middlewares/role.middleware.js';
 
 const router = express.Router();
 
@@ -52,9 +53,16 @@ router.get('/:id', userOnly, getLeaveById);
 
 /**
  * @route   PUT /api/leaves/:id/cancel
- * @desc    ยกเลิกคำขอลา
+ * @desc    ขอยกเลิกคำขอลา (ส่งคำขอยกเลิก - ต้องรอการอนุมัติ)
  * @access  Private (User)
  */
 router.put('/:id/cancel', userOnly, cancelLeave);
+
+/**
+ * @route   PUT /api/leaves/:id/approve-cancel
+ * @desc    อนุมัติ/ปฏิเสธการยกเลิกคำขอลา
+ * @access  Private (Approvers: director, central_office_staff, central_office_head, admin)
+ */
+router.put('/:id/approve-cancel', approverOnly, approveCancelLeave);
 
 export default router;

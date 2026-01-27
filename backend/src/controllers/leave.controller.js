@@ -96,6 +96,9 @@ export const createLeave = async (req, res) => {
         total_days: totalDays,
         reason: JSON.stringify(reasonWithDates), // เก็บ reason + dates รวมกัน
         document_url: documentUrl || null,
+        acting_person_id: actingPersonId || null,
+        contact_address: contactAddress || null,
+        contact_phone: contactPhone || null,
         status: LEAVE_STATUS.PENDING
       })
       .select('*')
@@ -103,6 +106,33 @@ export const createLeave = async (req, res) => {
 
     if (error) {
       throw error;
+    }
+
+    // ดึงข้อมูลผู้ยื่นคำขอ
+    const { data: requestor } = await supabaseAdmin
+      .from('users')
+      .select('employee_code, title, first_name, last_name')
+      .eq('id', userId)
+      .single();
+
+    const requestorName = `${requestor?.title || ''}${requestor?.first_name} ${requestor?.last_name}`.trim();
+
+    // สร้าง notification ให้ผู้ปฏิบัติหน้าที่แทน (ถ้ามี)
+    if (actingPersonId) {
+      try {
+        await supabaseAdmin
+          .from('notifications')
+          .insert({
+            user_id: actingPersonId,
+            type: 'acting_request',
+            title: 'คำขอปฏิบัติหน้าที่แทน',
+            message: `${requestorName} (${requestor?.employee_code}) ขอให้คุณปฏิบัติหน้าที่แทน ในวันที่ ${selectedDates.join(', ')}`,
+            reference_id: leave.id,
+            reference_type: 'leave'
+          });
+      } catch (notifError) {
+        console.log('Notification insert skipped:', notifError.message);
+      }
     }
 
     // บันทึก history
@@ -271,6 +301,15 @@ export const getLeaveById = async (req, res) => {
           last_name,
           position,
           department
+        ),
+        acting_person:users!leaves_acting_person_id_fkey (
+          id,
+          employee_code,
+          title,
+          first_name,
+          last_name,
+          position,
+          department
         )
       `)
       .eq('id', id)
@@ -331,13 +370,23 @@ export const getLeaveById = async (req, res) => {
         totalDays: leave.total_days,
         reason: actualReason,
         selectedDates: selectedDatesArray,
-
+        contactAddress: leave.contact_address,
+        contactPhone: leave.contact_phone,
         status: leave.status,
         documentUrl: leave.document_url,
         createdAt: leave.created_at,
         updatedAt: leave.updated_at,
         cancelledAt: leave.cancelled_at,
         cancelledReason: leave.cancelled_reason,
+        actingPerson: leave.acting_person ? {
+          id: leave.acting_person.id,
+          employeeCode: leave.acting_person.employee_code,
+          name: `${leave.acting_person.title || ''}${leave.acting_person.first_name} ${leave.acting_person.last_name}`.trim(),
+          position: leave.acting_person.position,
+          department: leave.acting_person.department
+        } : null,
+        actingApproved: leave.acting_approved,
+        actingApprovedAt: leave.acting_approved_at,
         approvals: approvals?.map(approval => ({
           level: approval.approval_level,
           action: approval.action,
@@ -362,7 +411,7 @@ export const getLeaveById = async (req, res) => {
 };
 
 /**
- * ยกเลิกคำขอลา (User สามารถยกเลิกได้เมื่อยังไม่ได้รับการอนุมัติขั้นสุดท้าย)
+ * ขอยกเลิกคำขอลา (User ส่งคำขอยกเลิก - ต้องรอการอนุมัติจากผู้บังคับบัญชา)
  */
 export const cancelLeave = async (req, res) => {
   try {
@@ -386,15 +435,7 @@ export const cancelLeave = async (req, res) => {
       );
     }
 
-    // ตรวจสอบสถานะ - ไม่สามารถยกเลิกได้ถ้าอนุมัติแล้วหรือยกเลิกไปแล้ว
-    if (leave.status === LEAVE_STATUS.APPROVED_FINAL) {
-      return errorResponse(
-        res,
-        HTTP_STATUS.BAD_REQUEST,
-        'Cannot cancel leave that has been fully approved'
-      );
-    }
-
+    // ตรวจสอบสถานะ - ไม่สามารถยกเลิกได้ถ้ายกเลิกไปแล้วหรือถูกปฏิเสธ
     if (leave.status === LEAVE_STATUS.CANCELLED) {
       return errorResponse(
         res,
@@ -411,13 +452,22 @@ export const cancelLeave = async (req, res) => {
       );
     }
 
-    // อัพเดทสถานะเป็น cancelled
+    // ตรวจสอบว่ากำลังรอพิจารณายกเลิกอยู่หรือไม่
+    if (leave.status.startsWith('pending_cancel') || leave.status.startsWith('cancel_level')) {
+      return errorResponse(
+        res,
+        HTTP_STATUS.BAD_REQUEST,
+        'Leave cancellation is already pending approval'
+      );
+    }
+
+    // อัพเดทสถานะเป็น pending_cancel (รอพิจารณาการยกเลิก)
     const { error: updateError } = await supabaseAdmin
       .from('leaves')
       .update({
-        status: LEAVE_STATUS.CANCELLED,
-        cancelled_at: new Date().toISOString(),
-        cancelled_reason: reason || 'ยกเลิกโดยผู้ยื่นคำขอ'
+        status: LEAVE_STATUS.PENDING_CANCEL,
+        cancel_requested_at: new Date().toISOString(),
+        cancelled_reason: reason || 'ขอยกเลิกโดยผู้ยื่นคำขอ'
       })
       .eq('id', id);
 
@@ -431,22 +481,153 @@ export const cancelLeave = async (req, res) => {
       .insert({
         user_id: userId,
         leave_id: id,
-        action: 'cancelled',
+        action: 'cancel_requested',
         action_by: userId,
-        remarks: reason || 'ยกเลิกโดยผู้ยื่นคำขอ'
+        remarks: reason || 'ขอยกเลิกโดยผู้ยื่นคำขอ'
       });
 
     return successResponse(
       res,
       HTTP_STATUS.OK,
-      'Leave request cancelled successfully'
+      'Leave cancellation request submitted successfully. Waiting for approval.',
+      { status: LEAVE_STATUS.PENDING_CANCEL }
     );
   } catch (error) {
     console.error('Cancel leave error:', error);
     return errorResponse(
       res,
       HTTP_STATUS.INTERNAL_SERVER_ERROR,
-      'Failed to cancel leave request: ' + error.message
+      'Failed to submit leave cancellation request: ' + error.message
+    );
+  }
+};
+
+/**
+ * อนุมัติ/ปฏิเสธการยกเลิกคำขอลา (สำหรับผู้มีอำนาจอนุมัติ)
+ */
+export const approveCancelLeave = async (req, res) => {
+  try {
+    const approverId = req.user.id;
+    const approverRole = req.user.role_name;
+    const { id } = req.params;
+    const { action, comment } = req.body; // action: 'approve' or 'reject'
+
+    // ตรวจสอบว่ามีคำขอลานี้หรือไม่
+    const { data: leave, error: fetchError } = await supabaseAdmin
+      .from('leaves')
+      .select('*, users!leaves_user_id_fkey(first_name, last_name, employee_code)')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !leave) {
+      return errorResponse(
+        res,
+        HTTP_STATUS.NOT_FOUND,
+        'Leave request not found'
+      );
+    }
+
+    // ตรวจสอบว่าเป็นคำขอยกเลิกหรือไม่
+    const cancelStatuses = ['pending_cancel', 'cancel_level1', 'cancel_level2', 'cancel_level3'];
+    if (!cancelStatuses.includes(leave.status)) {
+      return errorResponse(
+        res,
+        HTTP_STATUS.BAD_REQUEST,
+        'This leave request is not pending cancellation'
+      );
+    }
+
+    // ตรวจสอบว่า role มีสิทธิ์อนุมัติสถานะปัจจุบันหรือไม่
+    const roleToStatusMap = {
+      'director': 'pending_cancel',
+      'central_office_staff': 'cancel_level1',
+      'central_office_head': 'cancel_level2',
+      'admin': 'cancel_level3'
+    };
+
+    if (roleToStatusMap[approverRole] !== leave.status) {
+      return errorResponse(
+        res,
+        HTTP_STATUS.FORBIDDEN,
+        'You are not authorized to approve this cancellation at this stage'
+      );
+    }
+
+    let newStatus;
+    if (action === 'reject') {
+      // ถ้าปฏิเสธการยกเลิก - คืนสถานะเดิม (ใช้สถานะ approved_final เพราะส่วนใหญ่จะยกเลิกหลังอนุมัติแล้ว)
+      newStatus = LEAVE_STATUS.APPROVED_FINAL;
+    } else {
+      // ถ้าอนุมัติ - ไปสถานะถัดไป
+      const nextStatusMap = {
+        'pending_cancel': LEAVE_STATUS.CANCEL_LEVEL1,
+        'cancel_level1': LEAVE_STATUS.CANCEL_LEVEL2,
+        'cancel_level2': LEAVE_STATUS.CANCEL_LEVEL3,
+        'cancel_level3': LEAVE_STATUS.CANCELLED // ยกเลิกสำเร็จ
+      };
+      newStatus = nextStatusMap[leave.status];
+    }
+
+    // อัพเดทสถานะ
+    const updateData = {
+      status: newStatus,
+      updated_at: new Date().toISOString()
+    };
+
+    // ถ้ายกเลิกสำเร็จ
+    if (newStatus === LEAVE_STATUS.CANCELLED) {
+      updateData.cancelled_at = new Date().toISOString();
+      updateData.cancelled_by = approverId;
+    }
+
+    const { error: updateError } = await supabaseAdmin
+      .from('leaves')
+      .update(updateData)
+      .eq('id', id);
+
+    if (updateError) {
+      throw updateError;
+    }
+
+    // บันทึก history
+    await supabaseAdmin
+      .from('leave_history')
+      .insert({
+        user_id: leave.user_id,
+        leave_id: id,
+        action: action === 'approve' ? 'cancel_approved' : 'cancel_rejected',
+        action_by: approverId,
+        remarks: comment || (action === 'approve' ? 'อนุมัติการยกเลิก' : 'ปฏิเสธการยกเลิก')
+      });
+
+    // แจ้งเตือนผู้ยื่นคำขอ
+    const statusMessage = newStatus === LEAVE_STATUS.CANCELLED 
+      ? 'คำขอยกเลิกการลาของคุณได้รับการอนุมัติแล้ว'
+      : action === 'reject' 
+        ? 'คำขอยกเลิกการลาของคุณถูกปฏิเสธ'
+        : 'คำขอยกเลิกการลาของคุณผ่านการพิจารณาขั้นหนึ่งแล้ว รอการพิจารณาจากผู้บังคับบัญชาขั้นถัดไป';
+
+    await supabaseAdmin
+      .from('notifications')
+      .insert({
+        user_id: leave.user_id,
+        type: 'cancel_leave_update',
+        message: statusMessage,
+        data: { leave_id: id, status: newStatus }
+      });
+
+    return successResponse(
+      res,
+      HTTP_STATUS.OK,
+      action === 'approve' ? 'Cancellation approved successfully' : 'Cancellation rejected',
+      { status: newStatus }
+    );
+  } catch (error) {
+    console.error('Approve cancel leave error:', error);
+    return errorResponse(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      'Failed to process cancellation: ' + error.message
     );
   }
 };

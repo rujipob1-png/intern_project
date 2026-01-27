@@ -119,6 +119,12 @@ export const CreateLeavePage = () => {
       toast.error('กรุณากรอกเหตุผลการลา');
       return;
     }
+    
+    // ⚠️ เฉพาะลาพักผ่อน (VACATION) ต้องใส่ผู้ปฏิบัติหน้าที่แทน
+    if (selectedLeaveType?.type_code === 'VACATION' && !formData.actingPersonId) {
+      toast.error('กรุณาเลือกผู้ปฏิบัติหน้าที่แทน (สำหรับลาพักผ่อนต้องระบุ)');
+      return;
+    }
 
     setLoading(true);
 
@@ -176,6 +182,80 @@ export const CreateLeavePage = () => {
   };
 
   const selectedLeaveType = leaveTypes.find(type => type.id === formData.leaveTypeId);
+
+  // ฟังก์ชันคำนวณ 15 วันทำการ (ไม่นับเสาร์อาทิตย์)
+  const calculate15WorkingDays = (startDateStr) => {
+    const dates = [];
+    let currentDate = new Date(startDateStr + 'T00:00:00');
+    let workingDays = 0;
+
+    while (workingDays < 15) {
+      const dayOfWeek = currentDate.getDay();
+      // 0 = อาทิตย์, 6 = เสาร์
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+        const dateStr = currentDate.toISOString().split('T')[0];
+        dates.push(dateStr);
+        workingDays++;
+      }
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    return dates;
+  };
+
+  // ตรวจสอบว่าวันที่เลือกเป็นวันติดต่อกันหรือไม่ (สำหรับ ABSENT)
+  const checkConsecutiveDays = (dates) => {
+    if (dates.length < 2) return dates.length;
+    const sorted = [...dates].sort();
+    let maxConsecutive = 1;
+    let currentConsecutive = 1;
+    
+    for (let i = 1; i < sorted.length; i++) {
+      const prevDate = new Date(sorted[i - 1] + 'T00:00:00');
+      const currDate = new Date(sorted[i] + 'T00:00:00');
+      const diffDays = (currDate - prevDate) / (1000 * 60 * 60 * 24);
+      
+      if (diffDays === 1) {
+        currentConsecutive++;
+        maxConsecutive = Math.max(maxConsecutive, currentConsecutive);
+      } else {
+        currentConsecutive = 1;
+      }
+    }
+    return maxConsecutive;
+  };
+
+  // เมื่อเลือกประเภทลาช่วยภรรยาคลอดบุตร ให้ reset วันที่
+  const handleLeaveTypeChange = (e) => {
+    const { value } = e.target;
+    const selectedType = leaveTypes.find(t => t.id === value);
+    
+    setFormData(prev => ({
+      ...prev,
+      leaveTypeId: value,
+      // Reset วันที่ถ้าเปลี่ยนประเภท
+      selectedDates: [],
+      totalDays: 0
+    }));
+  };
+
+  // สำหรับ PATERNITY: เลือกวันเริ่มต้นแล้วคำนวณอัตโนมัติ
+  const handlePaternityStartDate = (e) => {
+    const startDate = e.target.value;
+    if (!startDate) return;
+
+    const dates = calculate15WorkingDays(startDate);
+    setFormData(prev => ({
+      ...prev,
+      selectedDates: dates,
+      totalDays: 15
+    }));
+    setTempDate('');
+  };
+
+  // ตรวจสอบว่าเป็นประเภท PATERNITY หรือไม่
+  const isPaternityLeave = selectedLeaveType?.type_code === 'PATERNITY';
+  const isAbsentLeave = selectedLeaveType?.type_code === 'ABSENT';
+  const consecutiveDays = checkConsecutiveDays(formData.selectedDates);
 
   return (
     <MainLayout>
@@ -237,7 +317,7 @@ export const CreateLeavePage = () => {
                 <select
                   name="leaveTypeId"
                   value={formData.leaveTypeId}
-                  onChange={handleInputChange}
+                  onChange={handleLeaveTypeChange}
                   className={`input-field ${!formData.leaveTypeId ? 'text-black' : 'text-black'
                     }`}
                   required
@@ -262,54 +342,82 @@ export const CreateLeavePage = () => {
               {/* Date Selection */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  เลือกวันที่ลา <span className="text-red-500">*</span>
+                  {isPaternityLeave ? 'เลือกวันเริ่มต้นลา' : 'เลือกวันที่ลา'} <span className="text-red-500">*</span>
                 </label>
-                <div className="flex gap-2">
-                  <input
-                    type="date"
-                    value={tempDate}
-                    onChange={(e) => setTempDate(e.target.value)}
-                    className="input-field flex-1"
-                    placeholder="เลือกวันที่"
-                  />
-                  <Button
-                    type="button"
-                    onClick={handleAddDate}
-                    variant="outline"
-                  >
-                    เพิ่มวันที่
-                  </Button>
-                </div>
-                <p className="mt-1 text-sm text-gray-500">
-                  เลือกวันที่ที่ต้องการลา สามารถเลือกหลายวันที่ได้ (ไม่จำเป็นต้องต่อเนื่อง)
-                </p>
+                
+                {/* สำหรับลาช่วยภรรยาคลอดบุตร - เลือกวันเริ่มต้นเท่านั้น */}
+                {isPaternityLeave ? (
+                  <div>
+                    <input
+                      type="date"
+                      value={formData.selectedDates[0] || ''}
+                      onChange={handlePaternityStartDate}
+                      className="input-field w-full"
+                      placeholder="เลือกวันเริ่มต้น"
+                    />
+                    <p className="mt-1 text-sm text-blue-600">
+                      ⓘ ระบบจะคำนวณ 15 วันทำการติดต่อกันให้อัตโนมัติ (ไม่นับเสาร์-อาทิตย์)
+                    </p>
+                  </div>
+                ) : (
+                  /* สำหรับประเภทอื่นๆ */
+                  <>
+                    <div className="flex gap-2">
+                      <input
+                        type="date"
+                        value={tempDate}
+                        onChange={(e) => setTempDate(e.target.value)}
+                        className="input-field flex-1"
+                        placeholder="เลือกวันที่"
+                      />
+                      <Button
+                        type="button"
+                        onClick={handleAddDate}
+                        variant="outline"
+                      >
+                        เพิ่มวันที่
+                      </Button>
+                    </div>
+                    <p className="mt-1 text-sm text-gray-500">
+                      เลือกวันที่ที่ต้องการลา สามารถเลือกหลายวันที่ได้ (ไม่จำเป็นต้องต่อเนื่อง)
+                    </p>
+                  </>
+                )}
 
                 {/* Selected Dates List */}
                 {formData.selectedDates.length > 0 && (
                   <div className="mt-4 space-y-2">
                     <p className="text-sm font-medium text-gray-700">
-                      วันที่เลือก ({formData.selectedDates.length} วัน):
+                      {isPaternityLeave ? 'วันที่ลา 15 วันทำการติดต่อกัน:' : `วันที่เลือก (${formData.selectedDates.length} วัน):`}
                     </p>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                       {formData.selectedDates.map((date, index) => (
                         <div
                           key={index}
-                          className="flex items-center justify-between p-2 bg-blue-50 border border-blue-200 rounded-lg"
+                          className={`flex items-center justify-between p-2 border rounded-lg ${
+                            isPaternityLeave 
+                              ? 'bg-green-50 border-green-200' 
+                              : 'bg-blue-50 border-blue-200'
+                          }`}
                         >
-                          <span className="text-sm text-blue-900">
+                          <span className={`text-sm ${isPaternityLeave ? 'text-green-900' : 'text-blue-900'}`}>
                             {new Date(date + 'T00:00:00').toLocaleDateString('th-TH', {
-                              year: 'numeric',
+                              weekday: 'short',
+                              day: 'numeric',
                               month: 'short',
-                              day: 'numeric'
+                              year: 'numeric'
                             })}
                           </span>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveDate(date)}
-                            className="text-red-500 hover:text-red-700"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
+                          {/* ไม่แสดงปุ่มลบสำหรับ PATERNITY */}
+                          {!isPaternityLeave && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveDate(date)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -340,6 +448,49 @@ export const CreateLeavePage = () => {
                           ท่านลาป่วย <span className="font-bold">{formData.totalDays} วัน</span> ซึ่งเกิน 15 วัน
                           <br />
                           <span className="font-semibold">วันที่ {formData.totalDays - 15} วัน ที่เกินจะไม่ได้รับการพิจารณาเงินเดือน</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ⚠️ คำเตือน: ขาดราชการเกิน 15 วันติดต่อกัน */}
+                {isAbsentLeave && consecutiveDays >= 15 && (
+                  <div className="mt-4 p-4 bg-red-50 border-2 border-red-400 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5 animate-pulse" />
+                      <div>
+                        <p className="text-base font-bold text-red-900 mb-2">
+                          🚨 คำเตือนร้ายแรง: ขาดราชการเกิน 15 วันติดต่อกัน
+                        </p>
+                        <p className="text-sm text-red-800 mb-2">
+                          ท่านขาดราชการ <span className="font-bold text-red-900">{consecutiveDays} วันติดต่อกัน</span>
+                        </p>
+                        <div className="p-3 bg-red-100 rounded-md">
+                          <p className="text-sm font-bold text-red-900">
+                            ⚖️ ตามระเบียบราชการ: หากขาดราชการติดต่อกันเกิน 15 วันโดยไม่มีเหตุผลอันสมควร
+                            <br />
+                            <span className="text-red-700">จะถูกพิจารณาให้ออกจากราชการทันที</span>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* แสดงคำเตือนเบื้องต้นสำหรับขาดราชการ */}
+                {isAbsentLeave && consecutiveDays >= 10 && consecutiveDays < 15 && (
+                  <div className="mt-4 p-4 bg-orange-50 border border-orange-300 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-semibold text-orange-900 mb-1">
+                          ⚠️ คำเตือน: ขาดราชการใกล้ครบ 15 วัน
+                        </p>
+                        <p className="text-sm text-orange-800">
+                          ท่านขาดราชการ <span className="font-bold">{consecutiveDays} วันติดต่อกัน</span> แล้ว
+                          <br />
+                          เหลืออีก <span className="font-bold text-orange-900">{15 - consecutiveDays} วัน</span> จะถูกพิจารณาให้ออกจากราชการ
                         </p>
                       </div>
                     </div>
@@ -384,12 +535,25 @@ export const CreateLeavePage = () => {
                 />
               </div>
 
-              {/* Acting Person */}
-              <ActingPersonSelect
-                value={formData.actingPersonId}
-                onChange={(value) => setFormData(prev => ({ ...prev, actingPersonId: value }))}
-                required={false}
-              />
+              {/* Acting Person - บังคับเฉพาะลาพักผ่อน */}
+              {selectedLeaveType?.type_code === 'VACATION' ? (
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <ActingPersonSelect
+                    value={formData.actingPersonId}
+                    onChange={(value) => setFormData(prev => ({ ...prev, actingPersonId: value }))}
+                    required={true}
+                  />
+                  <p className="mt-2 text-sm text-blue-700">
+                    ⚠️ <span className="font-semibold">การลาพักผ่อนต้องระบุผู้ปฏิบัติหน้าที่แทน</span>
+                  </p>
+                </div>
+              ) : (
+                <ActingPersonSelect
+                  value={formData.actingPersonId}
+                  onChange={(value) => setFormData(prev => ({ ...prev, actingPersonId: value }))}
+                  required={false}
+                />
+              )}
 
               {/* File Upload */}
               <div>

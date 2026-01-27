@@ -14,19 +14,40 @@ import {
   TrendingUp,
   Clock
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ROLES } from '../../utils/constants';
+import { getActingRequests } from '../../api/acting.api';
 
 export const Sidebar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(true);
+  const [actingRequestCount, setActingRequestCount] = useState(0);
   const [openSections, setOpenSections] = useState({
     leave: true,
     approval: true,
     management: true,
   });
+
+  // ดึงจำนวนคำขอปฏิบัติหน้าที่แทนที่รออยู่
+  useEffect(() => {
+    const fetchActingCount = async () => {
+      try {
+        const result = await getActingRequests();
+        if (result.success) {
+          setActingRequestCount(result.data?.length || 0);
+        }
+      } catch (error) {
+        console.log('Error fetching acting requests count');
+      }
+    };
+    fetchActingCount();
+    
+    // Refresh ทุก 30 วินาที
+    const interval = setInterval(fetchActingCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -68,6 +89,11 @@ export const Sidebar = () => {
         {
           title: 'คำขอลาของฉัน',
           path: '/my-leaves',
+          roles: [ROLES.USER],
+        },
+        {
+          title: 'คำขอปฏิบัติหน้าที่แทน',
+          path: '/acting-requests',
           roles: [ROLES.USER],
         },
         {
@@ -217,13 +243,14 @@ export const Sidebar = () => {
                         <ul className="ml-8 mt-1 space-y-1">
                           {section.items.map((item) => {
                             const ItemIcon = item.icon;
+                            const showBadge = item.path === '/acting-requests' && actingRequestCount > 0;
                             return (
                               <li key={item.path}>
                                 <button
                                   onClick={() => navigate(item.path)}
                                   className={`
                                     w-full flex items-center gap-3 px-3 py-2 rounded-lg
-                                    transition-all duration-200
+                                    transition-all duration-200 relative
                                     ${isActive(item.path)
                                       ? 'bg-blue-600 text-white font-bold shadow-md' 
                                       : 'text-white bg-slate-700/20 hover:bg-slate-600/40 font-semibold'
@@ -232,7 +259,12 @@ export const Sidebar = () => {
                                 >
                                   {ItemIcon && <ItemIcon className="w-4 h-4 flex-shrink-0" />}
                                   <span className="flex-1 text-left text-sm">{item.title}</span>
-                                  {isActive(item.path) && <div className="w-2 h-2 bg-white rounded-full" />}
+                                  {showBadge && (
+                                    <span className="flex items-center justify-center min-w-5 h-5 px-1 bg-red-500 text-white text-xs font-bold rounded-full animate-pulse">
+                                      {actingRequestCount}
+                                    </span>
+                                  )}
+                                  {isActive(item.path) && !showBadge && <div className="w-2 h-2 bg-white rounded-full" />}
                                 </button>
                               </li>
                             );

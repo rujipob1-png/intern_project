@@ -140,3 +140,37 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* Print Styles */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  
+  .print-form,
+  .print-form * {
+    visibility: visible !important;
+  }
+  
+  .print-form {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 15mm;
+    background: white !important;
+    font-family: 'Sarabun', 'Noto Sans Thai', sans-serif !important;
+    font-size: 12pt;
+    line-height: 1.8;
+    color: #000 !important;
+  }
+  
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+}
