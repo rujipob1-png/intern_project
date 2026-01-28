@@ -166,11 +166,21 @@ export const CancelLeaveFormPDF = forwardRef(({ leave, user }, ref) => {
       </div>
 
       {/* ลงชื่อ */}
-      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px' }}>
         <div>ขอแสดงความนับถือ</div>
-        <div style={{ marginTop: '30px' }}>
-          <div>(ลงชื่อ) <SignatureLine></SignatureLine></div>
-          <div>( <SignatureLine>{fullName}</SignatureLine> )</div>
+        <div style={{ marginTop: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 260 }}>
+          <div style={{ minWidth: 220, display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ minWidth: 60, textAlign: 'right' }}>(ลงชื่อ)</span>
+            <SignatureLine width={140}></SignatureLine>
+          </div>
+          <div style={{ minWidth: 220, display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 4, marginBottom: 0 }}>
+            <span style={{ minWidth: 60 }}></span>
+            <span style={{ minWidth: 140, textAlign: 'center', marginBottom: 0 }}>( {fullName} )</span>
+          </div>
+          <div style={{ minWidth: 220, display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 0 }}>
+            <span style={{ minWidth: 60 }}></span>
+            <SignatureLine width={140}></SignatureLine>
+          </div>
         </div>
       </div>
 
@@ -182,11 +192,20 @@ export const CancelLeaveFormPDF = forwardRef(({ leave, user }, ref) => {
       </div>
       <FullLine />
       <FullLine />
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div>(ลงชื่อ) <SignatureLine></SignatureLine></div>
-          <div>ตำแหน่ง <Line width={150}></Line></div>
-          <div>วันที่ <Line width={30}></Line>/<Line width={30}></Line>/<Line width={50}></Line></div>
+      <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 260 }}>
+          <div style={{ minWidth: 220, display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ minWidth: 60, textAlign: 'right' }}>(ลงชื่อ)</span>
+            <SignatureLine width={140}></SignatureLine>
+          </div>
+          <div style={{ minWidth: 220, display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 4 }}>
+            <span style={{ minWidth: 60, textAlign: 'right' }}>ตำแหน่ง</span>
+            <Line width={140}></Line>
+          </div>
+          <div style={{ minWidth: 220, display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 4 }}>
+            <span style={{ minWidth: 60, textAlign: 'right' }}>วันที่</span>
+            <Line width={30}></Line>/<Line width={30}></Line>/<Line width={50}></Line>
+          </div>
         </div>
       </div>
 
@@ -201,11 +220,20 @@ export const CancelLeaveFormPDF = forwardRef(({ leave, user }, ref) => {
       </div>
       <FullLine />
       <FullLine />
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div>(ลงชื่อ) <SignatureLine></SignatureLine></div>
-          <div>ตำแหน่ง <Line width={150}></Line></div>
-          <div>วันที่ <Line width={30}></Line>/<Line width={30}></Line>/<Line width={50}></Line></div>
+      <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 260 }}>
+          <div style={{ minWidth: 220, display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ minWidth: 60, textAlign: 'right' }}>(ลงชื่อ)</span>
+            <SignatureLine width={140}></SignatureLine>
+          </div>
+          <div style={{ minWidth: 220, display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 4 }}>
+            <span style={{ minWidth: 60, textAlign: 'right' }}>ตำแหน่ง</span>
+            <Line width={140}></Line>
+          </div>
+          <div style={{ minWidth: 220, display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 4 }}>
+            <span style={{ minWidth: 60, textAlign: 'right' }}>วันที่</span>
+            <Line width={30}></Line>/<Line width={30}></Line>/<Line width={50}></Line>
+          </div>
         </div>
       </div>
     </div>

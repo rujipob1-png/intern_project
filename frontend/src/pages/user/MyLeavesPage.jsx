@@ -259,6 +259,7 @@ export const MyLeavesPage = () => {
               >
                 <option value="all">สถานะทั้งหมด</option>
                 <option value="pending">รอพิจารณา</option>
+                <option value="pending_cancel">รอพิจารณายกเลิก</option>
                 <option value="approved">อนุมัติ</option>
                 <option value="rejected">ไม่อนุมัติ</option>
                 <option value="cancelled">ยกเลิกแล้ว</option>

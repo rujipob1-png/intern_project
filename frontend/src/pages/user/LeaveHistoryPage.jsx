@@ -315,6 +315,7 @@ export const LeaveHistoryPage = () => {
                 <option value="approved">✅ อนุมัติแล้ว</option>
                 <option value="rejected">❌ ไม่อนุมัติ</option>
                 <option value="pending">⏳ รอพิจารณา</option>
+                <option value="pending_cancel">⏳ รอพิจารณายกเลิก</option>
                 <option value="cancelled">🚫 ยกเลิกแล้ว</option>
               </select>
               <Filter className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 pointer-events-none" />
