@@ -150,7 +150,17 @@ export const ActingRequestsPage = () => {
                   {/* Reason */}
                   <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 mb-4">
                     <p className="text-xs text-slate-500 font-medium mb-1">เหตุผลการลา:</p>
-                    <p className="text-sm text-slate-700">{request.reason}</p>
+                    <p className="text-sm text-slate-700">{
+                      (() => {
+                        if (typeof request.reason === 'string' && request.reason.trim().startsWith('{')) {
+                          try {
+                            const parsed = JSON.parse(request.reason);
+                            if (parsed && typeof parsed.reason === 'string') return parsed.reason;
+                          } catch (e) {}
+                        }
+                        return request.reason;
+                      })()
+                    }</p>
                   </div>
 
                   {/* Actions */}
