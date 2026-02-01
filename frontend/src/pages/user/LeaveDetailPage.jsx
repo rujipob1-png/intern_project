@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '../../components/commo
 import { Button } from '../../components/common/Button';
 import { Timeline } from '../../components/leave/Timeline';
 import { CancelLeaveFormPDF } from '../../components/leave/CancelLeaveFormPDF';
+import { LeaveFormPDF } from '../../components/leave/LeaveFormPDF';
 import { leaveAPI } from '../../api/leave.api';
 import { formatDate, formatDateTime } from '../../utils/formatDate';
 import { LEAVE_TYPE_NAMES, LEAVE_STATUS_TEXT } from '../../utils/constants';
@@ -30,16 +31,25 @@ export const LeaveDetailPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const pdfFormRef = useRef();
+  const leaveFormPdfRef = useRef();
   const [loading, setLoading] = useState(true);
   const [leave, setLeave] = useState(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [showPDFPreview, setShowPDFPreview] = useState(false);
+  const [showLeaveFormPDFPreview, setShowLeaveFormPDFPreview] = useState(false);
 
-  // ฟังก์ชันดาวน์โหลด PDF
+  // ฟังก์ชันดาวน์โหลด PDF ยกเลิก
   const handleDownloadPDF = async () => {
     if (pdfFormRef.current) {
       await pdfFormRef.current.downloadPDF();
+    }
+  };
+
+  // ฟังก์ชันดาวน์โหลด PDF คำขอลา
+  const handleDownloadLeaveFormPDF = async () => {
+    if (leaveFormPdfRef.current) {
+      await leaveFormPdfRef.current.downloadPDF();
     }
   };
 
@@ -269,6 +279,36 @@ export const LeaveDetailPage = () => {
                       เบอร์โทรศัพท์
                     </label>
                     <p className="text-gray-900">{leave.contactPhone || leave.contact_phone || '-'}</p>
+                  </div>
+                </div>
+
+                {/* ปุ่มดาวน์โหลดแบบฟอร์มคำขอลา */}
+                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <h4 className="text-sm font-semibold text-green-900 mb-1">
+                        📄 แบบฟอร์มคำขอลา
+                      </h4>
+                      <p className="text-xs text-green-700">
+                        ดาวน์โหลดแบบฟอร์มคำขอลาแบบราชการเพื่อใช้ในการยื่นเอกสาร
+                      </p>
+                    </div>
+                    <div className="flex gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => setShowLeaveFormPDFPreview(true)}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-green-300 text-green-700 rounded-lg hover:bg-green-50 transition-colors text-sm font-medium"
+                      >
+                        <Eye className="w-4 h-4" />
+                        ดูตัวอย่าง
+                      </button>
+                      <button
+                        onClick={handleDownloadLeaveFormPDF}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                      >
+                        <Download className="w-4 h-4" />
+                        ดาวน์โหลด PDF
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -561,7 +601,7 @@ export const LeaveDetailPage = () => {
         </div>
       )}
 
-      {/* PDF Preview Modal */}
+      {/* PDF Preview Modal - Cancel Form */}
       {showPDFPreview && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
@@ -594,9 +634,43 @@ export const LeaveDetailPage = () => {
         </div>
       )}
 
-      {/* Hidden PDF Form for download */}
+      {/* PDF Preview Modal - Leave Request Form */}
+      {showLeaveFormPDFPreview && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b bg-gray-50">
+              <h3 className="text-lg font-semibold text-gray-900">ตัวอย่างแบบฟอร์มคำขอลา</h3>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleDownloadLeaveFormPDF}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                >
+                  <Download className="w-4 h-4" />
+                  ดาวน์โหลด PDF
+                </button>
+                <button
+                  onClick={() => setShowLeaveFormPDFPreview(false)}
+                  className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+            {/* Content */}
+            <div className="overflow-auto max-h-[calc(90vh-80px)] bg-gray-200 p-4">
+              <div className="shadow-lg mx-auto" style={{ width: 'fit-content' }}>
+                <LeaveFormPDF ref={leaveFormPdfRef} leave={leave} user={user} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Hidden PDF Forms for download */}
       <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
         <CancelLeaveFormPDF ref={pdfFormRef} leave={leave} user={user} />
+        <LeaveFormPDF ref={leaveFormPdfRef} leave={leave} user={user} />
       </div>
     </MainLayout>
   );

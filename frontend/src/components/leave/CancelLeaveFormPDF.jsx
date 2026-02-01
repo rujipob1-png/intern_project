@@ -169,17 +169,13 @@ export const CancelLeaveFormPDF = forwardRef(({ leave, user }, ref) => {
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px' }}>
         <div>ขอแสดงความนับถือ</div>
         <div style={{ marginTop: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 260 }}>
-          <div style={{ minWidth: 220, display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ minWidth: 60, textAlign: 'right' }}>(ลงชื่อ)</span>
-            <SignatureLine width={140}></SignatureLine>
+          <div style={{ minWidth: 220, display: 'flex', flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center' }}>
+            <span style={{ minWidth: 60, textAlign: 'right', marginRight: '6px' }}>(ลงชื่อ)</span>
+            <span style={{ display: 'inline-block', width: '140px', borderBottom: '1px solid #000', paddingBottom: '2px' }}></span>
           </div>
-          <div style={{ minWidth: 220, display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 4, marginBottom: 0 }}>
+          <div style={{ minWidth: 220, display: 'flex', flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', marginTop: 4, marginBottom: 0 }}>
             <span style={{ minWidth: 60 }}></span>
-            <span style={{ minWidth: 140, textAlign: 'center', marginBottom: 0 }}>( {fullName} )</span>
-          </div>
-          <div style={{ minWidth: 220, display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 0 }}>
-            <span style={{ minWidth: 60 }}></span>
-            <SignatureLine width={140}></SignatureLine>
+            <span style={{ display: 'inline-block', width: '140px', textAlign: 'center', borderBottom: '1px solid #000', paddingBottom: '2px', marginLeft: '6px' }}>({fullName})</span>
           </div>
         </div>
       </div>
