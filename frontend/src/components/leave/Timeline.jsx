@@ -151,7 +151,10 @@ export const Timeline = ({ approvals, status }) => {
     <div className="space-y-6">
       {steps.map((step, index) => {
         const stepStatus = getStepStatus(step);
-        const approval = approvals?.find(a => a.approval_level === step.level);
+        // ค้นหา approval ทั้งจาก approval_level และ level
+        const approval = approvals?.find(a => 
+          a.approval_level === step.level || a.level === step.level
+        );
         const isLast = index === steps.length - 1;
 
         return (
@@ -189,44 +192,74 @@ export const Timeline = ({ approvals, status }) => {
 
                     {/* Approval Info */}
                     {approval && (
-                      <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2">
+                      <div className={`mt-3 p-4 rounded-lg ${
+                        approval.action === 'rejected' || approval.status === 'rejected'
+                          ? 'bg-red-50 border border-red-200'
+                          : 'bg-green-50 border border-green-200'
+                      }`}>
+                        {/* ผู้อนุมัติ */}
                         <div className="flex items-center gap-2 text-sm">
                           <User className="w-4 h-4 text-gray-500" />
                           <span className="font-medium text-gray-700">
-                            {approval.approver?.full_name || 'ไม่ระบุ'}
+                            {approval.approver?.full_name || 
+                             approval.approver?.name ||
+                             (approval.approver?.first_name ? `${approval.approver.title || ''}${approval.approver.first_name} ${approval.approver.last_name}` : 'ไม่ระบุ')}
                           </span>
-                          <span className="text-gray-500">
-                            ({approval.approver?.departments?.department_name || 'ไม่ระบุ'})
-                          </span>
+                          {(approval.approver?.position || approval.approver?.departments?.department_name) && (
+                            <span className="text-gray-500 text-xs">
+                              ({approval.approver?.position || approval.approver?.departments?.department_name})
+                            </span>
+                          )}
                         </div>
 
-                        <div className="text-xs text-gray-500">
-                          {formatDateTime(approval.approval_date)}
+                        {/* วันที่ */}
+                        <div className="text-xs text-gray-500 mt-1 ml-6">
+                          {formatDateTime(approval.approval_date || approval.actionDate)}
                         </div>
 
-                        {approval.comments && (
-                          <div className="mt-2 text-sm text-gray-700">
-                            <span className="font-medium">หมายเหตุ: </span>
-                            {approval.comments}
+                        {/* แสดงเหตุผล/หมายเหตุ */}
+                        {(approval.comments || approval.comment) && (
+                          <div className={`mt-3 p-3 rounded-lg ${
+                            approval.action === 'rejected' || approval.status === 'rejected'
+                              ? 'bg-red-100 border-l-4 border-red-400'
+                              : 'bg-green-100 border-l-4 border-green-400'
+                          }`}>
+                            <p className={`text-xs font-semibold mb-1 ${
+                              approval.action === 'rejected' || approval.status === 'rejected'
+                                ? 'text-red-600'
+                                : 'text-green-600'
+                            }`}>
+                              {approval.action === 'rejected' || approval.status === 'rejected' 
+                                ? 'เหตุผลที่ไม่อนุมัติ' 
+                                : 'หมายเหตุ'}
+                            </p>
+                            <p className={`text-sm ${
+                              approval.action === 'rejected' || approval.status === 'rejected'
+                                ? 'text-red-800'
+                                : 'text-green-800'
+                            }`}>
+                              {approval.comments || approval.comment}
+                            </p>
                           </div>
                         )}
 
-                        <div className="flex items-center gap-2">
+                        {/* สถานะ Badge */}
+                        <div className="flex items-center gap-2 mt-3">
                           <span
-                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                              approval.status === 'approved'
-                                ? 'bg-green-100 text-green-800'
-                                : 'bg-red-100 text-red-800'
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${
+                              approval.status === 'approved' || approval.action === 'approved'
+                                ? 'bg-green-500 text-white'
+                                : 'bg-red-500 text-white'
                             }`}
                           >
-                            {approval.status === 'approved' ? (
+                            {approval.status === 'approved' || approval.action === 'approved' ? (
                               <>
-                                <Check className="w-3 h-3" />
-                                อนุมัติ
+                                <Check className="w-3.5 h-3.5" />
+                                อนุมัติแล้ว
                               </>
                             ) : (
                               <>
-                                <X className="w-3 h-3" />
+                                <X className="w-3.5 h-3.5" />
                                 ไม่อนุมัติ
                               </>
                             )}

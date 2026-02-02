@@ -187,6 +187,47 @@ export const LeaveDetailPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Details */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Rejection Reason Banner - แสดงเมื่อไม่อนุมัติ */}
+            {leave.status === 'rejected' && (
+              <Card className="border-red-300 bg-red-50">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-red-100 rounded-full">
+                      <XCircle className="w-6 h-6 text-red-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-red-800 text-lg">คำขอลาไม่ได้รับการอนุมัติ</h3>
+                      {leave.approvals && leave.approvals.length > 0 && (() => {
+                        const rejectedApproval = leave.approvals.find(a => a.action === 'rejected' || a.status === 'rejected');
+                        if (rejectedApproval) {
+                          return (
+                            <div className="mt-2 space-y-2">
+                              <p className="text-red-700">
+                                <span className="font-medium">ผู้พิจารณา: </span>
+                                {rejectedApproval.approver?.name || 
+                                 rejectedApproval.approver?.full_name ||
+                                 `${rejectedApproval.approver?.title || ''}${rejectedApproval.approver?.first_name || ''} ${rejectedApproval.approver?.last_name || ''}`.trim() ||
+                                 'ไม่ระบุ'}
+                              </p>
+                              {(rejectedApproval.comment || rejectedApproval.comments) && (
+                                <div className="bg-red-100 p-3 rounded-lg">
+                                  <p className="text-red-800">
+                                    <span className="font-semibold">เหตุผล: </span>
+                                    {rejectedApproval.comment || rejectedApproval.comments}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Leave Info */}
             <Card>
               <CardHeader>
