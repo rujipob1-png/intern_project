@@ -53,11 +53,16 @@ export const AuthProvider = ({ children }) => {
         return { success: true };
       }
       
-      return { success: false, message: data.message };
+      return { 
+        success: false, 
+        message: data.message,
+        errorCode: data.data?.errorCode 
+      };
     } catch (error) {
       return { 
         success: false, 
-        message: error.message || 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ' 
+        message: error.message || 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ',
+        errorCode: error.data?.errorCode
       };
     }
   };

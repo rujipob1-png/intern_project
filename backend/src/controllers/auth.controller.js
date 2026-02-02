@@ -12,11 +12,28 @@ export const login = async (req, res) => {
     const { employeeCode, password } = req.body;
 
     // Validate input
-    if (!employeeCode || !password) {
+    if (!employeeCode && !password) {
       return errorResponse(
         res,
         HTTP_STATUS.BAD_REQUEST,
-        'Employee code and password are required'
+        'กรุณากรอกรหัสพนักงานและรหัสผ่าน',
+        { errorCode: 'MISSING_BOTH' }
+      );
+    }
+    if (!employeeCode) {
+      return errorResponse(
+        res,
+        HTTP_STATUS.BAD_REQUEST,
+        'กรุณากรอกรหัสพนักงาน',
+        { errorCode: 'MISSING_EMPLOYEE_CODE' }
+      );
+    }
+    if (!password) {
+      return errorResponse(
+        res,
+        HTTP_STATUS.BAD_REQUEST,
+        'กรุณากรอกรหัสผ่าน',
+        { errorCode: 'MISSING_PASSWORD' }
       );
     }
 
@@ -52,7 +69,8 @@ export const login = async (req, res) => {
       return errorResponse(
         res,
         HTTP_STATUS.UNAUTHORIZED,
-        'Invalid employee code or password'
+        'ไม่พบรหัสพนักงานนี้ในระบบ กรุณาตรวจสอบรหัสพนักงานอีกครั้ง',
+        { errorCode: 'EMPLOYEE_NOT_FOUND' }
       );
     }
 
@@ -61,7 +79,8 @@ export const login = async (req, res) => {
       return errorResponse(
         res,
         HTTP_STATUS.FORBIDDEN,
-        'Your account has been deactivated. Please contact admin.'
+        'บัญชีของคุณถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ',
+        { errorCode: 'ACCOUNT_DEACTIVATED' }
       );
     }
 
@@ -72,7 +91,8 @@ export const login = async (req, res) => {
       return errorResponse(
         res,
         HTTP_STATUS.UNAUTHORIZED,
-        'Invalid employee code or password'
+        'รหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบรหัสผ่านอีกครั้ง',
+        { errorCode: 'INVALID_PASSWORD' }
       );
     }
 
