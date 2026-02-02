@@ -63,8 +63,9 @@ export const authorizeLevel = (minLevel) => {
 
 /**
  * Middleware สำหรับตรวจสอบว่าเป็น User ทั่วไปเท่านั้น
+ * อัปเดต: ทุก role สามารถสร้างใบลาและดูยอดวันลาได้
  */
-export const userOnly = requireRole(['user']);
+export const userOnly = requireRole(['user', 'director', 'central_office_staff', 'central_office_head', 'admin']);
 
 /**
  * Middleware สำหรับตรวจสอบว่าเป็น Director ขึ้นไป

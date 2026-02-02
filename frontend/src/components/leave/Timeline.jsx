@@ -92,14 +92,27 @@ export const Timeline = ({ approvals, status }) => {
     const approval = approvals?.find(a => a.approval_level === step.level);
     
     if (approval) {
-      return approval.status === 'approved' ? 'completed' : 'rejected';
+      return approval.action === 'approved' || approval.status === 'approved' ? 'completed' : 'rejected';
     }
 
+    // รองรับทั้ง approved_levelX และ level_X_approved format
     // Check if this step should be waiting
     if (step.level === 1 && status === 'pending') return 'waiting';
-    if (step.level === 2 && status === 'level_1_approved') return 'waiting';
-    if (step.level === 3 && status === 'level_2_approved') return 'waiting';
-    if (step.level === 4 && status === 'level_3_approved') return 'waiting';
+    
+    // Level 1 completed, Level 2 waiting
+    if (step.level === 1 && (status === 'approved_level1' || status === 'level_1_approved' || status === 'approved_level2' || status === 'approved_level3' || status === 'approved')) return 'completed';
+    if (step.level === 2 && (status === 'approved_level1' || status === 'level_1_approved')) return 'waiting';
+    
+    // Level 2 completed, Level 3 waiting
+    if (step.level === 2 && (status === 'approved_level2' || status === 'level_2_approved' || status === 'approved_level3' || status === 'approved')) return 'completed';
+    if (step.level === 3 && (status === 'approved_level2' || status === 'level_2_approved')) return 'waiting';
+    
+    // Level 3 completed, Level 4 waiting
+    if (step.level === 3 && (status === 'approved_level3' || status === 'level_3_approved' || status === 'approved')) return 'completed';
+    if (step.level === 4 && (status === 'approved_level3' || status === 'level_3_approved')) return 'waiting';
+    
+    // Level 4 completed (final approval)
+    if (step.level === 4 && status === 'approved') return 'completed';
 
     return 'pending';
   };

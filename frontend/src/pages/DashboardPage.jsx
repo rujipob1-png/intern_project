@@ -7,6 +7,7 @@ import CentralOfficeStaffDashboard from './centralOffice/CentralOfficeStaffDashb
 import CentralOfficeHeadDashboard from './centralOffice/CentralOfficeHeadDashboard';
 import AdminDashboard from './admin/AdminDashboard';
 import { ROLES, LEAVE_TYPE_CODES } from '../utils/constants';
+import { getDepartmentThaiCode } from '../utils/departmentMapping';
 import { leaveAPI } from '../api/leave.api';
 import { formatDate } from '../utils/formatDate';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/common/Card';
@@ -154,7 +155,7 @@ export const DashboardPage = () => {
             </div>
             <div className="text-right">
               <p className="text-xs text-slate-500">กองหน้าที่ของคุณ</p>
-              <p className="text-sm font-semibold text-slate-700">{user?.department}</p>
+              <p className="text-sm font-semibold text-slate-700">{getDepartmentThaiCode(user?.department)}</p>
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
+import { ConfirmProvider } from './components/common/ConfirmDialog';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 import { LoginPage } from './pages/auth/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
@@ -10,6 +11,7 @@ import { LeaveDetailPage } from './pages/user/LeaveDetailPage';
 import { LeaveHistoryPage } from './pages/user/LeaveHistoryPage';
 import { ActingRequestsPage } from './pages/user/ActingRequestsPage';
 import DashboardDirector from './pages/director/DashboardDirector';
+import ApprovalHistoryPage from './pages/director/ApprovalHistoryPage';
 import CentralOfficeStaffDashboard from './pages/centralOffice/CentralOfficeStaffDashboard';
 import CentralOfficeHeadDashboard from './pages/centralOffice/CentralOfficeHeadDashboard';
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -17,6 +19,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 function App() {
   return (
     <AuthProvider>
+      <ConfirmProvider>
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
@@ -78,6 +81,14 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          <Route 
+            path="/director/history" 
+            element={
+              <ProtectedRoute>
+                <ApprovalHistoryPage />
+              </ProtectedRoute>
+            } 
+          />
           
           {/* Central Office Staff Routes */}
           <Route 
@@ -114,26 +125,38 @@ function App() {
         </Routes>
       </BrowserRouter>
       <Toaster 
-        position="top-right"
+        position="top-center"
         toastOptions={{
-          duration: 3000,
+          duration: 4000,
           style: {
             fontFamily: 'Inter, Noto Sans Thai, sans-serif',
+            padding: '16px 24px',
+            borderRadius: '12px',
+            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.15)',
           },
           success: {
+            style: {
+              background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+              color: 'white',
+            },
             iconTheme: {
-              primary: '#10B981',
-              secondary: '#fff',
+              primary: '#fff',
+              secondary: '#10B981',
             },
           },
           error: {
+            style: {
+              background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
+              color: 'white',
+            },
             iconTheme: {
-              primary: '#EF4444',
-              secondary: '#fff',
+              primary: '#fff',
+              secondary: '#EF4444',
             },
           },
         }}
       />
+      </ConfirmProvider>
     </AuthProvider>
   );
 }

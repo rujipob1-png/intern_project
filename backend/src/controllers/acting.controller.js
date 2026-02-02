@@ -8,6 +8,12 @@ import { supabase } from '../config/supabase.js';
 /**
  * ดึงรายชื่อพนักงานในชั้นเดียวกัน (Same Department/Level)
  * สำหรับให้เลือกเป็นผู้ปฏิบัติหน้าที่แทน
+ * 
+ * Logic:
+ * - user: ดึงพนักงานที่มี department และ role เดียวกัน
+ * - director: ดึงพนักงานใน department ที่ตัวเองดูแล (user role)
+ * - central_office_staff/head: ดึงพนักงานใน central office (role เดียวกัน)
+ * - admin: ดึง admin คนอื่น
  */
 export const getSameLevelEmployees = async (req, res) => {
   try {
@@ -20,27 +26,110 @@ export const getSameLevelEmployees = async (req, res) => {
       .eq('id', userId)
       .single();
 
-    if (userError) throw userError;
+    if (userError) {
+      console.error('Error fetching current user:', userError);
+      throw userError;
+    }
 
-    // ดึงพนักงานที่อยู่ใน department และ role เดียวกัน (ยกเว้นตัวเอง)
-    const { data: employees, error: employeesError } = await supabase
-      .from('users')
-      .select(`
-        id,
-        employee_code,
-        title,
-        first_name,
-        last_name,
-        position,
-        department
-      `)
-      .eq('department', currentUser.department)
-      .eq('role_id', currentUser.role_id)
-      .eq('is_active', true)
-      .neq('id', userId)
-      .order('first_name', { ascending: true });
+    // ดึง role name แยก
+    const { data: userRoleData } = await supabase
+      .from('roles')
+      .select('role_name')
+      .eq('id', currentUser.role_id)
+      .single();
 
-    if (employeesError) throw employeesError;
+    const roleName = userRoleData?.role_name;
+    console.log('Current user role:', roleName, 'Department:', currentUser.department);
+
+    let employees = [];
+
+    // กำหนดเงื่อนไขตาม role
+    if (roleName === 'director') {
+      // Director: ดึงพนักงาน (user role) ใน department ที่ตัวเองดูแล
+      const { data: userRole } = await supabase
+        .from('roles')
+        .select('id')
+        .eq('role_name', 'user')
+        .single();
+
+      const { data, error } = await supabase
+        .from('users')
+        .select(`id, employee_code, title, first_name, last_name, position, department`)
+        .eq('department', currentUser.department)
+        .eq('role_id', userRole?.id || 1)
+        .eq('is_active', true)
+        .neq('id', userId)
+        .order('first_name', { ascending: true });
+
+      if (error) throw error;
+      employees = data || [];
+
+    } else if (roleName === 'central_office_staff' || roleName === 'central_office_head') {
+      // Central Office: ดึงพนักงาน central office คนอื่น
+      const { data: coRoles } = await supabase
+        .from('roles')
+        .select('id')
+        .in('role_name', ['central_office_staff', 'central_office_head']);
+
+      const coRoleIds = coRoles?.map(r => r.id) || [];
+      
+      const { data, error } = await supabase
+        .from('users')
+        .select(`id, employee_code, title, first_name, last_name, position, department`)
+        .in('role_id', coRoleIds)
+        .eq('is_active', true)
+        .neq('id', userId)
+        .order('first_name', { ascending: true });
+
+      if (error) throw error;
+      employees = data || [];
+
+    } else if (roleName === 'admin') {
+      // Admin: ดึง admin คนอื่น หรือ central office head
+      const { data: adminRoles } = await supabase
+        .from('roles')
+        .select('id')
+        .in('role_name', ['admin', 'central_office_head']);
+
+      const adminRoleIds = adminRoles?.map(r => r.id) || [];
+      
+      const { data, error } = await supabase
+        .from('users')
+        .select(`id, employee_code, title, first_name, last_name, position, department`)
+        .in('role_id', adminRoleIds)
+        .eq('is_active', true)
+        .neq('id', userId)
+        .order('first_name', { ascending: true });
+
+      if (error) throw error;
+      employees = data || [];
+
+    } else {
+      // User ทั่วไป: ดึงพนักงานที่ department และ role เดียวกัน
+      const { data, error } = await supabase
+        .from('users')
+        .select(`id, employee_code, title, first_name, last_name, position, department`)
+        .eq('department', currentUser.department)
+        .eq('role_id', currentUser.role_id)
+        .eq('is_active', true)
+        .neq('id', userId)
+        .order('first_name', { ascending: true });
+
+      if (error) throw error;
+      employees = data || [];
+    }
+
+    console.log('Found employees:', employees.length);
+
+    // Mapping รหัสแผนก → ตัวย่อภาษาไทย
+    const deptThaiMap = {
+      'GOK': 'กอก.',
+      'GYS': 'กยส.',
+      'GTS': 'กทส.',
+      'GTP': 'กตป.',
+      'GSS': 'กสส.',
+      'GKC': 'กคช.',
+    };
 
     // Format ข้อมูลให้พร้อมใช้งาน
     const formattedEmployees = employees.map(emp => ({
@@ -49,7 +138,7 @@ export const getSameLevelEmployees = async (req, res) => {
       employeeCode: emp.employee_code,
       fullName: `${emp.title || ''}${emp.first_name} ${emp.last_name}`,
       position: emp.position,
-      departmentName: emp.department
+      departmentName: deptThaiMap[emp.department] || emp.department
     }));
 
     res.json({

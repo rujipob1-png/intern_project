@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '../config/supabase.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 import { HTTP_STATUS, LEAVE_STATUS } from '../config/constants.js';
+import { createNotification } from './notification.controller.js';
 
 /**
  * ดึงประเภทการลาทั้งหมด
@@ -133,6 +134,44 @@ export const createLeave = async (req, res) => {
       } catch (notifError) {
         console.log('Notification insert skipped:', notifError.message);
       }
+    }
+
+    // ส่งแจ้งเตือนให้ Director ในกองเดียวกัน
+    try {
+      // ดึงข้อมูล department ของผู้ยื่นคำขอ
+      const { data: requestorData } = await supabaseAdmin
+        .from('users')
+        .select('department')
+        .eq('id', userId)
+        .single();
+
+      if (requestorData?.department) {
+        // หา Director ในกองเดียวกัน
+        const { data: directors } = await supabaseAdmin
+          .from('users')
+          .select(`
+            id,
+            roles!inner (role_name)
+          `)
+          .eq('department', requestorData.department)
+          .eq('roles.role_name', 'director');
+
+        // ส่งแจ้งเตือนให้ Director ทุกคนในกอง
+        if (directors && directors.length > 0) {
+          for (const director of directors) {
+            await createNotification(
+              director.id,
+              'leave_pending',
+              'มีคำขอลาใหม่รอการอนุมัติ',
+              `${requestorName} (${requestor?.employee_code}) ยื่นคำขอลา${leaveType.type_name} จำนวน ${totalDays} วัน รอการอนุมัติจากท่าน`,
+              leave.id,
+              'leave'
+            );
+          }
+        }
+      }
+    } catch (directorNotifError) {
+      console.log('Director notification skipped:', directorNotifError.message);
     }
 
     // บันทึก history

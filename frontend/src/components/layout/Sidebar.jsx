@@ -79,27 +79,27 @@ export const Sidebar = () => {
       title: 'การลา',
       icon: FileText,
       collapsible: true,
-      roles: [ROLES.USER],
+      roles: [ROLES.USER, ROLES.DIRECTOR, ROLES.CENTRAL_OFFICE_STAFF, ROLES.CENTRAL_OFFICE_HEAD, ROLES.ADMIN],
       items: [
         {
           title: 'สร้างคำขอลา',
           path: '/create-leave',
-          roles: [ROLES.USER],
+          roles: [ROLES.USER, ROLES.DIRECTOR, ROLES.CENTRAL_OFFICE_STAFF, ROLES.CENTRAL_OFFICE_HEAD, ROLES.ADMIN],
         },
         {
           title: 'คำขอลาของฉัน',
           path: '/my-leaves',
-          roles: [ROLES.USER],
+          roles: [ROLES.USER, ROLES.DIRECTOR, ROLES.CENTRAL_OFFICE_STAFF, ROLES.CENTRAL_OFFICE_HEAD, ROLES.ADMIN],
         },
         {
           title: 'คำขอปฏิบัติหน้าที่แทน',
           path: '/acting-requests',
-          roles: [ROLES.USER],
+          roles: [ROLES.USER, ROLES.DIRECTOR, ROLES.CENTRAL_OFFICE_STAFF, ROLES.CENTRAL_OFFICE_HEAD, ROLES.ADMIN],
         },
         {
           title: 'ประวัติการลา',
           path: '/leave-history',
-          roles: [ROLES.USER],
+          roles: [ROLES.USER, ROLES.DIRECTOR, ROLES.CENTRAL_OFFICE_STAFF, ROLES.CENTRAL_OFFICE_HEAD, ROLES.ADMIN],
         },
       ],
     },
@@ -116,8 +116,18 @@ export const Sidebar = () => {
           roles: [ROLES.DIRECTOR],
         },
         {
+          title: 'ประวัติการอนุมัติ',
+          path: '/director/history',
+          roles: [ROLES.DIRECTOR],
+        },
+        {
           title: 'ตรวจสอบเอกสาร (เจ้าหน้าที่)',
           path: '/central-office/staff',
+          roles: [ROLES.CENTRAL_OFFICE_STAFF],
+        },
+        {
+          title: 'ประวัติการตรวจสอบ',
+          path: '/central-office/staff/history',
           roles: [ROLES.CENTRAL_OFFICE_STAFF],
         },
         {
@@ -126,8 +136,18 @@ export const Sidebar = () => {
           roles: [ROLES.CENTRAL_OFFICE_HEAD],
         },
         {
+          title: 'ประวัติการอนุมัติ',
+          path: '/central-office/head/history',
+          roles: [ROLES.CENTRAL_OFFICE_HEAD],
+        },
+        {
           title: 'อนุมัติขั้นสุดท้าย (ผู้บริหาร)',
           path: '/admin/dashboard',
+          roles: [ROLES.ADMIN],
+        },
+        {
+          title: 'ประวัติการอนุมัติ',
+          path: '/admin/history',
           roles: [ROLES.ADMIN],
         },
       ],

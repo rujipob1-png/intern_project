@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '../config/supabase.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 import { HTTP_STATUS } from '../config/constants.js';
+import { createNotification } from './notification.controller.js';
 
 /**
  * ดูรายการคำขอลาที่รออนุมัติ (Director Role - Level 1)
@@ -13,11 +14,11 @@ export const getPendingLeaves = async (req, res) => {
     // ดึง department ของ Director
     const { data: director, error: directorError } = await supabaseAdmin
       .from('users')
-      .select('department_id')
+      .select('department')
       .eq('id', directorId)
       .single();
 
-    if (directorError || !director.department_id) {
+    if (directorError || !director.department) {
       return errorResponse(
         res,
         HTTP_STATUS.BAD_REQUEST,
@@ -25,7 +26,19 @@ export const getPendingLeaves = async (req, res) => {
       );
     }
 
-    // ดึงคำขอลาที่รอการอนุมัติระดับ 1 (pending)
+    // ดึงคำขอลาที่รอการอนุมัติระดับ 1 (pending) จากพนักงานในกองเดียวกัน
+    // ใช้ 2 queries เพราะ Supabase ไม่รองรับ filter nested relation
+    const { data: usersInDept, error: usersError } = await supabaseAdmin
+      .from('users')
+      .select('id')
+      .eq('department', director.department);
+
+    if (usersError) {
+      throw usersError;
+    }
+
+    const userIds = usersInDept.map(u => u.id);
+
     const { data: leaves, error } = await supabaseAdmin
       .from('leaves')
       .select(`
@@ -41,16 +54,12 @@ export const getPendingLeaves = async (req, res) => {
           first_name,
           last_name,
           position,
-          department_id,
-          phone,
-          departments (
-            department_name,
-            department_code
-          )
+          department,
+          phone
         )
       `)
       .eq('status', 'pending')
-      .eq('users.department_id', director.department_id)
+      .in('user_id', userIds)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -61,25 +70,52 @@ export const getPendingLeaves = async (req, res) => {
       res,
       HTTP_STATUS.OK,
       'Pending leaves retrieved successfully',
-      leaves.map(leave => ({
-        id: leave.id,
-        leaveNumber: leave.leave_number,
-        leaveType: leave.leave_types.type_name,
-        leaveTypeCode: leave.leave_types.type_code,
-        startDate: leave.start_date,
-        endDate: leave.end_date,
-        totalDays: leave.total_days,
-        reason: leave.reason,
-        documentUrl: leave.document_url,
-        createdAt: leave.created_at,
-        employee: {
-          employeeCode: leave.users.employee_code,
-          name: `${leave.users.title}${leave.users.first_name} ${leave.users.last_name}`,
-          position: leave.users.position,
-          department: leave.users.departments?.department_name || 'N/A',
-          phone: leave.users.phone
+      leaves.map(leave => {
+        // Parse reason if it's JSON (for backward compatibility)
+        let reason = leave.reason;
+        let selectedDates = leave.selected_dates;
+        
+        // If reason is JSON string containing selected_dates, parse it
+        if (reason && typeof reason === 'string' && reason.startsWith('{')) {
+          try {
+            const parsed = JSON.parse(reason);
+            reason = parsed.reason || reason;
+            selectedDates = parsed.selected_dates || selectedDates;
+          } catch (e) {
+            // Keep original reason if parsing fails
+          }
         }
-      }))
+        
+        // Parse selected_dates if it's a string
+        if (selectedDates && typeof selectedDates === 'string') {
+          try {
+            selectedDates = JSON.parse(selectedDates);
+          } catch (e) {
+            selectedDates = [];
+          }
+        }
+        
+        return {
+          id: leave.id,
+          leaveNumber: leave.leave_number,
+          leaveType: leave.leave_types?.type_name || 'N/A',
+          leaveTypeCode: leave.leave_types?.type_code || 'N/A',
+          startDate: leave.start_date,
+          endDate: leave.end_date,
+          totalDays: leave.total_days,
+          reason: reason,
+          selectedDates: selectedDates || [],
+          documentUrl: leave.document_url,
+          createdAt: leave.created_at,
+          employee: {
+            employeeCode: leave.users?.employee_code,
+            name: `${leave.users?.title || ''}${leave.users?.first_name || ''} ${leave.users?.last_name || ''}`,
+            position: leave.users?.position,
+            department: leave.users?.department || 'N/A',
+            phone: leave.users?.phone
+          }
+        };
+      })
     );
   } catch (error) {
     console.error('Get pending leaves error:', error);
@@ -103,11 +139,11 @@ export const approveLeave = async (req, res) => {
     // ดึง department ของ Director
     const { data: director, error: directorError } = await supabaseAdmin
       .from('users')
-      .select('department_id')
+      .select('department')
       .eq('id', directorId)
       .single();
 
-    if (directorError || !director.department_id) {
+    if (directorError || !director.department) {
       return errorResponse(
         res,
         HTTP_STATUS.BAD_REQUEST,
@@ -124,7 +160,7 @@ export const approveLeave = async (req, res) => {
           employee_code,
           first_name,
           last_name,
-          department_id
+          department
         )
       `)
       .eq('id', id)
@@ -139,7 +175,7 @@ export const approveLeave = async (req, res) => {
     }
 
     // ตรวจสอบว่าเป็นพนักงานในกองเดียวกันหรือไม่
-    if (leave.users.department_id !== director.department_id) {
+    if (leave.users.department !== director.department) {
       return errorResponse(
         res,
         HTTP_STATUS.FORBIDDEN,
@@ -156,14 +192,12 @@ export const approveLeave = async (req, res) => {
       );
     }
 
-    // อัพเดทสถานะเป็น approved_level1 และบันทึกข้อมูลผู้อนุมัติ
+    // อัพเดทสถานะเป็น approved_level1
     const { error: updateError } = await supabaseAdmin
       .from('leaves')
       .update({
         status: 'approved_level1',
-        director_id: directorId,
-        director_approved_at: new Date().toISOString(),
-        director_remarks: remarks || 'อนุมัติ',
+        current_approval_level: 2,
         updated_at: new Date().toISOString()
       })
       .eq('id', id);
@@ -171,6 +205,32 @@ export const approveLeave = async (req, res) => {
     if (updateError) {
       throw updateError;
     }
+
+    // บันทึกประวัติการอนุมัติในตาราง approvals
+    const { error: approvalError } = await supabaseAdmin
+      .from('approvals')
+      .insert({
+        leave_id: id,
+        approver_id: directorId,
+        approval_level: 1,
+        action: 'approved',
+        comment: remarks || 'อนุมัติ'
+      });
+
+    if (approvalError) {
+      console.error('Approval insert error:', approvalError);
+      // ไม่ throw เพราะ update สถานะสำเร็จแล้ว
+    }
+
+    // ส่งแจ้งเตือนให้ผู้ขอลา
+    await createNotification(
+      leave.user_id,
+      'leave_approved',
+      'คำขอลาได้รับการอนุมัติระดับ 1',
+      `คำขอลาเลขที่ ${leave.leave_number} ได้รับการอนุมัติจากผู้อำนวยการกลุ่มงานแล้ว รอการอนุมัติระดับถัดไป`,
+      id,
+      'leave'
+    );
 
     return successResponse(
       res,
@@ -212,11 +272,11 @@ export const rejectLeave = async (req, res) => {
     // ดึง department ของ Director
     const { data: director, error: directorError } = await supabaseAdmin
       .from('users')
-      .select('department_id')
+      .select('department')
       .eq('id', directorId)
       .single();
 
-    if (directorError || !director.department_id) {
+    if (directorError || !director.department) {
       return errorResponse(
         res,
         HTTP_STATUS.BAD_REQUEST,
@@ -233,7 +293,7 @@ export const rejectLeave = async (req, res) => {
           employee_code,
           first_name,
           last_name,
-          department_id
+          department
         )
       `)
       .eq('id', id)
@@ -248,7 +308,7 @@ export const rejectLeave = async (req, res) => {
     }
 
     // ตรวจสอบว่าเป็นพนักงานในกองเดียวกันหรือไม่
-    if (leave.users.department_id !== director.department_id) {
+    if (leave.users.department !== director.department) {
       return errorResponse(
         res,
         HTTP_STATUS.FORBIDDEN,
@@ -270,9 +330,6 @@ export const rejectLeave = async (req, res) => {
       .from('leaves')
       .update({
         status: 'rejected',
-        director_id: directorId,
-        director_approved_at: new Date().toISOString(),
-        director_remarks: remarks,
         updated_at: new Date().toISOString()
       })
       .eq('id', id);
@@ -280,6 +337,31 @@ export const rejectLeave = async (req, res) => {
     if (updateError) {
       throw updateError;
     }
+
+    // บันทึกประวัติการปฏิเสธในตาราง approvals
+    const { error: approvalError } = await supabaseAdmin
+      .from('approvals')
+      .insert({
+        leave_id: id,
+        approver_id: directorId,
+        approval_level: 1,
+        action: 'rejected',
+        comment: remarks
+      });
+
+    if (approvalError) {
+      console.error('Approval insert error:', approvalError);
+    }
+
+    // ส่งแจ้งเตือนให้ผู้ขอลา
+    await createNotification(
+      leave.user_id,
+      'leave_rejected',
+      'คำขอลาถูกปฏิเสธ',
+      `คำขอลาเลขที่ ${leave.leave_number} ถูกปฏิเสธจากผู้อำนวยการกลุ่มงาน เหตุผล: ${remarks || 'ไม่ระบุ'}`,
+      id,
+      'leave'
+    );
 
     return successResponse(
       res,
@@ -297,6 +379,126 @@ export const rejectLeave = async (req, res) => {
       res,
       HTTP_STATUS.INTERNAL_SERVER_ERROR,
       'Failed to reject leave'
+    );
+  }
+};
+
+/**
+ * ดูประวัติการอนุมัติ/ปฏิเสธของ Director
+ */
+export const getApprovalHistory = async (req, res) => {
+  try {
+    const directorId = req.user.id;
+
+    // ดึง department ของ Director
+    const { data: director, error: directorError } = await supabaseAdmin
+      .from('users')
+      .select('department')
+      .eq('id', directorId)
+      .single();
+
+    if (directorError || !director.department) {
+      return errorResponse(
+        res,
+        HTTP_STATUS.BAD_REQUEST,
+        'Director department not found'
+      );
+    }
+
+    // ดึง users ในกองเดียวกัน
+    const { data: usersInDept, error: usersError } = await supabaseAdmin
+      .from('users')
+      .select('id')
+      .eq('department', director.department);
+
+    if (usersError) {
+      throw usersError;
+    }
+
+    const userIds = usersInDept.map(u => u.id);
+
+    // ดึงคำขอลาที่ไม่ใช่ pending (หมายถึงอนุมัติหรือปฏิเสธไปแล้ว) จากพนักงานในกองเดียวกัน
+    const { data: leaves, error } = await supabaseAdmin
+      .from('leaves')
+      .select(`
+        *,
+        leave_types (
+          type_name,
+          type_code
+        ),
+        users!leaves_user_id_fkey (
+          id,
+          employee_code,
+          title,
+          first_name,
+          last_name,
+          position,
+          department,
+          phone
+        )
+      `)
+      .neq('status', 'pending')
+      .in('user_id', userIds)
+      .order('updated_at', { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    return successResponse(
+      res,
+      HTTP_STATUS.OK,
+      'Approval history retrieved successfully',
+      leaves.map(leave => {
+        let reason = leave.reason;
+        let selectedDates = leave.selected_dates;
+        
+        if (reason && typeof reason === 'string' && reason.startsWith('{')) {
+          try {
+            const parsed = JSON.parse(reason);
+            reason = parsed.reason || reason;
+            selectedDates = parsed.selected_dates || selectedDates;
+          } catch (e) {}
+        }
+        
+        if (selectedDates && typeof selectedDates === 'string') {
+          try {
+            selectedDates = JSON.parse(selectedDates);
+          } catch (e) {
+            selectedDates = [];
+          }
+        }
+        
+        return {
+          id: leave.id,
+          leaveNumber: leave.leave_number,
+          leaveType: leave.leave_types?.type_name || 'N/A',
+          leaveTypeCode: leave.leave_types?.type_code || 'N/A',
+          startDate: leave.start_date,
+          endDate: leave.end_date,
+          totalDays: leave.total_days,
+          reason: reason,
+          selectedDates: selectedDates || [],
+          documentUrl: leave.document_url,
+          status: leave.status,
+          createdAt: leave.created_at,
+          updatedAt: leave.updated_at,
+          employee: {
+            employeeCode: leave.users?.employee_code,
+            name: `${leave.users?.title || ''}${leave.users?.first_name || ''} ${leave.users?.last_name || ''}`,
+            position: leave.users?.position,
+            department: leave.users?.department || 'N/A',
+            phone: leave.users?.phone
+          }
+        };
+      })
+    );
+  } catch (error) {
+    console.error('Get approval history error:', error);
+    return errorResponse(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      'Failed to retrieve approval history'
     );
   }
 };

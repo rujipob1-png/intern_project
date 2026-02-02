@@ -24,11 +24,8 @@ export const getPendingLeavesStaff = async (req, res) => {
           first_name,
           last_name,
           position,
-          phone,
-          departments (
-            department_name,
-            department_code
-          )
+          department,
+          phone
         ),
         director:users!leaves_director_id_fkey (
           title,
@@ -50,8 +47,8 @@ export const getPendingLeavesStaff = async (req, res) => {
       leaves.map(leave => ({
         id: leave.id,
         leaveNumber: leave.leave_number,
-        leaveType: leave.leave_types.type_name,
-        leaveTypeCode: leave.leave_types.type_code,
+        leaveType: leave.leave_types?.type_name || 'N/A',
+        leaveTypeCode: leave.leave_types?.type_code || 'N/A',
         startDate: leave.start_date,
         endDate: leave.end_date,
         totalDays: leave.total_days,
@@ -59,11 +56,11 @@ export const getPendingLeavesStaff = async (req, res) => {
         documentUrl: leave.document_url,
         createdAt: leave.created_at,
         employee: {
-          employeeCode: leave.users.employee_code,
-          name: `${leave.users.title}${leave.users.first_name} ${leave.users.last_name}`,
-          position: leave.users.position,
-          department: leave.users.departments?.department_name || 'N/A',
-          phone: leave.users.phone
+          employeeCode: leave.users?.employee_code,
+          name: `${leave.users?.title || ''}${leave.users?.first_name || ''} ${leave.users?.last_name || ''}`,
+          position: leave.users?.position,
+          department: leave.users?.department || 'N/A',
+          phone: leave.users?.phone
         },
         directorApproval: {
           approvedAt: leave.director_approved_at,
@@ -250,11 +247,8 @@ export const getPendingLeavesHead = async (req, res) => {
           first_name,
           last_name,
           position,
-          phone,
-          departments (
-            department_name,
-            department_code
-          )
+          department,
+          phone
         ),
         director:users!leaves_director_id_fkey (
           title,
@@ -281,8 +275,8 @@ export const getPendingLeavesHead = async (req, res) => {
       leaves.map(leave => ({
         id: leave.id,
         leaveNumber: leave.leave_number,
-        leaveType: leave.leave_types.type_name,
-        leaveTypeCode: leave.leave_types.type_code,
+        leaveType: leave.leave_types?.type_name || 'N/A',
+        leaveTypeCode: leave.leave_types?.type_code || 'N/A',
         startDate: leave.start_date,
         endDate: leave.end_date,
         totalDays: leave.total_days,
@@ -290,10 +284,10 @@ export const getPendingLeavesHead = async (req, res) => {
         documentUrl: leave.document_url,
         createdAt: leave.created_at,
         employee: {
-          employeeCode: leave.users.employee_code,
-          name: `${leave.users.title}${leave.users.first_name} ${leave.users.last_name}`,
-          position: leave.users.position,
-          department: leave.users.departments?.department_name || 'N/A'
+          employeeCode: leave.users?.employee_code,
+          name: `${leave.users?.title || ''}${leave.users?.first_name || ''} ${leave.users?.last_name || ''}`,
+          position: leave.users?.position,
+          department: leave.users?.department || 'N/A'
         },
         approvalHistory: {
           director: {

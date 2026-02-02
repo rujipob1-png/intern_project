@@ -1,6 +1,7 @@
 import { useAuth } from '../../contexts/AuthContext';
 import { User } from 'lucide-react';
 import { NotificationBell } from '../common/NotificationBell';
+import { getDepartmentThaiCode } from '../../utils/departmentMapping';
 
 export const Header = () => {
   const { user } = useAuth();
@@ -13,7 +14,7 @@ export const Header = () => {
             ระบบการลาออนไลน์
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            {user?.department || 'ยินดีต้อนรับ'}
+            {getDepartmentThaiCode(user?.department) || 'ยินดีต้อนรับ'}
           </p>
         </div>
 
