@@ -219,15 +219,15 @@ export const LoginPage = () => {
                 <p className="text-slate-600 mt-1">51143 / 123456</p>
               </div>
               <div className="bg-slate-50 p-3 rounded-lg border-2 border-slate-300 hover:border-slate-400 hover:shadow-md transition-all">
-                <p className="font-semibold text-slate-900">ผอ.กลุ่มงาน (กทส.)</p>
-                <p className="text-slate-600 mt-1">51134 / 123456</p>
+                <p className="font-semibold text-slate-900">ผอ.กลุ่มงาน (กยส.)</p>
+                <p className="text-slate-600 mt-1">51497 / 123456</p>
               </div>
               <div className="bg-white p-3 rounded-lg border-2 border-slate-300 hover:border-slate-400 hover:shadow-md transition-all">
-                <p className="font-semibold text-slate-900">เจ้าหน้าที่ กอก.</p>
+                <p className="font-semibold text-slate-900">หัวหน้าฝ่ายบริหารทั่วไป</p>
                 <p className="text-slate-600 mt-1">51417 / 123456</p>
               </div>
               <div className="bg-slate-50 p-3 rounded-lg border-2 border-slate-300 hover:border-slate-400 hover:shadow-md transition-all">
-                <p className="font-semibold text-slate-900">หัวหน้า กอก.</p>
+                <p className="font-semibold text-slate-900">ผอ.กอก.</p>
                 <p className="text-slate-600 mt-1">51410 / 123456</p>
               </div>
               <div className="bg-blue-50 p-3 rounded-lg border-2 border-blue-300 hover:border-blue-400 hover:shadow-md transition-all col-span-2">

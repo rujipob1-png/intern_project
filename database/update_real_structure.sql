@@ -89,8 +89,9 @@ INSERT INTO users (employee_code, password_hash, title, first_name, last_name, p
 -- STEP 6: เพิ่มพนักงาน กอก. (ชั้น 3)
 -- ============================================
 INSERT INTO users (employee_code, password_hash, title, first_name, last_name, position, department, phone, role_id, is_active) VALUES
--- ฝ่ายบริหารทั่วไป
-('51417', '$2b$10$/4pSD6HlFYNNTEjihi6bE.1ZRDZdczPqrrQSIbWz.GGvc1mTqRzC.', 'นาย', 'อานนท์', 'กรวดแก้ว', 'ฝ่ายบริหารทั่วไป', 'GOK', '0827934149', (SELECT id FROM roles WHERE role_name = 'user'), true),
+-- ฝ่ายบริหารทั่วไป (หัวหน้าฝ่าย)
+('51417', '$2b$10$/4pSD6HlFYNNTEjihi6bE.1ZRDZdczPqrrQSIbWz.GGvc1mTqRzC.', 'นาย', 'อานนท์', 'กรวดแก้ว', 'หัวหน้าฝ่ายบริหารทั่วไป', 'GOK', '0827934149', (SELECT id FROM roles WHERE role_name = 'central_office_staff'), true),
+-- ฝ่ายบริหารทั่วไป (พนักงาน)
 ('51418', '$2b$10$/4pSD6HlFYNNTEjihi6bE.1ZRDZdczPqrrQSIbWz.GGvc1mTqRzC.', 'นาย', 'สุภาพ', 'ภูวงศ์', 'ฝ่ายบริหารทั่วไป', 'GOK', '0962679067', (SELECT id FROM roles WHERE role_name = 'user'), true),
 ('51408', '$2b$10$/4pSD6HlFYNNTEjihi6bE.1ZRDZdczPqrrQSIbWz.GGvc1mTqRzC.', 'นาย', 'บดินทร์', 'แสงวิรุณ', 'ฝ่ายบริหารทั่วไป', 'GOK', '0808419718', (SELECT id FROM roles WHERE role_name = 'user'), true),
 ('51404', '$2b$10$/4pSD6HlFYNNTEjihi6bE.1ZRDZdczPqrrQSIbWz.GGvc1mTqRzC.', 'น.ส.', 'วไลพร', 'มณีวงษ์', 'ฝ่ายบริหารทั่วไป', 'GOK', '0936181830', (SELECT id FROM roles WHERE role_name = 'user'), true),

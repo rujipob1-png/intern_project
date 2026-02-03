@@ -15,7 +15,6 @@ export const getPendingLeaves = async (req, res) => {
         *,
         leave_types (
           type_name,
-          type_code,
           type_code
         ),
         users!leaves_user_id_fkey (
@@ -25,47 +24,86 @@ export const getPendingLeaves = async (req, res) => {
           first_name,
           last_name,
           position,
+          department,
           phone,
           sick_leave_balance,
           personal_leave_balance,
-          vacation_leave_balance,
-          departments (
-            department_name,
-            department_code
-          )
-        ),
-        director:users!leaves_director_id_fkey (
-          title,
-          first_name,
-          last_name
-        ),
-        staff:users!leaves_central_office_staff_id_fkey (
-          title,
-          first_name,
-          last_name
-        ),
-        head:users!leaves_central_office_head_id_fkey (
-          title,
-          first_name,
-          last_name
+          vacation_leave_balance
         )
       `)
       .eq('status', 'approved_level3')
-      .order('central_office_head_approved_at', { ascending: true });
+      .order('updated_at', { ascending: true });
 
     if (error) {
       throw error;
     }
 
+    // ดึงข้อมูลการอนุมัติจาก approvals table สำหรับแต่ละ leave
+    const leavesWithApprovals = await Promise.all(
+      leaves.map(async (leave) => {
+        // ดึงการอนุมัติ level 1 (Director)
+        const { data: level1Approval } = await supabaseAdmin
+          .from('approvals')
+          .select(`
+            *,
+            approver:users!approvals_approver_id_fkey (
+              title,
+              first_name,
+              last_name
+            )
+          `)
+          .eq('leave_id', leave.id)
+          .eq('approval_level', 1)
+          .single();
+
+        // ดึงการอนุมัติ level 2 (Staff)
+        const { data: level2Approval } = await supabaseAdmin
+          .from('approvals')
+          .select(`
+            *,
+            approver:users!approvals_approver_id_fkey (
+              title,
+              first_name,
+              last_name
+            )
+          `)
+          .eq('leave_id', leave.id)
+          .eq('approval_level', 2)
+          .single();
+
+        // ดึงการอนุมัติ level 3 (Head)
+        const { data: level3Approval } = await supabaseAdmin
+          .from('approvals')
+          .select(`
+            *,
+            approver:users!approvals_approver_id_fkey (
+              title,
+              first_name,
+              last_name
+            )
+          `)
+          .eq('leave_id', leave.id)
+          .eq('approval_level', 3)
+          .single();
+
+        return {
+          ...leave,
+          level1Approval,
+          level2Approval,
+          level3Approval
+        };
+      })
+    );
+
     return successResponse(
       res,
       HTTP_STATUS.OK,
       'Pending leaves for admin final approval retrieved successfully',
-      leaves.map(leave => ({
+      leavesWithApprovals.map(leave => ({
         id: leave.id,
         leaveNumber: leave.leave_number,
-        leaveType: leave.leave_types.type_name,
-        leaveTypeCode: leave.leave_types.type_code,
+        leaveType: leave.leave_types?.type_name || 'N/A',
+        leaveTypeCode: leave.leave_types?.type_code || 'N/A',
         startDate: leave.start_date,
         endDate: leave.end_date,
         totalDays: leave.total_days,
@@ -73,32 +111,38 @@ export const getPendingLeaves = async (req, res) => {
         documentUrl: leave.document_url,
         createdAt: leave.created_at,
         employee: {
-          id: leave.users.id,
-          employeeCode: leave.users.employee_code,
-          name: `${leave.users.title}${leave.users.first_name} ${leave.users.last_name}`,
-          position: leave.users.position,
-          department: leave.users.departments?.department_name || 'N/A',
+          id: leave.users?.id,
+          employeeCode: leave.users?.employee_code,
+          name: `${leave.users?.title || ''}${leave.users?.first_name || ''} ${leave.users?.last_name || ''}`,
+          position: leave.users?.position,
+          department: leave.users?.department || 'N/A',
           leaveBalance: {
-            sick: leave.users.sick_leave_balance,
-            personal: leave.users.personal_leave_balance,
-            vacation: leave.users.vacation_leave_balance
+            sick: leave.users?.sick_leave_balance,
+            personal: leave.users?.personal_leave_balance,
+            vacation: leave.users?.vacation_leave_balance
           }
         },
         approvalHistory: {
           director: {
-            approvedAt: leave.director_approved_at,
-            remarks: leave.director_remarks,
-            approver: leave.director ? `${leave.director.title}${leave.director.first_name} ${leave.director.last_name}` : null
+            approvedAt: leave.level1Approval?.action_date,
+            remarks: leave.level1Approval?.comment,
+            approver: leave.level1Approval?.approver 
+              ? `${leave.level1Approval.approver.title}${leave.level1Approval.approver.first_name} ${leave.level1Approval.approver.last_name}` 
+              : null
           },
           staff: {
-            approvedAt: leave.central_office_staff_approved_at,
-            remarks: leave.central_office_staff_remarks,
-            approver: leave.staff ? `${leave.staff.title}${leave.staff.first_name} ${leave.staff.last_name}` : null
+            approvedAt: leave.level2Approval?.action_date,
+            remarks: leave.level2Approval?.comment,
+            approver: leave.level2Approval?.approver 
+              ? `${leave.level2Approval.approver.title}${leave.level2Approval.approver.first_name} ${leave.level2Approval.approver.last_name}` 
+              : null
           },
           head: {
-            approvedAt: leave.central_office_head_approved_at,
-            remarks: leave.central_office_head_remarks,
-            approver: leave.head ? `${leave.head.title}${leave.head.first_name} ${leave.head.last_name}` : null
+            approvedAt: leave.level3Approval?.action_date,
+            remarks: leave.level3Approval?.comment,
+            approver: leave.level3Approval?.approver 
+              ? `${leave.level3Approval.approver.title}${leave.level3Approval.approver.first_name} ${leave.level3Approval.approver.last_name}` 
+              : null
           }
         }
       }))
@@ -208,20 +252,34 @@ export const approveLeaveFinal = async (req, res) => {
         updateBalance = null;
     }
 
-    // อัพเดทสถานะเป็น approved_final
+    // อัพเดทสถานะเป็น approved (final)
     const { error: updateLeaveError } = await supabaseAdmin
       .from('leaves')
       .update({
-        status: 'approved_final',
-        admin_id: adminId,
-        admin_approved_at: new Date().toISOString(),
-        admin_remarks: remarks || 'อนุมัติ',
+        status: 'approved',
+        current_approval_level: 4,
         updated_at: new Date().toISOString()
       })
       .eq('id', id);
 
     if (updateLeaveError) {
       throw updateLeaveError;
+    }
+
+    // บันทึกการอนุมัติใน approvals table
+    const { error: approvalError } = await supabaseAdmin
+      .from('approvals')
+      .insert({
+        leave_id: id,
+        approver_id: adminId,
+        approval_level: 4,
+        action: 'approved',
+        comment: remarks || 'อนุมัติ',
+        action_date: new Date().toISOString()
+      });
+
+    if (approvalError) {
+      console.error('Error inserting approval record:', approvalError);
     }
 
     // หักวันลา (ถ้าต้องหัก)
@@ -242,7 +300,7 @@ export const approveLeaveFinal = async (req, res) => {
       'Leave approved successfully. Leave balance has been deducted.',
       {
         leaveId: id,
-        status: 'approved_final',
+        status: 'approved',
         deductedDays: updateBalance ? totalDays : 0,
         balanceField: balanceField || 'none',
         newBalance: updateBalance ? updateBalance[balanceField] : null
@@ -304,15 +362,28 @@ export const rejectLeaveFinal = async (req, res) => {
       .from('leaves')
       .update({
         status: 'rejected',
-        admin_id: adminId,
-        admin_approved_at: new Date().toISOString(),
-        admin_remarks: remarks,
         updated_at: new Date().toISOString()
       })
       .eq('id', id);
 
     if (updateError) {
       throw updateError;
+    }
+
+    // บันทึกการปฏิเสธใน approvals table
+    const { error: approvalError } = await supabaseAdmin
+      .from('approvals')
+      .insert({
+        leave_id: id,
+        approver_id: adminId,
+        approval_level: 4,
+        action: 'rejected',
+        comment: remarks,
+        action_date: new Date().toISOString()
+      });
+
+    if (approvalError) {
+      console.error('Error inserting approval record:', approvalError);
     }
 
     return successResponse(

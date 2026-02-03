@@ -26,25 +26,45 @@ export const getPendingLeavesStaff = async (req, res) => {
           position,
           department,
           phone
-        ),
-        director:users!leaves_director_id_fkey (
-          title,
-          first_name,
-          last_name
         )
       `)
       .eq('status', 'approved_level1')
-      .order('director_approved_at', { ascending: true });
+      .order('updated_at', { ascending: true });
 
     if (error) {
       throw error;
     }
 
+    // ดึงข้อมูลการอนุมัติจาก approvals table สำหรับแต่ละ leave
+    const leavesWithApprovals = await Promise.all(
+      leaves.map(async (leave) => {
+        // ดึงการอนุมัติ level 1 (Director)
+        const { data: level1Approval } = await supabaseAdmin
+          .from('approvals')
+          .select(`
+            *,
+            approver:users!approvals_approver_id_fkey (
+              title,
+              first_name,
+              last_name
+            )
+          `)
+          .eq('leave_id', leave.id)
+          .eq('approval_level', 1)
+          .single();
+
+        return {
+          ...leave,
+          level1Approval
+        };
+      })
+    );
+
     return successResponse(
       res,
       HTTP_STATUS.OK,
       'Pending leaves for staff review retrieved successfully',
-      leaves.map(leave => ({
+      leavesWithApprovals.map(leave => ({
         id: leave.id,
         leaveNumber: leave.leave_number,
         leaveType: leave.leave_types?.type_name || 'N/A',
@@ -63,9 +83,11 @@ export const getPendingLeavesStaff = async (req, res) => {
           phone: leave.users?.phone
         },
         directorApproval: {
-          approvedAt: leave.director_approved_at,
-          remarks: leave.director_remarks,
-          approver: leave.director ? `${leave.director.title}${leave.director.first_name} ${leave.director.last_name}` : null
+          approvedAt: leave.level1Approval?.action_date,
+          remarks: leave.level1Approval?.comment,
+          approver: leave.level1Approval?.approver 
+            ? `${leave.level1Approval.approver.title}${leave.level1Approval.approver.first_name} ${leave.level1Approval.approver.last_name}` 
+            : null
         }
       }))
     );
@@ -117,15 +139,29 @@ export const approveLeavLevel2 = async (req, res) => {
       .from('leaves')
       .update({
         status: 'approved_level2',
-        central_office_staff_id: staffId,
-        central_office_staff_approved_at: new Date().toISOString(),
-        central_office_staff_remarks: remarks || 'เอกสารถูกต้อง ครบถ้วน',
+        current_approval_level: 3,
         updated_at: new Date().toISOString()
       })
       .eq('id', id);
 
     if (updateError) {
       throw updateError;
+    }
+
+    // บันทึกการอนุมัติใน approvals table
+    const { error: approvalError } = await supabaseAdmin
+      .from('approvals')
+      .insert({
+        leave_id: id,
+        approver_id: staffId,
+        approval_level: 2,
+        action: 'approved',
+        comment: remarks || 'เอกสารถูกต้อง ครบถ้วน',
+        action_date: new Date().toISOString()
+      });
+
+    if (approvalError) {
+      console.error('Error inserting approval record:', approvalError);
     }
 
     return successResponse(
@@ -194,15 +230,28 @@ export const rejectLeaveLevel2 = async (req, res) => {
       .from('leaves')
       .update({
         status: 'rejected',
-        central_office_staff_id: staffId,
-        central_office_staff_approved_at: new Date().toISOString(),
-        central_office_staff_remarks: remarks,
         updated_at: new Date().toISOString()
       })
       .eq('id', id);
 
     if (updateError) {
       throw updateError;
+    }
+
+    // บันทึกการปฏิเสธใน approvals table
+    const { error: approvalError } = await supabaseAdmin
+      .from('approvals')
+      .insert({
+        leave_id: id,
+        approver_id: staffId,
+        approval_level: 2,
+        action: 'rejected',
+        comment: remarks,
+        action_date: new Date().toISOString()
+      });
+
+    if (approvalError) {
+      console.error('Error inserting approval record:', approvalError);
     }
 
     return successResponse(
@@ -249,30 +298,61 @@ export const getPendingLeavesHead = async (req, res) => {
           position,
           department,
           phone
-        ),
-        director:users!leaves_director_id_fkey (
-          title,
-          first_name,
-          last_name
-        ),
-        staff:users!leaves_central_office_staff_id_fkey (
-          title,
-          first_name,
-          last_name
         )
       `)
       .eq('status', 'approved_level2')
-      .order('central_office_staff_approved_at', { ascending: true });
+      .order('updated_at', { ascending: true });
 
     if (error) {
       throw error;
     }
 
+    // ดึงข้อมูลการอนุมัติจาก approvals table สำหรับแต่ละ leave
+    const leavesWithApprovals = await Promise.all(
+      leaves.map(async (leave) => {
+        // ดึงการอนุมัติ level 1 (Director)
+        const { data: level1Approval } = await supabaseAdmin
+          .from('approvals')
+          .select(`
+            *,
+            approver:users!approvals_approver_id_fkey (
+              title,
+              first_name,
+              last_name
+            )
+          `)
+          .eq('leave_id', leave.id)
+          .eq('approval_level', 1)
+          .single();
+
+        // ดึงการอนุมัติ level 2 (Staff)
+        const { data: level2Approval } = await supabaseAdmin
+          .from('approvals')
+          .select(`
+            *,
+            approver:users!approvals_approver_id_fkey (
+              title,
+              first_name,
+              last_name
+            )
+          `)
+          .eq('leave_id', leave.id)
+          .eq('approval_level', 2)
+          .single();
+
+        return {
+          ...leave,
+          level1Approval,
+          level2Approval
+        };
+      })
+    );
+
     return successResponse(
       res,
       HTTP_STATUS.OK,
       'Pending leaves for head review retrieved successfully',
-      leaves.map(leave => ({
+      leavesWithApprovals.map(leave => ({
         id: leave.id,
         leaveNumber: leave.leave_number,
         leaveType: leave.leave_types?.type_name || 'N/A',
@@ -291,14 +371,18 @@ export const getPendingLeavesHead = async (req, res) => {
         },
         approvalHistory: {
           director: {
-            approvedAt: leave.director_approved_at,
-            remarks: leave.director_remarks,
-            approver: leave.director ? `${leave.director.title}${leave.director.first_name} ${leave.director.last_name}` : null
+            approvedAt: leave.level1Approval?.action_date,
+            remarks: leave.level1Approval?.comment,
+            approver: leave.level1Approval?.approver 
+              ? `${leave.level1Approval.approver.title}${leave.level1Approval.approver.first_name} ${leave.level1Approval.approver.last_name}` 
+              : null
           },
           staff: {
-            approvedAt: leave.central_office_staff_approved_at,
-            remarks: leave.central_office_staff_remarks,
-            approver: leave.staff ? `${leave.staff.title}${leave.staff.first_name} ${leave.staff.last_name}` : null
+            approvedAt: leave.level2Approval?.action_date,
+            remarks: leave.level2Approval?.comment,
+            approver: leave.level2Approval?.approver 
+              ? `${leave.level2Approval.approver.title}${leave.level2Approval.approver.first_name} ${leave.level2Approval.approver.last_name}` 
+              : null
           }
         }
       }))
@@ -351,15 +435,29 @@ export const approveLeaveLevel3 = async (req, res) => {
       .from('leaves')
       .update({
         status: 'approved_level3',
-        central_office_head_id: headId,
-        central_office_head_approved_at: new Date().toISOString(),
-        central_office_head_remarks: remarks || 'อนุมัติ',
+        current_approval_level: 4,
         updated_at: new Date().toISOString()
       })
       .eq('id', id);
 
     if (updateError) {
       throw updateError;
+    }
+
+    // บันทึกการอนุมัติใน approvals table
+    const { error: approvalError } = await supabaseAdmin
+      .from('approvals')
+      .insert({
+        leave_id: id,
+        approver_id: headId,
+        approval_level: 3,
+        action: 'approved',
+        comment: remarks || 'อนุมัติ',
+        action_date: new Date().toISOString()
+      });
+
+    if (approvalError) {
+      console.error('Error inserting approval record:', approvalError);
     }
 
     return successResponse(
@@ -428,15 +526,28 @@ export const rejectLeaveLevel3 = async (req, res) => {
       .from('leaves')
       .update({
         status: 'rejected',
-        central_office_head_id: headId,
-        central_office_head_approved_at: new Date().toISOString(),
-        central_office_head_remarks: remarks,
         updated_at: new Date().toISOString()
       })
       .eq('id', id);
 
     if (updateError) {
       throw updateError;
+    }
+
+    // บันทึกการปฏิเสธใน approvals table
+    const { error: approvalError } = await supabaseAdmin
+      .from('approvals')
+      .insert({
+        leave_id: id,
+        approver_id: headId,
+        approval_level: 3,
+        action: 'rejected',
+        comment: remarks,
+        action_date: new Date().toISOString()
+      });
+
+    if (approvalError) {
+      console.error('Error inserting approval record:', approvalError);
     }
 
     return successResponse(
