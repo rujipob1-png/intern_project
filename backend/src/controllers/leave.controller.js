@@ -109,14 +109,49 @@ export const createLeave = async (req, res) => {
       throw error;
     }
 
-    // ดึงข้อมูลผู้ยื่นคำขอ
+    // ดึงข้อมูลผู้ยื่นคำขอ รวม department
     const { data: requestor } = await supabaseAdmin
       .from('users')
-      .select('employee_code, title, first_name, last_name')
+      .select('employee_code, title, first_name, last_name, department')
       .eq('id', userId)
       .single();
 
     const requestorName = `${requestor?.title || ''}${requestor?.first_name} ${requestor?.last_name}`.trim();
+    const isGOKDepartment = requestor?.department === 'GOK';
+
+    // ถ้าเป็น GOK (ชั้น 3) - ข้าม Director ไปที่หัวหน้าฝ่ายบริหารทั่วไปเลย
+    if (isGOKDepartment) {
+      // อัพเดทสถานะเป็น approved_level1 (ข้าม Director)
+      await supabaseAdmin
+        .from('leaves')
+        .update({
+          status: 'approved_level1',
+          current_approval_level: 2
+        })
+        .eq('id', leave.id);
+
+      // ส่งแจ้งเตือนให้หัวหน้าฝ่ายบริหารทั่วไป (central_office_staff)
+      const { data: staffUsers } = await supabaseAdmin
+        .from('users')
+        .select(`
+          id,
+          roles!inner (role_name)
+        `)
+        .eq('roles.role_name', 'central_office_staff');
+
+      if (staffUsers && staffUsers.length > 0) {
+        for (const staff of staffUsers) {
+          await createNotification(
+            staff.id,
+            'leave_pending',
+            'มีคำขอลาใหม่รอตรวจสอบเอกสาร',
+            `${requestorName} (${requestor?.employee_code}) ยื่นคำขอลา${leaveType.type_name} จำนวน ${totalDays} วัน (ชั้น 3 - ข้าม ผอ.กลุ่ม)`,
+            leave.id,
+            'leave'
+          );
+        }
+      }
+    }
 
     // สร้าง notification ให้ผู้ปฏิบัติหน้าที่แทน (ถ้ามี)
     if (actingPersonId) {
@@ -136,16 +171,9 @@ export const createLeave = async (req, res) => {
       }
     }
 
-    // ส่งแจ้งเตือนให้ Director ในกองเดียวกัน
-    try {
-      // ดึงข้อมูล department ของผู้ยื่นคำขอ
-      const { data: requestorData } = await supabaseAdmin
-        .from('users')
-        .select('department')
-        .eq('id', userId)
-        .single();
-
-      if (requestorData?.department) {
+    // ส่งแจ้งเตือนให้ Director ในกองเดียวกัน (ยกเว้น GOK - เพราะข้าม Director ไปแล้ว)
+    if (!isGOKDepartment) {
+      try {
         // หา Director ในกองเดียวกัน
         const { data: directors } = await supabaseAdmin
           .from('users')
@@ -153,7 +181,7 @@ export const createLeave = async (req, res) => {
             id,
             roles!inner (role_name)
           `)
-          .eq('department', requestorData.department)
+          .eq('department', requestor?.department)
           .eq('roles.role_name', 'director');
 
         // ส่งแจ้งเตือนให้ Director ทุกคนในกอง
@@ -169,9 +197,9 @@ export const createLeave = async (req, res) => {
             );
           }
         }
+      } catch (directorNotifError) {
+        console.log('Director notification skipped:', directorNotifError.message);
       }
-    } catch (directorNotifError) {
-      console.log('Director notification skipped:', directorNotifError.message);
     }
 
     // บันทึก history
@@ -231,6 +259,8 @@ export const getMyLeaves = async (req, res) => {
   try {
     const userId = req.user.id;
     const { status, page = 1, limit = 10 } = req.query;
+
+    console.log('getMyLeaves - userId:', userId);
 
     const offset = (page - 1) * limit;
 
@@ -322,9 +352,15 @@ export const getMyLeaves = async (req, res) => {
 export const getLeaveById = async (req, res) => {
   try {
     const userId = req.user.id;
+    const userRole = req.user.roleName; // Use roleName from auth middleware
     const { id } = req.params;
 
-    const { data: leave, error } = await supabaseAdmin
+    // Check if user has approver role (can view all leaves)
+    const approverRoles = ['director', 'central_office_staff', 'central_office_head', 'admin'];
+    const isApprover = approverRoles.includes(userRole);
+
+    // Build query - approvers can see all leaves, regular users only their own
+    let query = supabaseAdmin
       .from('leaves')
       .select(`
         *,
@@ -351,9 +387,14 @@ export const getLeaveById = async (req, res) => {
           department
         )
       `)
-      .eq('id', id)
-      .eq('user_id', userId)
-      .single();
+      .eq('id', id);
+
+    // If not approver, only allow viewing own leaves
+    if (!isApprover) {
+      query = query.eq('user_id', userId);
+    }
+
+    const { data: leave, error } = await query.single();
 
     if (error || !leave) {
       return errorResponse(
@@ -458,6 +499,8 @@ export const cancelLeave = async (req, res) => {
     const { id } = req.params;
     const { reason } = req.body;
 
+    console.log('Cancel leave request - leaveId:', id, 'userId:', userId);
+
     // ตรวจสอบว่ามีคำขอลานี้หรือไม่
     const { data: leave, error: fetchError } = await supabaseAdmin
       .from('leaves')
@@ -466,7 +509,17 @@ export const cancelLeave = async (req, res) => {
       .eq('user_id', userId)
       .single();
 
+    console.log('Leave found:', leave, 'Error:', fetchError);
+
     if (fetchError || !leave) {
+      // ดู leave โดยไม่ filter user_id เพื่อ debug
+      const { data: anyLeave } = await supabaseAdmin
+        .from('leaves')
+        .select('id, user_id, leave_number')
+        .eq('id', id)
+        .single();
+      console.log('Leave without user filter:', anyLeave);
+      
       return errorResponse(
         res,
         HTTP_STATUS.NOT_FOUND,
@@ -524,6 +577,51 @@ export const cancelLeave = async (req, res) => {
         action_by: userId,
         remarks: reason || 'ขอยกเลิกโดยผู้ยื่นคำขอ'
       });
+
+    // ส่งแจ้งเตือนให้ Director ในกองเดียวกันว่ามีคำขอยกเลิก
+    try {
+      // ดึงข้อมูลผู้ขอลา
+      const { data: requestor } = await supabaseAdmin
+        .from('users')
+        .select('first_name, last_name, employee_code, department')
+        .eq('id', userId)
+        .single();
+
+      const requestorName = `${requestor?.first_name || ''} ${requestor?.last_name || ''}`.trim();
+      
+      // ดึง leave type
+      const { data: leaveType } = await supabaseAdmin
+        .from('leave_types')
+        .select('type_name')
+        .eq('id', leave.leave_type_id)
+        .single();
+
+      // หา Director ในกองเดียวกัน
+      const { data: directors } = await supabaseAdmin
+        .from('users')
+        .select(`
+          id,
+          roles!inner (role_name)
+        `)
+        .eq('department', requestor?.department)
+        .eq('roles.role_name', 'director');
+
+      // ส่งแจ้งเตือนให้ Director
+      if (directors && directors.length > 0) {
+        for (const director of directors) {
+          await createNotification(
+            director.id,
+            'cancel_pending',
+            'มีคำขอยกเลิกการลารอการอนุมัติ',
+            `${requestorName} (${requestor?.employee_code}) ยื่นขอยกเลิกคำขอลา${leaveType?.type_name || ''} รอการอนุมัติจากท่าน`,
+            id,
+            'leave'
+          );
+        }
+      }
+    } catch (notifError) {
+      console.log('Director cancel notification skipped:', notifError.message);
+    }
 
     return successResponse(
       res,

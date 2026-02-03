@@ -1,9 +1,11 @@
 import { Check, X, Clock, User } from 'lucide-react';
 import { formatDateTime } from '../../utils/formatDate';
 
-export const Timeline = ({ approvals, status }) => {
+export const Timeline = ({ approvals, status, department }) => {
   // ตรวจสอบว่าเป็นสถานะยกเลิกหรือไม่
   const isCancelFlow = status?.startsWith('pending_cancel') || status?.startsWith('cancel_level');
+  // ตรวจสอบว่าเป็น GOK (ชั้น 3) หรือไม่ - ข้าม ผอ.กลุ่มงาน
+  const isGOKDepartment = department === 'GOK';
 
   const steps = isCancelFlow ? [
     // ขั้นตอนสำหรับการยกเลิก
@@ -13,12 +15,13 @@ export const Timeline = ({ approvals, status }) => {
       description: 'ส่งคำขอยกเลิกการลาเข้าสู่ระบบ',
       status: 'completed',
     },
-    {
+    // ข้าม ผอ.กลุ่มงาน ถ้าเป็น GOK
+    ...(isGOKDepartment ? [] : [{
       level: 1,
       title: 'ผู้บังคับบัญชา (ผอ.กลุ่มงาน)',
       description: 'รอพิจารณายกเลิกจากผู้บังคับบัญชา',
       approvalKey: 'cancel_level_1',
-    },
+    }]),
     {
       level: 2,
       title: 'หัวหน้าฝ่ายบริหารทั่วไป',
@@ -45,12 +48,13 @@ export const Timeline = ({ approvals, status }) => {
       description: 'ส่งคำขอลาเข้าสู่ระบบ',
       status: 'completed',
     },
-    {
+    // ข้าม ผอ.กลุ่มงาน ถ้าเป็น GOK
+    ...(isGOKDepartment ? [] : [{
       level: 1,
       title: 'ผู้บังคับบัญชา (ผอ.กลุ่มงาน)',
       description: 'รอการอนุมัติจากผู้บังคับบัญชา',
       approvalKey: 'level_1',
-    },
+    }]),
     {
       level: 2,
       title: 'หัวหน้าฝ่ายบริหารทั่วไป',
@@ -93,6 +97,17 @@ export const Timeline = ({ approvals, status }) => {
     
     if (approval) {
       return approval.action === 'approved' || approval.status === 'approved' ? 'completed' : 'rejected';
+    }
+
+    // สำหรับ GOK - ข้าม Level 1, เริ่มที่ Level 2
+    if (isGOKDepartment) {
+      if (step.level === 2 && (status === 'approved_level1' || status === 'pending')) return 'waiting';
+      if (step.level === 2 && (status === 'approved_level2' || status === 'approved_level3' || status === 'approved')) return 'completed';
+      if (step.level === 3 && status === 'approved_level2') return 'waiting';
+      if (step.level === 3 && (status === 'approved_level3' || status === 'approved')) return 'completed';
+      if (step.level === 4 && status === 'approved_level3') return 'waiting';
+      if (step.level === 4 && status === 'approved') return 'completed';
+      return 'pending';
     }
 
     // รองรับทั้ง approved_levelX และ level_X_approved format
@@ -255,7 +270,7 @@ export const Timeline = ({ approvals, status }) => {
                             {approval.status === 'approved' || approval.action === 'approved' ? (
                               <>
                                 <Check className="w-3.5 h-3.5" />
-                                อนุมัติแล้ว
+                                เห็นชอบแล้ว
                               </>
                             ) : (
                               <>

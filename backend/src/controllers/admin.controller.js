@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '../config/supabase.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 import { HTTP_STATUS } from '../config/constants.js';
+import { createNotification } from './notification.controller.js';
 
 /**
  * ดูรายการคำขอลาที่รออนุมัติ (Admin - Level 4 / Final)
@@ -403,5 +404,209 @@ export const rejectLeaveFinal = async (req, res) => {
       HTTP_STATUS.INTERNAL_SERVER_ERROR,
       'Failed to reject leave'
     );
+  }
+};
+
+// ==================== CANCEL REQUEST FUNCTIONS (Final) ====================
+
+/**
+ * ดูรายการคำขอยกเลิกที่รออนุมัติขั้นสุดท้าย
+ * ดูคำขอที่ผ่านการอนุมัติจาก Head แล้ว (cancel_level3)
+ */
+export const getPendingCancelRequests = async (req, res) => {
+  try {
+    const { data: leaves, error } = await supabaseAdmin
+      .from('leaves')
+      .select(`
+        *,
+        leave_types (type_name, type_code),
+        users!leaves_user_id_fkey (
+          id, employee_code, title, first_name, last_name, position, department, phone,
+          sick_leave_balance, personal_leave_balance, vacation_leave_balance
+        )
+      `)
+      .eq('status', 'cancel_level3')
+      .order('updated_at', { ascending: true });
+
+    if (error) throw error;
+
+    return successResponse(res, HTTP_STATUS.OK, 'Pending cancel requests for final approval retrieved',
+      leaves.map(leave => ({
+        id: leave.id,
+        leaveNumber: leave.leave_number,
+        leaveType: leave.leave_types?.type_name || 'N/A',
+        leaveTypeCode: leave.leave_types?.type_code || 'N/A',
+        startDate: leave.start_date,
+        endDate: leave.end_date,
+        totalDays: leave.total_days,
+        reason: leave.reason,
+        cancelledReason: leave.cancelled_reason,
+        employee: {
+          employeeCode: leave.users?.employee_code,
+          name: `${leave.users?.title || ''}${leave.users?.first_name || ''} ${leave.users?.last_name || ''}`,
+          position: leave.users?.position,
+          department: leave.users?.department || 'N/A',
+          phone: leave.users?.phone,
+          sickLeaveBalance: leave.users?.sick_leave_balance,
+          personalLeaveBalance: leave.users?.personal_leave_balance,
+          vacationLeaveBalance: leave.users?.vacation_leave_balance
+        }
+      }))
+    );
+  } catch (error) {
+    console.error('Get pending cancel requests (final) error:', error);
+    return errorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Failed to retrieve cancel requests');
+  }
+};
+
+/**
+ * อนุมัติคำขอยกเลิกขั้นสุดท้าย - ยกเลิกใบลาและคืนวันลา
+ */
+export const approveCancelFinal = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { remarks } = req.body;
+    const adminId = req.user.id;
+
+    // ดึงข้อมูลใบลา
+    const { data: leave, error: fetchError } = await supabaseAdmin
+      .from('leaves')
+      .select(`
+        *,
+        leave_types (type_code),
+        users!leaves_user_id_fkey (
+          id, sick_leave_balance, personal_leave_balance, vacation_leave_balance
+        )
+      `)
+      .eq('id', id)
+      .eq('status', 'cancel_level3')
+      .single();
+
+    if (fetchError || !leave) {
+      return errorResponse(res, HTTP_STATUS.NOT_FOUND, 'Cancel request not found');
+    }
+
+    // คืนวันลา
+    const leaveTypeCode = leave.leave_types?.type_code;
+    const totalDays = leave.total_days;
+    const user = leave.users;
+
+    let balanceField = null;
+    if (leaveTypeCode === 'SICK') balanceField = 'sick_leave_balance';
+    else if (leaveTypeCode === 'PERSONAL') balanceField = 'personal_leave_balance';
+    else if (leaveTypeCode === 'VACATION') balanceField = 'vacation_leave_balance';
+
+    if (balanceField && user) {
+      const currentBalance = user[balanceField] || 0;
+      const newBalance = currentBalance + totalDays;
+
+      await supabaseAdmin
+        .from('users')
+        .update({ [balanceField]: newBalance })
+        .eq('id', leave.user_id);
+    }
+
+    // อัพเดทสถานะเป็น cancelled
+    await supabaseAdmin
+      .from('leaves')
+      .update({ 
+        status: 'cancelled',
+        cancelled_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id);
+
+    // บันทึกการอนุมัติ
+    await supabaseAdmin.from('approvals').insert({
+      leave_id: id,
+      approver_id: adminId,
+      approval_level: 4,
+      action: 'cancel_approved_final',
+      comment: remarks || 'ยืนยันการยกเลิกใบลา - วันลาคืนกลับแล้ว',
+      action_date: new Date().toISOString()
+    });
+
+    // แจ้งผู้ขอลาว่าคำขอยกเลิกได้รับการอนุมัติ
+    await createNotification(
+      leave.user_id,
+      'cancel_approved',
+      'คำขอยกเลิกการลาได้รับอนุมัติ',
+      `คำขอยกเลิก ${leave.leave_number} ได้รับอนุมัติแล้ว วันลาได้คืนกลับ ${totalDays} วัน`,
+      id,
+      'leave'
+    );
+
+    return successResponse(res, HTTP_STATUS.OK, 'Leave cancelled successfully', {
+      leaveId: id,
+      status: 'cancelled',
+      refundedDays: totalDays,
+      balanceField
+    });
+  } catch (error) {
+    console.error('Approve cancel final error:', error);
+    return errorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Failed to cancel leave');
+  }
+};
+
+/**
+ * ปฏิเสธคำขอยกเลิกขั้นสุดท้าย - ใบลายังมีผลอยู่
+ */
+export const rejectCancelFinal = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { remarks } = req.body;
+    const adminId = req.user.id;
+
+    if (!remarks?.trim()) {
+      return errorResponse(res, HTTP_STATUS.BAD_REQUEST, 'Rejection reason is required');
+    }
+
+    const { data: leave } = await supabaseAdmin
+      .from('leaves')
+      .select('*')
+      .eq('id', id)
+      .eq('status', 'cancel_level3')
+      .single();
+
+    if (!leave) {
+      return errorResponse(res, HTTP_STATUS.NOT_FOUND, 'Cancel request not found');
+    }
+
+    // คืนสถานะกลับเป็น approved_final
+    await supabaseAdmin
+      .from('leaves')
+      .update({ 
+        status: 'approved_final',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id);
+
+    // บันทึกการปฏิเสธ
+    await supabaseAdmin.from('approvals').insert({
+      leave_id: id,
+      approver_id: adminId,
+      approval_level: 4,
+      action: 'cancel_rejected',
+      comment: remarks,
+      action_date: new Date().toISOString()
+    });
+
+    // แจ้งผู้ขอลาว่าคำขอยกเลิกถูกปฏิเสธ
+    await createNotification(
+      leave.user_id,
+      'cancel_rejected',
+      'คำขอยกเลิกการลาถูกปฏิเสธ',
+      `คำขอยกเลิก ${leave.leave_number} ถูกปฏิเสธ: ${remarks}`,
+      id,
+      'leave'
+    );
+
+    return successResponse(res, HTTP_STATUS.OK, 'Cancel request rejected', {
+      leaveId: id,
+      status: 'approved_final'
+    });
+  } catch (error) {
+    console.error('Reject cancel final error:', error);
+    return errorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Failed to reject cancel');
   }
 };

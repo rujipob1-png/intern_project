@@ -2,7 +2,10 @@ import express from 'express';
 import {
   getPendingLeaves,
   approveLeaveFinal,
-  rejectLeaveFinal
+  rejectLeaveFinal,
+  getPendingCancelRequests,
+  approveCancelFinal,
+  rejectCancelFinal
 } from '../controllers/admin.controller.js';
 import { authenticate } from '../middlewares/auth.middleware.js';
 import { requireRole } from '../middlewares/role.middleware.js';
@@ -14,24 +17,31 @@ router.use(authenticate);
 router.use(requireRole(['admin']));
 
 /**
- * @route   GET /api/admin/pending
+ * @route   GET /api/admin/leaves/pending
  * @desc    ดูรายการคำขอลาที่รออนุมัติขั้นสุดท้าย (Level 4)
  * @access  Private (Admin)
  */
-router.get('/pending', getPendingLeaves);
+router.get('/leaves/pending', getPendingLeaves);
 
 /**
- * @route   POST /api/admin/:id/approve
+ * @route   PUT /api/admin/leaves/:id/approve
  * @desc    อนุมัติคำขอลาขั้นสุดท้ายและหักวันลา (Level 4)
  * @access  Private (Admin)
  */
-router.post('/:id/approve', approveLeaveFinal);
+router.put('/leaves/:id/approve', approveLeaveFinal);
 
 /**
- * @route   POST /api/admin/:id/reject
+ * @route   PUT /api/admin/leaves/:id/reject
  * @desc    ปฏิเสธคำขอลาขั้นสุดท้าย (Level 4)
  * @access  Private (Admin)
  */
-router.post('/:id/reject', rejectLeaveFinal);
+router.put('/leaves/:id/reject', rejectLeaveFinal);
+
+/**
+ * ==================== Cancel Request Routes (Final) ====================
+ */
+router.get('/cancel-requests/pending', getPendingCancelRequests);
+router.put('/cancel-requests/:id/approve', approveCancelFinal);
+router.put('/cancel-requests/:id/reject', rejectCancelFinal);
 
 export default router;

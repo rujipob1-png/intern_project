@@ -12,7 +12,8 @@ import {
   ChevronDown,
   CheckCircle,
   TrendingUp,
-  Clock
+  Clock,
+  XCircle
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { ROLES } from '../../utils/constants';
@@ -27,6 +28,7 @@ export const Sidebar = () => {
   const [openSections, setOpenSections] = useState({
     leave: true,
     approval: true,
+    cancellation: false,
     management: true,
   });
 
@@ -148,6 +150,35 @@ export const Sidebar = () => {
         {
           title: 'ประวัติการอนุมัติ',
           path: '/admin/history',
+          roles: [ROLES.ADMIN],
+        },
+      ],
+    },
+    {
+      id: 'cancellation',
+      title: 'อนุมัติยกเลิกการลา',
+      icon: XCircle,
+      collapsible: true,
+      roles: [ROLES.DIRECTOR, ROLES.CENTRAL_OFFICE_STAFF, ROLES.CENTRAL_OFFICE_HEAD, ROLES.ADMIN],
+      items: [
+        {
+          title: 'รออนุมัติยกเลิก (ผู้อำนวยการ)',
+          path: '/director/cancel-requests',
+          roles: [ROLES.DIRECTOR],
+        },
+        {
+          title: 'รออนุมัติยกเลิก (เจ้าหน้าที่)',
+          path: '/central-office/staff/cancel-requests',
+          roles: [ROLES.CENTRAL_OFFICE_STAFF],
+        },
+        {
+          title: 'รออนุมัติยกเลิก (หัวหน้าสำนักงานกลาง)',
+          path: '/central-office/head/cancel-requests',
+          roles: [ROLES.CENTRAL_OFFICE_HEAD],
+        },
+        {
+          title: 'อนุมัติยกเลิกขั้นสุดท้าย (ผู้บริหาร)',
+          path: '/admin/cancel-requests',
           roles: [ROLES.ADMIN],
         },
       ],

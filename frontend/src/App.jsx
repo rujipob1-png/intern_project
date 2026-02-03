@@ -12,9 +12,13 @@ import { LeaveHistoryPage } from './pages/user/LeaveHistoryPage';
 import { ActingRequestsPage } from './pages/user/ActingRequestsPage';
 import DashboardDirector from './pages/director/DashboardDirector';
 import ApprovalHistoryPage from './pages/director/ApprovalHistoryPage';
+import DirectorCancelRequests from './pages/director/DirectorCancelRequests';
 import CentralOfficeStaffDashboard from './pages/centralOffice/CentralOfficeStaffDashboard';
+import CentralOfficeStaffCancelRequests from './pages/centralOffice/CentralOfficeStaffCancelRequests';
 import CentralOfficeHeadDashboard from './pages/centralOffice/CentralOfficeHeadDashboard';
+import CentralOfficeHeadCancelRequests from './pages/centralOffice/CentralOfficeHeadCancelRequests';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminCancelRequests from './pages/admin/AdminCancelRequests';
 
 function App() {
   return (
@@ -89,6 +93,14 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          <Route 
+            path="/director/cancel-requests" 
+            element={
+              <ProtectedRoute>
+                <DirectorCancelRequests />
+              </ProtectedRoute>
+            } 
+          />
           
           {/* Central Office Staff Routes */}
           <Route 
@@ -96,6 +108,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <CentralOfficeStaffDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/central-office/staff/cancel-requests" 
+            element={
+              <ProtectedRoute>
+                <CentralOfficeStaffCancelRequests />
               </ProtectedRoute>
             } 
           />
@@ -109,6 +129,14 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          <Route 
+            path="/central-office/head/cancel-requests" 
+            element={
+              <ProtectedRoute>
+                <CentralOfficeHeadCancelRequests />
+              </ProtectedRoute>
+            } 
+          />
           
           {/* Admin Routes */}
           <Route 
@@ -116,6 +144,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <AdminDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/cancel-requests" 
+            element={
+              <ProtectedRoute>
+                <AdminCancelRequests />
               </ProtectedRoute>
             } 
           />

@@ -30,4 +30,23 @@ export const adminAPI = {
     const response = await axios.put(`/admin/users/${userId}`, data);
     return response.data;
   },
+
+  // ============= CANCEL REQUESTS (Final Level) =============
+  // Get pending cancel requests for final approval
+  getPendingCancelRequests: async () => {
+    const response = await axios.get('/admin/cancel-requests/pending');
+    return response.data;
+  },
+
+  // Approve cancel final (actually cancels the leave)
+  approveCancelFinal: async (leaveId, remarks = '') => {
+    const response = await axios.put(`/admin/cancel-requests/${leaveId}/approve`, { remarks });
+    return response.data;
+  },
+
+  // Reject cancel at final level
+  rejectCancelFinal: async (leaveId, remarks) => {
+    const response = await axios.put(`/admin/cancel-requests/${leaveId}/reject`, { remarks });
+    return response.data;
+  },
 };

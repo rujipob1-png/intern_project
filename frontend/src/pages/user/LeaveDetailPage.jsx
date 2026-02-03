@@ -521,7 +521,11 @@ export const LeaveDetailPage = () => {
                 <CardTitle>สถานะการอนุมัติ</CardTitle>
               </CardHeader>
               <CardContent>
-                <Timeline approvals={leave.approvals} status={leave.status} />
+                <Timeline 
+                  approvals={leave.approvals} 
+                  status={leave.status} 
+                  department={user?.department}
+                />
               </CardContent>
             </Card>
           </div>

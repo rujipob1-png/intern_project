@@ -7,9 +7,11 @@ import { useState, useEffect, useRef } from 'react';
 import { Bell, Check, CheckCheck, X, Trash2 } from 'lucide-react';
 import { notificationAPI } from '../../api/notification.api';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
 
 export const NotificationBell = () => {
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
@@ -124,14 +126,44 @@ export const NotificationBell = () => {
       handleMarkAsRead(notification.id);
     }
     
-    // Navigate based on reference type
-    if (notification.reference_type === 'leave' && notification.reference_id) {
+    const userRole = user?.role_name;
+    const notificationType = notification.type;
+    
+    // Navigate based on notification type and user role
+    if (notificationType === 'leave_request' || notificationType === 'new_leave' || notificationType === 'leave_pending') {
+      // คำขอลาใหม่ - ไปหน้าอนุมัติตาม role
+      if (userRole === 'director') {
+        navigate('/director/dashboard');
+      } else if (userRole === 'central_office_staff') {
+        navigate('/central-office/staff');
+      } else if (userRole === 'central_office_head') {
+        navigate('/central-office/head');
+      } else if (userRole === 'admin') {
+        navigate('/admin/dashboard');
+      } else {
+        navigate(`/leave-detail/${notification.reference_id}`);
+      }
+    } else if (notificationType === 'cancel_request' || notificationType === 'cancel_pending') {
+      // คำขอยกเลิกการลา - ไปหน้าอนุมัติยกเลิกตาม role
+      if (userRole === 'director') {
+        navigate('/director/cancel-requests');
+      } else if (userRole === 'central_office_staff') {
+        navigate('/central-office/staff/cancel-requests');
+      } else if (userRole === 'central_office_head') {
+        navigate('/central-office/head/cancel-requests');
+      } else if (userRole === 'admin') {
+        navigate('/admin/cancel-requests');
+      } else {
+        navigate(`/leave-detail/${notification.reference_id}`);
+      }
+    } else if (notification.reference_type === 'leave' && notification.reference_id) {
+      // ประเภทอื่นๆ ที่เกี่ยวกับ leave
       navigate(`/leave-detail/${notification.reference_id}`);
-      setIsOpen(false);
     } else if (notification.action_url) {
-      setIsOpen(false);
       navigate(notification.action_url);
     }
+    
+    setIsOpen(false);
   };
 
   const getNotificationIcon = (type) => {
@@ -144,8 +176,47 @@ export const NotificationBell = () => {
         return '✔️';
       case 'leave_rejected':
         return '❌';
+      case 'leave_request':
+      case 'new_leave':
+      case 'leave_pending':
+        return '📋';
+      case 'cancel_request':
+      case 'cancel_pending':
+        return '🚫';
+      case 'cancel_approved':
+        return '✅';
+      case 'cancel_rejected':
+        return '❌';
       default:
         return '🔔';
+    }
+  };
+
+  // Get display title for notification type
+  const getNotificationDisplayTitle = (notification) => {
+    const type = notification.type;
+    switch (type) {
+      case 'leave_request':
+      case 'new_leave':
+      case 'leave_pending':
+        return '📋 คำขอลาใหม่รอการอนุมัติ';
+      case 'cancel_request':
+      case 'cancel_pending':
+        return '🚫 คำขอยกเลิกการลารอการอนุมัติ';
+      case 'leave_approved':
+        return '✅ คำขอลาได้รับการอนุมัติ';
+      case 'leave_rejected':
+        return '❌ คำขอลาถูกปฏิเสธ';
+      case 'cancel_approved':
+        return '✅ คำขอยกเลิกได้รับการอนุมัติ';
+      case 'cancel_rejected':
+        return '❌ คำขอยกเลิกถูกปฏิเสธ';
+      case 'acting_request':
+        return '👤 คำขอปฏิบัติหน้าที่แทน';
+      case 'acting_approved':
+        return '✅ อนุมัติปฏิบัติหน้าที่แทน';
+      default:
+        return notification.title || 'การแจ้งเตือน';
     }
   };
 
@@ -240,7 +311,7 @@ export const NotificationBell = () => {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2 mb-1">
                             <h4 className="font-semibold text-slate-900 text-sm">
-                              {notification.title}
+                              {getNotificationDisplayTitle(notification)}
                             </h4>
                             <div className="flex items-center gap-2 flex-shrink-0">
                               {!notification.is_read && (

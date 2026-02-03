@@ -5,7 +5,14 @@ import {
   rejectLeaveLevel2,
   getPendingLeavesHead,
   approveLeaveLevel3,
-  rejectLeaveLevel3
+  rejectLeaveLevel3,
+  // Cancel request functions
+  getPendingCancelRequestsStaff,
+  approveCancelLevel2,
+  rejectCancelLevel2,
+  getPendingCancelRequestsHead,
+  approveCancelLevel3,
+  rejectCancelLevel3
 } from '../controllers/centralOffice.controller.js';
 import { authenticate } from '../middlewares/auth.middleware.js';
 import { requireRole } from '../middlewares/role.middleware.js';
@@ -64,5 +71,19 @@ router.post('/head/:id/approve', requireRole(['central_office_head']), approveLe
  * @access  Private (Central Office Head)
  */
 router.post('/head/:id/reject', requireRole(['central_office_head']), rejectLeaveLevel3);
+
+/**
+ * ==================== Cancel Request Routes - Staff (Level 2) ====================
+ */
+router.get('/staff/cancel-requests/pending', requireRole(['central_office_staff']), getPendingCancelRequestsStaff);
+router.post('/staff/cancel-requests/:id/approve', requireRole(['central_office_staff']), approveCancelLevel2);
+router.post('/staff/cancel-requests/:id/reject', requireRole(['central_office_staff']), rejectCancelLevel2);
+
+/**
+ * ==================== Cancel Request Routes - Head (Level 3) ====================
+ */
+router.get('/head/cancel-requests/pending', requireRole(['central_office_head']), getPendingCancelRequestsHead);
+router.post('/head/cancel-requests/:id/approve', requireRole(['central_office_head']), approveCancelLevel3);
+router.post('/head/cancel-requests/:id/reject', requireRole(['central_office_head']), rejectCancelLevel3);
 
 export default router;
