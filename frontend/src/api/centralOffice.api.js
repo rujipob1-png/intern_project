@@ -39,6 +39,17 @@ export const centralOfficeAPI = {
     return response.data;
   },
 
+  // Partial approve leave at level 3 (approve some dates, reject others)
+  partialApproveLeaveLevel3: async (leaveId, approvedDates, rejectedDates, rejectReason, remarks = '') => {
+    const response = await axios.post(`/central-office/head/${leaveId}/partial-approve`, {
+      approvedDates,
+      rejectedDates,
+      rejectReason,
+      remarks
+    });
+    return response.data;
+  },
+
   // ============= CANCEL REQUESTS - STAFF (Level 2) =============
   // Get pending cancel requests for staff
   getPendingCancelRequestsStaff: async () => {

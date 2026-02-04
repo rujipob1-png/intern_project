@@ -110,6 +110,7 @@ export const getPendingLeaves = async (req, res) => {
         totalDays: leave.total_days,
         reason: leave.reason,
         documentUrl: leave.document_url,
+        selectedDates: leave.selected_dates,
         createdAt: leave.created_at,
         employee: {
           id: leave.users?.id,
@@ -295,6 +296,16 @@ export const approveLeaveFinal = async (req, res) => {
       }
     }
 
+    // ส่งแจ้งเตือนไปยังผู้ยื่นใบลา
+    await createNotification(
+      leave.user_id,
+      'leave_approved',
+      'คำขอลาได้รับการอนุมัติแล้ว',
+      `คำขอลาเลขที่ ${leave.leave_number} ได้รับการอนุมัติขั้นสุดท้ายเรียบร้อยแล้ว`,
+      id,
+      'leave'
+    );
+
     return successResponse(
       res,
       HTTP_STATUS.OK,
@@ -387,6 +398,16 @@ export const rejectLeaveFinal = async (req, res) => {
       console.error('Error inserting approval record:', approvalError);
     }
 
+    // ส่งแจ้งเตือนไปยังผู้ยื่นใบลา
+    await createNotification(
+      leave.user_id,
+      'leave_rejected',
+      'คำขอลาถูกปฏิเสธ',
+      `คำขอลาเลขที่ ${leave.leave_number} ถูกปฏิเสธจากผู้บริหาร เหตุผล: ${remarks}`,
+      id,
+      'leave'
+    );
+
     return successResponse(
       res,
       HTTP_STATUS.OK,
@@ -403,6 +424,193 @@ export const rejectLeaveFinal = async (req, res) => {
       res,
       HTTP_STATUS.INTERNAL_SERVER_ERROR,
       'Failed to reject leave'
+    );
+  }
+};
+
+/**
+ * อนุมัติบางวัน (Partial Approval) - Admin Level 4 (Final)
+ * สามารถเลือกอนุมัติบางวันและปฏิเสธบางวันได้
+ */
+export const partialApproveLeaveFinal = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { approvedDates, rejectedDates, rejectReason, remarks } = req.body;
+    const adminId = req.user.id;
+
+    if (!approvedDates || approvedDates.length === 0) {
+      return errorResponse(
+        res,
+        HTTP_STATUS.BAD_REQUEST,
+        'ต้องมีอย่างน้อย 1 วันที่อนุมัติ'
+      );
+    }
+
+    if (rejectedDates && rejectedDates.length > 0 && !rejectReason) {
+      return errorResponse(
+        res,
+        HTTP_STATUS.BAD_REQUEST,
+        'ต้องระบุเหตุผลสำหรับวันที่ไม่อนุมัติ'
+      );
+    }
+
+    // ตรวจสอบว่ามีคำขอลานี้หรือไม่
+    const { data: leave, error: fetchError } = await supabaseAdmin
+      .from('leaves')
+      .select(`
+        *,
+        leave_types (type_name, type_code),
+        users!leaves_user_id_fkey (
+          id, sick_leave_balance, personal_leave_balance, vacation_leave_balance
+        )
+      `)
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !leave) {
+      return errorResponse(
+        res,
+        HTTP_STATUS.NOT_FOUND,
+        'Leave request not found'
+      );
+    }
+
+    // ตรวจสอบสถานะ - ต้องเป็น approved_level3
+    if (leave.status !== 'approved_level3') {
+      return errorResponse(
+        res,
+        HTTP_STATUS.BAD_REQUEST,
+        'This leave request is not ready for final approval'
+      );
+    }
+
+    // คำนวณจำนวนวันที่อนุมัติใหม่
+    const newTotalDays = approvedDates.length;
+    const newStartDate = approvedDates.sort()[0];
+    const newEndDate = approvedDates.sort()[approvedDates.length - 1];
+
+    // หาประเภทการลาและหักวันลา
+    const user = leave.users;
+    const leaveTypeCode = leave.leave_types?.type_code;
+    let updateBalance = null;
+    let balanceField = null;
+
+    switch (leaveTypeCode) {
+      case 'SICK':
+        balanceField = 'sick_leave_balance';
+        if (user.sick_leave_balance < newTotalDays) {
+          return errorResponse(res, HTTP_STATUS.BAD_REQUEST, 'ยอดวันลาป่วยไม่เพียงพอ');
+        }
+        updateBalance = { sick_leave_balance: user.sick_leave_balance - newTotalDays };
+        break;
+      case 'PERSONAL':
+        balanceField = 'personal_leave_balance';
+        if (user.personal_leave_balance < newTotalDays) {
+          return errorResponse(res, HTTP_STATUS.BAD_REQUEST, 'ยอดวันลากิจไม่เพียงพอ');
+        }
+        updateBalance = { personal_leave_balance: user.personal_leave_balance - newTotalDays };
+        break;
+      case 'VACATION':
+        balanceField = 'vacation_leave_balance';
+        if (user.vacation_leave_balance < newTotalDays) {
+          return errorResponse(res, HTTP_STATUS.BAD_REQUEST, 'ยอดวันพักร้อนไม่เพียงพอ');
+        }
+        updateBalance = { vacation_leave_balance: user.vacation_leave_balance - newTotalDays };
+        break;
+      default:
+        updateBalance = null;
+    }
+
+    // อัพเดทข้อมูลการลา
+    const { error: updateError } = await supabaseAdmin
+      .from('leaves')
+      .update({
+        status: 'approved',
+        current_approval_level: 4,
+        total_days: newTotalDays,
+        start_date: newStartDate,
+        end_date: newEndDate,
+        selected_dates: approvedDates,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id);
+
+    if (updateError) {
+      throw updateError;
+    }
+
+    // สร้างหมายเหตุรวม - รูปแบบกระชับ
+    let fullRemarks = `✓ อนุมัติ: ${approvedDates.join(', ')}`;
+    if (rejectedDates && rejectedDates.length > 0) {
+      fullRemarks += ` | ✗ ไม่อนุมัติ: ${rejectedDates.join(', ')} (เหตุผล: ${rejectReason})`;
+    }
+    if (remarks) {
+      fullRemarks += ` | หมายเหตุ: ${remarks}`;
+    }
+
+    // บันทึกการอนุมัติใน approvals table
+    const { error: approvalError } = await supabaseAdmin
+      .from('approvals')
+      .insert({
+        leave_id: id,
+        approver_id: adminId,
+        approval_level: 4,
+        action: 'partial_approved',
+        comment: fullRemarks,
+        action_date: new Date().toISOString()
+      });
+
+    if (approvalError) {
+      console.error('Error inserting approval record:', approvalError);
+    }
+
+    // หักวันลา
+    if (updateBalance) {
+      const { error: updateBalanceError } = await supabaseAdmin
+        .from('users')
+        .update(updateBalance)
+        .eq('id', user.id);
+
+      if (updateBalanceError) {
+        throw updateBalanceError;
+      }
+    }
+
+    // ส่งแจ้งเตือนให้ผู้ขอลา
+    let notificationMessage = `คำขอลาเลขที่ ${leave.leave_number} ได้รับการอนุมัติบางส่วน: ${approvedDates.length} วัน`;
+    if (rejectedDates && rejectedDates.length > 0) {
+      notificationMessage += ` (ไม่อนุมัติ ${rejectedDates.length} วัน: ${rejectReason})`;
+    }
+
+    await createNotification(
+      leave.user_id,
+      'leave_partial_approved',
+      'คำขอลาได้รับการอนุมัติบางส่วน',
+      notificationMessage,
+      id,
+      'leave'
+    );
+
+    return successResponse(
+      res,
+      HTTP_STATUS.OK,
+      'Leave partially approved successfully',
+      {
+        leaveId: id,
+        status: 'approved',
+        approvedDates,
+        rejectedDates,
+        newTotalDays,
+        deductedDays: updateBalance ? newTotalDays : 0,
+        newBalance: updateBalance ? updateBalance[balanceField] : null
+      }
+    );
+  } catch (error) {
+    console.error('Partial approve leave final error:', error);
+    return errorResponse(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      'Failed to partially approve leave'
     );
   }
 };

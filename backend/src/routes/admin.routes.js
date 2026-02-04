@@ -3,6 +3,7 @@ import {
   getPendingLeaves,
   approveLeaveFinal,
   rejectLeaveFinal,
+  partialApproveLeaveFinal,
   getPendingCancelRequests,
   approveCancelFinal,
   rejectCancelFinal
@@ -36,6 +37,13 @@ router.put('/leaves/:id/approve', approveLeaveFinal);
  * @access  Private (Admin)
  */
 router.put('/leaves/:id/reject', rejectLeaveFinal);
+
+/**
+ * @route   PUT /api/admin/leaves/:id/partial-approve
+ * @desc    อนุมัติบางวัน (Partial Approval) ขั้นสุดท้าย (Level 4)
+ * @access  Private (Admin)
+ */
+router.put('/leaves/:id/partial-approve', partialApproveLeaveFinal);
 
 /**
  * ==================== Cancel Request Routes (Final) ====================

@@ -19,6 +19,17 @@ export const adminAPI = {
     return response.data;
   },
 
+  // Partial approve leave at level 4 (approve some dates, reject others)
+  partialApproveLeaveFinal: async (leaveId, approvedDates, rejectedDates, rejectReason, remarks = '') => {
+    const response = await axios.put(`/admin/leaves/${leaveId}/partial-approve`, {
+      approvedDates,
+      rejectedDates,
+      rejectReason,
+      remarks
+    });
+    return response.data;
+  },
+
   // Get all users (for user management)
   getAllUsers: async () => {
     const response = await axios.get('/admin/users');

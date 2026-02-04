@@ -422,12 +422,15 @@ export const getLeaveById = async (req, res) => {
 
     // Parse reason to extract actual text and selected dates
     let actualReason = leave.reason;
-    let selectedDatesArray = [];
+    let selectedDatesArray = leave.selected_dates || []; // ใช้ selected_dates จาก column ก่อน
     try {
       const parsed = JSON.parse(leave.reason);
       if (parsed.reason && parsed.selected_dates) {
         actualReason = parsed.reason;
-        selectedDatesArray = parsed.selected_dates;
+        // ถ้า column selected_dates ว่าง ให้ใช้จาก reason JSON
+        if (selectedDatesArray.length === 0) {
+          selectedDatesArray = parsed.selected_dates;
+        }
       }
     } catch (e) {
       // If not JSON, use as-is

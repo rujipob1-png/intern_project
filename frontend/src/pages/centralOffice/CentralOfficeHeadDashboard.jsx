@@ -5,8 +5,20 @@ import { formatDate } from '../../utils/formatDate';
 import { getDepartmentThaiCode } from '../../utils/departmentMapping';
 import { Card } from '../../components/common/Card';
 import { useConfirm } from '../../components/common/ConfirmDialog';
+import DateEditModal from '../../components/common/DateEditModal';
 import toast from 'react-hot-toast';
-import { CheckCircle, XCircle, Clock, Calendar, FileText, Shield, User, Filter, Users, Building2 } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Calendar, FileText, Shield, User, Filter, Users, Building2, Edit3 } from 'lucide-react';
+
+// Helper function to parse reason from JSON
+const parseReason = (reason) => {
+  if (!reason) return 'ไม่ระบุเหตุผล';
+  try {
+    const parsed = JSON.parse(reason);
+    return parsed.reason || reason;
+  } catch (e) {
+    return reason;
+  }
+};
 
 // Department names mapping (รองรับทั้งรหัสภาษาอังกฤษและชื่อเต็มภาษาไทย)
 const DEPARTMENT_NAMES = {
@@ -14,18 +26,22 @@ const DEPARTMENT_NAMES = {
   'GYS': 'กยส.',
   'GOK': 'กอก.',
   'GTS': 'กทส.',
+  'GTP': 'กตป.',
+  'GSS': 'กสส.',
+  'GKC': 'กคช.',
   'GPS': 'กปส.',
-  'GSS': 'กศส.',
   'GKM': 'กกม.',
   'SLK': 'สลก.',
   'TSN': 'ตสน.',
   'KPR': 'กพร.',
   // ชื่อเต็มภาษาไทย
-  'กองยุทธศาสตร์และแผนงาน': 'กยส.',
-  'กองอำนวยการ': 'กอก.',
-  'กองทะเบียนและสารสนเทศ': 'กทส.',
+  'กลุ่มงานยุทธศาสตร์สารสนเทศและการสื่อสาร': 'กยส.',
+  'กลุ่มงานอำนวยการ': 'กอก.',
+  'กลุ่มงานเทคโนโลยีสารสนเทศ': 'กทส.',
+  'กลุ่มงานติดตามประเมินผลด้านสารสนเทศและการสื่อสาร': 'กตป.',
+  'กลุ่มงานเทคโนโลยีการสื่อสาร': 'กสส.',
+  'กลุ่มงานโครงสร้างพื้นฐานด้านสารสนเทศและการสื่อสาร': 'กคช.',
   'กองหลักประกันสุขภาพ': 'กปส.',
-  'กองเศรษฐกิจสุขภาพและหลักประกันสุขภาพ': 'กศส.',
   'กองกฎหมาย': 'กกม.',
   'สำนักงานเลขานุการกรม': 'สลก.',
   'กลุ่มตรวจสอบภายใน': 'ตสน.',
@@ -40,6 +56,8 @@ export default function CentralOfficeHeadDashboard() {
   const [remarks, setRemarks] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState('all');
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingLeave, setEditingLeave] = useState(null);
 
   // Get unique departments from pending leaves and count
   const departmentStats = pendingLeaves.reduce((acc, leave) => {
@@ -124,6 +142,43 @@ export default function CentralOfficeHeadDashboard() {
     } catch (error) {
       console.error('Error rejecting leave:', error);
       toast.error(error.response?.data?.message || 'เกิดข้อผิดพลาดในการไม่อนุมัติ');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Open modal for editing dates
+  const handleOpenEditModal = (leave) => {
+    setEditingLeave(leave);
+    setEditModalOpen(true);
+  };
+
+  // Handle partial approval submission
+  const handlePartialApprove = async ({ approvedDates, rejectedDates, rejectReason }) => {
+    try {
+      setActionLoading(true);
+      await centralOfficeAPI.partialApproveLeaveLevel3(
+        editingLeave.id,
+        approvedDates,
+        rejectedDates,
+        rejectReason,
+        remarks
+      );
+      
+      let message = `🎉 อนุมัติ ${approvedDates.length} วัน`;
+      if (rejectedDates.length > 0) {
+        message += ` (ไม่อนุมัติ ${rejectedDates.length} วัน)`;
+      }
+      toast.success(message);
+      
+      setEditModalOpen(false);
+      setEditingLeave(null);
+      setRemarks('');
+      setSelectedLeave(null);
+      loadPendingLeaves();
+    } catch (error) {
+      console.error('Error partial approving leave:', error);
+      toast.error(error.response?.data?.message || 'เกิดข้อผิดพลาดในการอนุมัติบางส่วน');
     } finally {
       setActionLoading(false);
     }
@@ -291,9 +346,9 @@ export default function CentralOfficeHeadDashboard() {
 
                   {/* Reason */}
                   {leave.reason && (
-                    <div className="mt-4 bg-gray-50 rounded-xl p-4">
-                      <p className="text-sm font-medium text-gray-600 mb-1">เหตุผล:</p>
-                      <p className="text-gray-800">{leave.reason}</p>
+                    <div className="mt-4 bg-slate-50 rounded-xl p-4 border border-slate-200">
+                      <p className="text-sm font-medium text-slate-600 mb-1">เหตุผล:</p>
+                      <p className="text-slate-800">{parseReason(leave.reason)}</p>
                     </div>
                   )}
                 </div>
@@ -315,12 +370,20 @@ export default function CentralOfficeHeadDashboard() {
                         className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold py-3 rounded-xl hover:from-green-600 hover:to-green-700 transition-all shadow-md disabled:opacity-50"
                       >
                         <CheckCircle className="w-5 h-5" />
-                        {actionLoading ? 'กำลังดำเนินการ...' : 'อนุมัติ'}
+                        {actionLoading ? 'กำลังดำเนินการ...' : 'อนุมัติทั้งหมด'}
+                      </button>
+                      <button
+                        onClick={() => handleOpenEditModal(leave)}
+                        disabled={actionLoading}
+                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold py-3 rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all shadow-md disabled:opacity-50"
+                      >
+                        <Edit3 className="w-5 h-5" />
+                        แก้ไขวันลา
                       </button>
                       <button
                         onClick={() => handleReject(leave.id)}
                         disabled={actionLoading}
-                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-slate-500 to-slate-600 text-white font-semibold py-3 rounded-xl hover:from-slate-600 hover:to-slate-700 transition-all shadow-md disabled:opacity-50"
+                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold py-3 rounded-xl hover:from-red-600 hover:to-red-700 transition-all shadow-md disabled:opacity-50"
                       >
                         <XCircle className="w-5 h-5" />
                         ไม่อนุมัติ
@@ -353,6 +416,18 @@ export default function CentralOfficeHeadDashboard() {
           ))}
         </div>
       )}
+
+      {/* Date Edit Modal */}
+      <DateEditModal
+        isOpen={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false);
+          setEditingLeave(null);
+        }}
+        leave={editingLeave}
+        onSubmit={handlePartialApprove}
+        loading={actionLoading}
+      />
     </div>
   );
 }

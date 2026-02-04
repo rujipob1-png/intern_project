@@ -175,6 +175,43 @@ export const approveLeavLevel2 = async (req, res) => {
       console.error('Error inserting approval record:', approvalError);
     }
 
+    // ส่งแจ้งเตือนให้ผู้ขอลา
+    await createNotification(
+      leave.user_id,
+      'leave_approved',
+      'คำขอลาผ่านการตรวจสอบเอกสาร',
+      `คำขอลาเลขที่ ${leave.leave_number} ผ่านการตรวจสอบเอกสารจากเจ้าหน้าที่แล้ว รอการอนุมัติระดับถัดไป`,
+      id,
+      'leave'
+    );
+
+    // ส่งแจ้งเตือนให้ central_office_head (ผอ.กอก.)
+    const { data: headRole } = await supabaseAdmin
+      .from('roles')
+      .select('id')
+      .eq('role_name', 'central_office_head')
+      .single();
+
+    if (headRole) {
+      const { data: headUsers } = await supabaseAdmin
+        .from('users')
+        .select('id')
+        .eq('role_id', headRole.id);
+
+      if (headUsers && headUsers.length > 0) {
+        for (const head of headUsers) {
+          await createNotification(
+            head.id,
+            'leave_pending',
+            'มีคำขอลาใหม่รออนุมัติ',
+            `คำขอลาเลขที่ ${leave.leave_number} ผ่านการตรวจสอบเอกสารแล้ว รอการอนุมัติจากท่าน`,
+            id,
+            'leave'
+          );
+        }
+      }
+    }
+
     return successResponse(
       res,
       HTTP_STATUS.OK,
@@ -264,6 +301,16 @@ export const rejectLeaveLevel2 = async (req, res) => {
     if (approvalError) {
       console.error('Error inserting approval record:', approvalError);
     }
+
+    // ส่งแจ้งเตือนให้ผู้ขอลา
+    await createNotification(
+      leave.user_id,
+      'leave_rejected',
+      'คำขอลาไม่ผ่านการตรวจสอบ',
+      `คำขอลาเลขที่ ${leave.leave_number} ไม่ผ่านการตรวจสอบเอกสารจากเจ้าหน้าที่ เหตุผล: ${remarks}`,
+      id,
+      'leave'
+    );
 
     return successResponse(
       res,
@@ -373,6 +420,7 @@ export const getPendingLeavesHead = async (req, res) => {
         totalDays: leave.total_days,
         reason: leave.reason,
         documentUrl: leave.document_url,
+        selectedDates: leave.selected_dates,
         createdAt: leave.created_at,
         employee: {
           employeeCode: leave.users?.employee_code,
@@ -471,6 +519,43 @@ export const approveLeaveLevel3 = async (req, res) => {
       console.error('Error inserting approval record:', approvalError);
     }
 
+    // ส่งแจ้งเตือนให้ผู้ขอลา
+    await createNotification(
+      leave.user_id,
+      'leave_approved',
+      'คำขอลาได้รับการอนุมัติระดับ 3',
+      `คำขอลาเลขที่ ${leave.leave_number} ได้รับการอนุมัติจากหัวหน้าสำนักงานกลางแล้ว รอการอนุมัติขั้นสุดท้าย`,
+      id,
+      'leave'
+    );
+
+    // ส่งแจ้งเตือนให้ admin (ผู้บริหารสูงสุด)
+    const { data: adminRole } = await supabaseAdmin
+      .from('roles')
+      .select('id')
+      .eq('role_name', 'admin')
+      .single();
+
+    if (adminRole) {
+      const { data: adminUsers } = await supabaseAdmin
+        .from('users')
+        .select('id')
+        .eq('role_id', adminRole.id);
+
+      if (adminUsers && adminUsers.length > 0) {
+        for (const admin of adminUsers) {
+          await createNotification(
+            admin.id,
+            'leave_pending',
+            'มีคำขอลาใหม่รออนุมัติขั้นสุดท้าย',
+            `คำขอลาเลขที่ ${leave.leave_number} ผ่านการอนุมัติระดับ 3 แล้ว รอการอนุมัติขั้นสุดท้ายจากท่าน`,
+            id,
+            'leave'
+          );
+        }
+      }
+    }
+
     return successResponse(
       res,
       HTTP_STATUS.OK,
@@ -560,6 +645,16 @@ export const rejectLeaveLevel3 = async (req, res) => {
     if (approvalError) {
       console.error('Error inserting approval record:', approvalError);
     }
+
+    // ส่งแจ้งเตือนไปยังผู้ยื่นใบลา
+    await createNotification(
+      leave.user_id,
+      'leave_rejected',
+      'คำขอลาถูกปฏิเสธ',
+      `คำขอลาเลขที่ ${leave.leave_number} ถูกปฏิเสธจากหัวหน้าสำนักงานกลาง เหตุผล: ${remarks}`,
+      id,
+      'leave'
+    );
 
     return successResponse(
       res,
@@ -856,6 +951,142 @@ export const approveCancelLevel3 = async (req, res) => {
   } catch (error) {
     console.error('Approve cancel (level 3) error:', error);
     return errorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Failed to approve cancel');
+  }
+};
+
+/**
+ * อนุมัติบางวัน (Partial Approval) - Head Level 3
+ * สามารถเลือกอนุมัติบางวันและปฏิเสธบางวันได้
+ */
+export const partialApproveLeaveLevel3 = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { approvedDates, rejectedDates, rejectReason, remarks } = req.body;
+    const headId = req.user.id;
+
+    if (!approvedDates || approvedDates.length === 0) {
+      return errorResponse(
+        res,
+        HTTP_STATUS.BAD_REQUEST,
+        'ต้องมีอย่างน้อย 1 วันที่อนุมัติ'
+      );
+    }
+
+    if (rejectedDates && rejectedDates.length > 0 && !rejectReason) {
+      return errorResponse(
+        res,
+        HTTP_STATUS.BAD_REQUEST,
+        'ต้องระบุเหตุผลสำหรับวันที่ไม่อนุมัติ'
+      );
+    }
+
+    // ตรวจสอบว่ามีคำขอลานี้หรือไม่
+    const { data: leave, error: fetchError } = await supabaseAdmin
+      .from('leaves')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !leave) {
+      return errorResponse(
+        res,
+        HTTP_STATUS.NOT_FOUND,
+        'Leave request not found'
+      );
+    }
+
+    // ตรวจสอบสถานะ - ต้องเป็น approved_level2
+    if (leave.status !== 'approved_level2') {
+      return errorResponse(
+        res,
+        HTTP_STATUS.BAD_REQUEST,
+        'This leave request is not ready for head approval'
+      );
+    }
+
+    // คำนวณจำนวนวันที่อนุมัติใหม่
+    const newTotalDays = approvedDates.length;
+    const newStartDate = approvedDates.sort()[0];
+    const newEndDate = approvedDates.sort()[approvedDates.length - 1];
+
+    // อัพเดทข้อมูลการลา
+    const { error: updateError } = await supabaseAdmin
+      .from('leaves')
+      .update({
+        status: 'approved_level3',
+        current_approval_level: 4,
+        total_days: newTotalDays,
+        start_date: newStartDate,
+        end_date: newEndDate,
+        selected_dates: approvedDates,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id);
+
+    if (updateError) {
+      throw updateError;
+    }
+
+    // สร้างหมายเหตุรวม - รูปแบบกระชับ
+    let fullRemarks = `✓ อนุมัติ: ${approvedDates.join(', ')}`;
+    if (rejectedDates && rejectedDates.length > 0) {
+      fullRemarks += ` | ✗ ไม่อนุมัติ: ${rejectedDates.join(', ')} (เหตุผล: ${rejectReason})`;
+    }
+    if (remarks) {
+      fullRemarks += ` | หมายเหตุ: ${remarks}`;
+    }
+
+    // บันทึกการอนุมัติใน approvals table
+    const { error: approvalError } = await supabaseAdmin
+      .from('approvals')
+      .insert({
+        leave_id: id,
+        approver_id: headId,
+        approval_level: 3,
+        action: 'partial_approved',
+        comment: fullRemarks,
+        action_date: new Date().toISOString()
+      });
+
+    if (approvalError) {
+      console.error('Error inserting approval record:', approvalError);
+    }
+
+    // ส่งแจ้งเตือนให้ผู้ขอลา
+    let notificationMessage = `คำขอลาเลขที่ ${leave.leave_number} ได้รับการอนุมัติบางส่วน: ${approvedDates.length} วัน`;
+    if (rejectedDates && rejectedDates.length > 0) {
+      notificationMessage += ` (ไม่อนุมัติ ${rejectedDates.length} วัน: ${rejectReason})`;
+    }
+
+    await createNotification(
+      leave.user_id,
+      'leave_partial_approved',
+      'คำขอลาได้รับการอนุมัติบางส่วน',
+      notificationMessage,
+      id,
+      'leave'
+    );
+
+    return successResponse(
+      res,
+      HTTP_STATUS.OK,
+      'Leave partially approved successfully',
+      {
+        leaveId: id,
+        status: 'approved_level3',
+        approvedDates,
+        rejectedDates,
+        newTotalDays,
+        nextLevel: 'Admin (Final Approval)'
+      }
+    );
+  } catch (error) {
+    console.error('Partial approve leave (level 3) error:', error);
+    return errorResponse(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      'Failed to partially approve leave'
+    );
   }
 };
 

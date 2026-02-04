@@ -232,6 +232,34 @@ export const approveLeave = async (req, res) => {
       'leave'
     );
 
+    // ส่งแจ้งเตือนให้ central_office_staff (หัวหน้าฝ่ายบริหารทั่วไป)
+    const { data: staffRole } = await supabaseAdmin
+      .from('roles')
+      .select('id')
+      .eq('role_name', 'central_office_staff')
+      .single();
+
+    if (staffRole) {
+      const { data: staffUsers } = await supabaseAdmin
+        .from('users')
+        .select('id')
+        .eq('role_id', staffRole.id);
+
+      if (staffUsers && staffUsers.length > 0) {
+        const employeeName = `${leave.users.first_name} ${leave.users.last_name}`;
+        for (const staff of staffUsers) {
+          await createNotification(
+            staff.id,
+            'leave_pending',
+            'มีคำขอลาใหม่รอตรวจสอบเอกสาร',
+            `${employeeName} (${leave.users.employee_code}) ผ่านการอนุมัติจาก ผอ.กลุ่มงานแล้ว รอตรวจสอบเอกสาร`,
+            id,
+            'leave'
+          );
+        }
+      }
+    }
+
     return successResponse(
       res,
       HTTP_STATUS.OK,

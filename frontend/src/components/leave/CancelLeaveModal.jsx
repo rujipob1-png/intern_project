@@ -122,7 +122,7 @@ export function CancelLeaveModal({ leave, onClose, onSubmit }) {
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+            className="p-2 bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
           >
             <X className="w-6 h-6" />
           </button>

@@ -1,7 +1,12 @@
-import { Check, X, Clock, User } from 'lucide-react';
+import { useState } from 'react';
+import { Check, X, Clock, User, Info } from 'lucide-react';
 import { formatDateTime } from '../../utils/formatDate';
+import PartialApprovalDetailModal, { isPartialApprovalComment } from '../common/PartialApprovalDetailModal';
 
-export const Timeline = ({ approvals, status, department }) => {
+export const Timeline = ({ approvals, status, department, selectedDates = [] }) => {
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedApproval, setSelectedApproval] = useState(null);
+
   // ตรวจสอบว่าเป็นสถานะยกเลิกหรือไม่
   const isCancelFlow = status?.startsWith('pending_cancel') || status?.startsWith('cancel_level');
   // ตรวจสอบว่าเป็น GOK (ชั้น 3) หรือไม่ - ข้าม ผอ.กลุ่มงาน
@@ -174,21 +179,22 @@ export const Timeline = ({ approvals, status, department }) => {
 
         return (
           <div key={step.level} className="relative">
-            {/* Connector Line */}
+            {/* Connector Line - ใช้ calc เพื่อให้เส้นยาวตลอดจากไอคอนไปถึงด้านล่าง */}
             {!isLast && (
               <div
-                className={`absolute left-5 top-12 w-0.5 h-16 ${
+                className={`absolute left-5 top-10 w-0.5 -translate-x-1/2 ${
                   getStepStatus(steps[index + 1]) === 'completed'
                     ? 'bg-green-500'
                     : 'bg-gray-300'
                 }`}
+                style={{ height: 'calc(100% - 0.5rem)' }}
               />
             )}
 
             {/* Step Content */}
             <div className="flex gap-4">
               {/* Icon */}
-              <div className="flex-shrink-0">
+              <div className="flex-shrink-0 z-10">
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center ${getStepColor(
                     stepStatus
@@ -234,28 +240,57 @@ export const Timeline = ({ approvals, status, department }) => {
 
                         {/* แสดงเหตุผล/หมายเหตุ */}
                         {(approval.comments || approval.comment) && (
-                          <div className={`mt-3 p-3 rounded-lg ${
-                            approval.action === 'rejected' || approval.status === 'rejected'
-                              ? 'bg-red-100 border-l-4 border-red-400'
-                              : 'bg-green-100 border-l-4 border-green-400'
-                          }`}>
-                            <p className={`text-xs font-semibold mb-1 ${
-                              approval.action === 'rejected' || approval.status === 'rejected'
-                                ? 'text-red-600'
-                                : 'text-green-600'
-                            }`}>
-                              {approval.action === 'rejected' || approval.status === 'rejected' 
-                                ? 'เหตุผลที่ไม่อนุมัติ' 
-                                : 'หมายเหตุ'}
-                            </p>
-                            <p className={`text-sm ${
-                              approval.action === 'rejected' || approval.status === 'rejected'
-                                ? 'text-red-800'
-                                : 'text-green-800'
-                            }`}>
-                              {approval.comments || approval.comment}
-                            </p>
-                          </div>
+                          <>
+                            {/* ถ้าเป็น partial approval ให้แสดงปุ่มดูรายละเอียด */}
+                            {isPartialApprovalComment(approval.comments || approval.comment) ? (
+                              <div className="mt-3 p-3 rounded-lg bg-amber-50 border-l-4 border-amber-400">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <p className="text-xs font-semibold text-amber-700 mb-1">อนุมัติบางส่วน</p>
+                                    <p className="text-sm text-amber-800">มีวันที่ถูกปรับแก้</p>
+                                  </div>
+                                  <button
+                                    onClick={() => {
+                                      setSelectedApproval({
+                                        comment: approval.comments || approval.comment,
+                                        approverName: approval.approver?.name || 
+                                          (approval.approver?.first_name ? `${approval.approver.title || ''}${approval.approver.first_name} ${approval.approver.last_name}` : null),
+                                        approvalDate: approval.approval_date || approval.actionDate
+                                      });
+                                      setDetailModalOpen(true);
+                                    }}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 text-white text-xs font-semibold rounded-lg hover:bg-amber-600 transition-colors"
+                                  >
+                                    <Info className="w-4 h-4" />
+                                    ดูรายละเอียด
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className={`mt-3 p-3 rounded-lg ${
+                                approval.action === 'rejected' || approval.status === 'rejected'
+                                  ? 'bg-red-100 border-l-4 border-red-400'
+                                  : 'bg-green-100 border-l-4 border-green-400'
+                              }`}>
+                                <p className={`text-xs font-semibold mb-1 ${
+                                  approval.action === 'rejected' || approval.status === 'rejected'
+                                    ? 'text-red-600'
+                                    : 'text-green-600'
+                                }`}>
+                                  {approval.action === 'rejected' || approval.status === 'rejected' 
+                                    ? 'เหตุผลที่ไม่อนุมัติ' 
+                                    : 'หมายเหตุ'}
+                                </p>
+                                <p className={`text-sm ${
+                                  approval.action === 'rejected' || approval.status === 'rejected'
+                                    ? 'text-red-800'
+                                    : 'text-green-800'
+                                }`}>
+                                  {approval.comments || approval.comment}
+                                </p>
+                              </div>
+                            )}
+                          </>
                         )}
 
                         {/* สถานะ Badge */}
@@ -297,6 +332,19 @@ export const Timeline = ({ approvals, status, department }) => {
           </div>
         );
       })}
+
+      {/* Partial Approval Detail Modal */}
+      <PartialApprovalDetailModal
+        isOpen={detailModalOpen}
+        onClose={() => {
+          setDetailModalOpen(false);
+          setSelectedApproval(null);
+        }}
+        comment={selectedApproval?.comment}
+        approverName={selectedApproval?.approverName}
+        approvalDate={selectedApproval?.approvalDate}
+        leaveApprovedDates={selectedDates}
+      />
     </div>
   );
 };

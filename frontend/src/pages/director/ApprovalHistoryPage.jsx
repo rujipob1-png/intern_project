@@ -281,7 +281,7 @@ const ApprovalHistoryPage = () => {
                   </div>
                   <button
                     onClick={() => setShowModal(false)}
-                    className="p-2 hover:bg-white/20 rounded-full transition-colors"
+                    className="p-2 bg-red-500 hover:bg-red-600 rounded-full transition-colors"
                   >
                     <X className="w-5 h-5 text-white" />
                   </button>

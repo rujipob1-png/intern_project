@@ -67,7 +67,7 @@ const ConfirmDialog = ({
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+          className="absolute top-4 right-4 p-1 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-full transition-colors"
         >
           <X className="w-5 h-5" />
         </button>

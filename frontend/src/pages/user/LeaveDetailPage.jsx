@@ -525,6 +525,7 @@ export const LeaveDetailPage = () => {
                   approvals={leave.approvals} 
                   status={leave.status} 
                   department={user?.department}
+                  selectedDates={leave.selectedDates || leave.selected_dates || []}
                 />
               </CardContent>
             </Card>
@@ -663,7 +664,7 @@ export const LeaveDetailPage = () => {
                 </button>
                 <button
                   onClick={() => setShowPDFPreview(false)}
-                  className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+                  className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -696,7 +697,7 @@ export const LeaveDetailPage = () => {
                 </button>
                 <button
                   onClick={() => setShowLeaveFormPDFPreview(false)}
-                  className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+                  className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>

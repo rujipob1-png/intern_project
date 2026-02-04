@@ -6,6 +6,7 @@ import {
   getPendingLeavesHead,
   approveLeaveLevel3,
   rejectLeaveLevel3,
+  partialApproveLeaveLevel3,
   // Cancel request functions
   getPendingCancelRequestsStaff,
   approveCancelLevel2,
@@ -71,6 +72,13 @@ router.post('/head/:id/approve', requireRole(['central_office_head']), approveLe
  * @access  Private (Central Office Head)
  */
 router.post('/head/:id/reject', requireRole(['central_office_head']), rejectLeaveLevel3);
+
+/**
+ * @route   POST /api/central-office/head/:id/partial-approve
+ * @desc    อนุมัติบางวัน (Partial Approval) ระดับ 3
+ * @access  Private (Central Office Head)
+ */
+router.post('/head/:id/partial-approve', requireRole(['central_office_head']), partialApproveLeaveLevel3);
 
 /**
  * ==================== Cancel Request Routes - Staff (Level 2) ====================
