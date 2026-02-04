@@ -818,3 +818,97 @@ export const rejectCancelFinal = async (req, res) => {
     return errorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Failed to reject cancel');
   }
 };
+
+/**
+ * ดึงข้อมูลผู้ใช้ทั้งหมดในระบบ (สำหรับ Admin)
+ */
+export const getAllUsers = async (req, res) => {
+  try {
+    const { data: users, error } = await supabaseAdmin
+      .from('users')
+      .select(`
+        id,
+        employee_code,
+        title,
+        first_name,
+        last_name,
+        position,
+        department,
+        phone,
+        is_active,
+        sick_leave_balance,
+        personal_leave_balance,
+        vacation_leave_balance,
+        created_at,
+        roles (
+          id,
+          role_name,
+          role_level
+        )
+      `)
+      .order('employee_code', { ascending: true });
+
+    if (error) {
+      throw error;
+    }
+
+    // Format data for frontend
+    const formattedUsers = users.map(user => ({
+      id: user.id,
+      employee_code: user.employee_code,
+      title: user.title,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      full_name: `${user.title || ''}${user.first_name} ${user.last_name}`,
+      position: user.position,
+      phone: user.phone,
+      is_active: user.is_active,
+      department_code: user.department,
+      role_name: user.roles?.role_name,
+      role_level: user.roles?.role_level,
+      sick_leave_balance: user.sick_leave_balance,
+      personal_leave_balance: user.personal_leave_balance,
+      vacation_leave_balance: user.vacation_leave_balance,
+      created_at: user.created_at
+    }));
+
+    return successResponse(res, HTTP_STATUS.OK, 'Users retrieved successfully', formattedUsers);
+  } catch (error) {
+    console.error('Get all users error:', error);
+    return errorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Failed to get users');
+  }
+};
+
+/**
+ * อัพเดทข้อมูลผู้ใช้ (สำหรับ Admin)
+ */
+export const updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    // ลบ fields ที่ไม่ควรอัพเดทโดยตรง
+    delete updateData.id;
+    delete updateData.password_hash;
+    delete updateData.employee_code;
+
+    const { data: user, error } = await supabaseAdmin
+      .from('users')
+      .update({
+        ...updateData,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    return successResponse(res, HTTP_STATUS.OK, 'User updated successfully', user);
+  } catch (error) {
+    console.error('Update user error:', error);
+    return errorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Failed to update user');
+  }
+};

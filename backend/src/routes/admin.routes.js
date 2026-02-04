@@ -6,7 +6,9 @@ import {
   partialApproveLeaveFinal,
   getPendingCancelRequests,
   approveCancelFinal,
-  rejectCancelFinal
+  rejectCancelFinal,
+  getAllUsers,
+  updateUser
 } from '../controllers/admin.controller.js';
 import { authenticate } from '../middlewares/auth.middleware.js';
 import { requireRole } from '../middlewares/role.middleware.js';
@@ -51,5 +53,11 @@ router.put('/leaves/:id/partial-approve', partialApproveLeaveFinal);
 router.get('/cancel-requests/pending', getPendingCancelRequests);
 router.put('/cancel-requests/:id/approve', approveCancelFinal);
 router.put('/cancel-requests/:id/reject', rejectCancelFinal);
+
+/**
+ * ==================== User Management Routes ====================
+ */
+router.get('/users', getAllUsers);
+router.put('/users/:id', updateUser);
 
 export default router;

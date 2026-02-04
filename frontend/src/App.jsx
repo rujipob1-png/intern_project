@@ -19,6 +19,7 @@ import CentralOfficeHeadDashboard from './pages/centralOffice/CentralOfficeHeadD
 import CentralOfficeHeadCancelRequests from './pages/centralOffice/CentralOfficeHeadCancelRequests';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminCancelRequests from './pages/admin/AdminCancelRequests';
+import UserManagementPage from './pages/admin/UserManagementPage';
 
 function App() {
   return (
@@ -152,6 +153,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <AdminCancelRequests />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/users" 
+            element={
+              <ProtectedRoute>
+                <UserManagementPage />
               </ProtectedRoute>
             } 
           />
