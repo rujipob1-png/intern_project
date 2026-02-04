@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { centralOfficeAPI } from '../../api/centralOffice.api';
 import { formatDate } from '../../utils/formatDate';
 import { getDepartmentThaiCode } from '../../utils/departmentMapping';
 import { Card } from '../../components/common/Card';
 import { useConfirm } from '../../components/common/ConfirmDialog';
 import toast from 'react-hot-toast';
-import { XCircle, CheckCircle, Clock, Calendar, FileText, AlertCircle, AlertTriangle, Filter, Building2, Users } from 'lucide-react';
+import { XCircle, CheckCircle, Clock, Calendar, FileText, AlertCircle, AlertTriangle, Filter, Building2, Users, ArrowLeft } from 'lucide-react';
 
 // Helper function to parse reason from JSON
 const parseReason = (reason) => {
@@ -20,15 +21,16 @@ const parseReason = (reason) => {
 
 // Department display names mapping
 const DEPARTMENT_NAMES = {
-  'GOK': 'กอก.',
-  'GYS': 'กยส.',
-  'GTS': 'กทส.',
-  'GTP': 'กตป.',
-  'GSS': 'กสส.',
-  'GKC': 'กคช.',
+  'GYS': 'กยส.', 'GOK': 'กอก.', 'GTS': 'กทส.', 'GPS': 'กปส.', 'GSS': 'กศส.',
+  'GKM': 'กกม.', 'SLK': 'สลก.', 'TSN': 'ตสน.', 'KPR': 'กพร.',
+  'กองยุทธศาสตร์และแผนงาน': 'กยส.', 'กองอำนวยการ': 'กอก.',
+  'กองทะเบียนและสารสนเทศ': 'กทส.', 'กองหลักประกันสุขภาพ': 'กปส.',
+  'กองเศรษฐกิจสุขภาพและหลักประกันสุขภาพ': 'กศส.', 'กองกฎหมาย': 'กกม.',
+  'สำนักงานเลขานุการกรม': 'สลก.', 'กลุ่มตรวจสอบภายใน': 'ตสน.', 'กลุ่มพัฒนาระบบบริหาร': 'กพร.',
 };
 
 export default function CentralOfficeHeadCancelRequests() {
+  const navigate = useNavigate();
   const { confirm } = useConfirm();
   const [pendingCancels, setPendingCancels] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -128,51 +130,56 @@ export default function CentralOfficeHeadCancelRequests() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 p-6 bg-gray-50 min-h-screen">
+    <div className="space-y-6 p-6 bg-slate-50 min-h-screen">
+      {/* Back Button */}
+      <button
+        onClick={() => navigate('/dashboard')}
+        className="flex items-center gap-2 text-slate-600 hover:text-slate-800 transition-colors group"
+      >
+        <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+        <span className="font-medium">กลับหน้าหลัก</span>
+      </button>
+
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl p-6 text-white shadow-lg">
+      <div className="bg-gradient-to-r from-slate-600 to-slate-700 rounded-xl p-6 text-white shadow-lg">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold flex items-center gap-3">
-              <XCircle className="w-8 h-8" />
+            <h1 className="text-xl font-bold flex items-center gap-3">
+              <XCircle className="w-7 h-7" />
               คำขอยกเลิกการลา
             </h1>
-            <p className="text-orange-100 mt-1">หัวหน้าสำนักงานกลาง (Level 3)</p>
+            <p className="text-slate-300 mt-1">หัวหน้าสำนักงานกลาง (Level 3)</p>
           </div>
-          <div className="bg-white/20 backdrop-blur rounded-xl px-6 py-3 text-center">
+          <div className="bg-white/10 backdrop-blur rounded-lg px-6 py-3 text-center border border-slate-400">
             <div className="text-3xl font-bold">{pendingCancels.length}</div>
-            <div className="text-sm text-orange-100">รออนุมัติ</div>
+            <div className="text-sm text-slate-300">รออนุมัติ</div>
           </div>
         </div>
       </div>
 
       {/* Department Filter */}
       {pendingCancels.length > 0 && (
-        <div className="bg-white rounded-2xl p-4 shadow-md">
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
           <div className="flex items-center gap-3 mb-3">
-            <Filter className="w-5 h-5 text-orange-600" />
-            <h2 className="font-semibold text-gray-700">กรองตามกอง/ฝ่าย</h2>
+            <Filter className="w-5 h-5 text-slate-500" />
+            <h2 className="font-semibold text-slate-700">กรองตามกอง/ฝ่าย</h2>
           </div>
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setSelectedDepartment('all')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-200 ${
-                selectedDepartment === 'all'
-                  ? 'bg-orange-600 text-white shadow-md'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                selectedDepartment === 'all' ? 'bg-slate-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
               <Users className="w-4 h-4" />
               <span>ทั้งหมด</span>
-              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                selectedDepartment === 'all' ? 'bg-white/20' : 'bg-orange-100 text-orange-700'
-              }`}>
+              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${selectedDepartment === 'all' ? 'bg-white/20' : 'bg-slate-200'}`}>
                 {pendingCancels.length}
               </span>
             </button>
@@ -305,7 +312,7 @@ export default function CentralOfficeHeadCancelRequests() {
                           className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold hover:from-green-600 hover:to-green-700 transition-all disabled:opacity-50 shadow-md"
                         >
                           <CheckCircle className="w-5 h-5" />
-                          ✓ อนุมัติ (ยกเลิกใบลา)
+                          อนุมัติ (ยกเลิกใบลา)
                         </button>
                         <button
                           onClick={() => handleRejectCancel(leave.id)}
@@ -313,7 +320,7 @@ export default function CentralOfficeHeadCancelRequests() {
                           className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-semibold hover:from-red-600 hover:to-red-700 transition-all disabled:opacity-50 shadow-md"
                         >
                           <XCircle className="w-5 h-5" />
-                          ✗ ไม่อนุมัติ (ใบลายังมีผล)
+                          ไม่อนุมัติ (ใบลายังมีผล)
                         </button>
                       </div>
                       <button

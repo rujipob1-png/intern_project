@@ -9,7 +9,31 @@ import { Button } from '../../components/common/Button';
 import { Card } from '../../components/common/Card';
 import { useConfirm } from '../../components/common/ConfirmDialog';
 import toast from 'react-hot-toast';
-import { CheckCircle, XCircle, Clock, User, Calendar, FileText, AlertCircle, ArrowLeft, Building2, Stamp, Bell, Trash2 } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, User, Calendar, FileText, AlertCircle, ArrowLeft, Building2, Stamp, Bell, Trash2, Filter, Users } from 'lucide-react';
+
+// Department names mapping (รองรับทั้งรหัสภาษาอังกฤษและชื่อเต็มภาษาไทย)
+const DEPARTMENT_NAMES = {
+  // รหัสภาษาอังกฤษ
+  'GYS': 'กยส.',
+  'GOK': 'กอก.',
+  'GTS': 'กทส.',
+  'GPS': 'กปส.',
+  'GSS': 'กศส.',
+  'GKM': 'กกม.',
+  'SLK': 'สลก.',
+  'TSN': 'ตสน.',
+  'KPR': 'กพร.',
+  // ชื่อเต็มภาษาไทย
+  'กองยุทธศาสตร์และแผนงาน': 'กยส.',
+  'กองอำนวยการ': 'กอก.',
+  'กองทะเบียนและสารสนเทศ': 'กทส.',
+  'กองหลักประกันสุขภาพ': 'กปส.',
+  'กองเศรษฐกิจสุขภาพและหลักประกันสุขภาพ': 'กศส.',
+  'กองกฎหมาย': 'กกม.',
+  'สำนักงานเลขานุการกรม': 'สลก.',
+  'กลุ่มตรวจสอบภายใน': 'ตสน.',
+  'กลุ่มพัฒนาระบบบริหาร': 'กพร.',
+};
 
 export default function DashboardDirector() {
   const navigate = useNavigate();
@@ -21,6 +45,19 @@ export default function DashboardDirector() {
   const [actionLoading, setActionLoading] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [notifLoading, setNotifLoading] = useState(true);
+  const [selectedDepartment, setSelectedDepartment] = useState('all');
+
+  // Get unique departments from pending leaves and count
+  const departmentStats = pendingLeaves.reduce((acc, leave) => {
+    const dept = leave.employee?.department || 'unknown';
+    acc[dept] = (acc[dept] || 0) + 1;
+    return acc;
+  }, {});
+
+  // Filter leaves by selected department
+  const filteredLeaves = selectedDepartment === 'all' 
+    ? pendingLeaves 
+    : pendingLeaves.filter(leave => leave.employee?.department === selectedDepartment);
 
   useEffect(() => {
     loadPendingLeaves();
@@ -168,62 +205,62 @@ export default function DashboardDirector() {
       </button>
 
       {/* Official Government Header */}
-      <div className="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 rounded-xl shadow-2xl overflow-hidden border-4 border-yellow-500">
-        {/* Gold Stripe Top */}
-        <div className="h-2 bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-400"></div>
+      <div className="bg-gradient-to-r from-slate-700 via-slate-600 to-slate-700 rounded-xl shadow-lg overflow-hidden border border-slate-400">
+        {/* Top Stripe */}
+        <div className="h-1 bg-gradient-to-r from-blue-500 via-blue-400 to-blue-500"></div>
         
         <div className="p-6">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
               {/* Official Seal */}
-              <div className="w-20 h-20 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center shadow-lg border-4 border-yellow-300">
-                <Stamp className="w-10 h-10 text-blue-900" />
+              <div className="w-16 h-16 bg-gradient-to-br from-slate-100 to-slate-200 rounded-full flex items-center justify-center shadow-md border-2 border-slate-300">
+                <Stamp className="w-8 h-8 text-slate-600" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-                  <Building2 className="w-7 h-7 text-yellow-400" />
+                <h1 className="text-xl font-bold text-white flex items-center gap-3">
+                  <Building2 className="w-6 h-6 text-blue-300" />
                   ระบบอนุมัติการลา
                 </h1>
-                <p className="text-yellow-200 mt-1 text-lg">ผู้อำนวยการกลุ่ม • ลำดับที่ 1</p>
-                <p className="text-blue-200 text-sm mt-1">ตรวจสอบและอนุมัติใบลาของบุคลากรในสังกัด</p>
+                <p className="text-slate-300 mt-1">ผู้อำนวยการกลุ่ม • ลำดับที่ 1</p>
+                <p className="text-slate-400 text-sm mt-1">ตรวจสอบและอนุมัติใบลาของบุคลากรในสังกัด</p>
               </div>
             </div>
-            <div className="bg-white/10 backdrop-blur border-2 border-yellow-400 rounded-xl px-8 py-4 text-center">
-              <div className="text-4xl font-bold text-yellow-400">{pendingLeaves.length}</div>
-              <div className="text-sm text-yellow-200 font-medium">รายการรออนุมัติ</div>
+            <div className="bg-white/10 backdrop-blur border border-slate-400 rounded-lg px-6 py-3 text-center">
+              <div className="text-3xl font-bold text-blue-300">{pendingLeaves.length}</div>
+              <div className="text-sm text-slate-300">รายการรออนุมัติ</div>
             </div>
           </div>
         </div>
 
-        {/* Gold Stripe Bottom */}
-        <div className="h-2 bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-400"></div>
+        {/* Bottom Stripe */}
+        <div className="h-1 bg-gradient-to-r from-blue-500 via-blue-400 to-blue-500"></div>
       </div>
 
       {/* Notifications Section */}
       {notifications.length > 0 && (
-        <div className="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-amber-300 rounded-xl overflow-hidden shadow-lg">
-          <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-5 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-white">
+        <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+          <div className="bg-slate-100 px-5 py-3 flex items-center justify-between border-b border-slate-200">
+            <div className="flex items-center gap-2 text-slate-700">
               <Bell className="w-5 h-5" />
               <span className="font-semibold">แจ้งเตือนใหม่</span>
-              <span className="bg-white text-amber-600 text-xs font-bold px-2 py-0.5 rounded-full">{notifications.length}</span>
+              <span className="bg-blue-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{notifications.length}</span>
             </div>
             <button
               onClick={handleMarkAllAsRead}
-              className="text-white/80 hover:text-white text-sm flex items-center gap-1 transition-colors"
+              className="text-slate-500 hover:text-blue-600 text-sm flex items-center gap-1 transition-colors"
             >
               <CheckCircle className="w-4 h-4" />
               อ่านทั้งหมด
             </button>
           </div>
-          <div className="divide-y divide-amber-200">
+          <div className="divide-y divide-slate-100">
             {notifications.map((notif) => (
-              <div key={notif.id} className="px-5 py-4 flex items-start gap-4 hover:bg-amber-100/50 transition-colors">
-                <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <div key={notif.id} className="px-5 py-4 flex items-start gap-4 hover:bg-slate-50 transition-colors">
+                <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center flex-shrink-0">
                   {notif.type === 'leave_pending' ? (
-                    <Clock className="w-5 h-5 text-amber-600" />
+                    <Clock className="w-5 h-5 text-blue-500" />
                   ) : (
-                    <Bell className="w-5 h-5 text-amber-600" />
+                    <Bell className="w-5 h-5 text-blue-500" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -255,6 +292,66 @@ export default function DashboardDirector() {
         </div>
       )}
 
+      {/* Department Filter Tabs */}
+      {pendingLeaves.length > 0 && (
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+          <div className="flex items-center gap-3 mb-3">
+            <Filter className="w-5 h-5 text-slate-500" />
+            <h2 className="font-semibold text-slate-700">กรองตามกอง/ฝ่าย</h2>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {/* All departments button */}
+            <button
+              onClick={() => setSelectedDepartment('all')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                selectedDepartment === 'all'
+                  ? 'bg-slate-600 text-white shadow-md'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              <span>ทั้งหมด</span>
+              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                selectedDepartment === 'all' ? 'bg-white/20' : 'bg-slate-200 text-slate-600'
+              }`}>
+                {pendingLeaves.length}
+              </span>
+            </button>
+
+            {/* Department buttons */}
+            {Object.entries(departmentStats)
+              .sort((a, b) => b[1] - a[1])
+              .map(([dept, count]) => (
+                <button
+                  key={dept}
+                  onClick={() => setSelectedDepartment(dept)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                    selectedDepartment === dept
+                      ? 'bg-slate-600 text-white shadow-md'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  <Building2 className="w-4 h-4" />
+                  <span>{DEPARTMENT_NAMES[dept] || dept}</span>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                    selectedDepartment === dept ? 'bg-white/20' : 'bg-slate-200 text-slate-600'
+                  }`}>
+                    {count}
+                  </span>
+                </button>
+              ))}
+          </div>
+          
+          {selectedDepartment !== 'all' && (
+            <div className="mt-3 flex items-center gap-2 text-sm text-slate-600">
+              <span>แสดงเฉพาะ:</span>
+              <span className="font-semibold">{DEPARTMENT_NAMES[selectedDepartment] || selectedDepartment}</span>
+              <span className="text-slate-400">({filteredLeaves.length} รายการ)</span>
+            </div>
+          )}
+        </div>
+      )}
+
       {pendingLeaves.length === 0 ? (
         <Card className="text-center py-16 border-2 border-blue-200 bg-white shadow-lg">
           <div className="flex flex-col items-center gap-4">
@@ -270,30 +367,30 @@ export default function DashboardDirector() {
         </Card>
       ) : (
         <div className="grid gap-6">
-          {pendingLeaves.map((leave) => (
-            <Card key={leave.id} className="overflow-hidden hover:shadow-2xl transition-all duration-300 border-2 border-blue-100 bg-white">
+          {filteredLeaves.map((leave) => (
+            <Card key={leave.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 border border-slate-200 bg-white">
               {/* Official Document Header */}
-              <div className="bg-gradient-to-r from-blue-900 to-blue-800 px-6 py-3 flex items-center justify-between border-b-4 border-yellow-400">
+              <div className="bg-slate-600 px-6 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <FileText className="w-5 h-5 text-yellow-400" />
+                  <FileText className="w-5 h-5 text-slate-200" />
                   <span className="text-white font-semibold">เอกสารใบลาราชการ</span>
                 </div>
-                <span className="text-yellow-400 font-mono text-sm">เลขที่: {leave.id?.slice(0, 8).toUpperCase()}</span>
+                <span className="text-slate-300 font-mono text-sm">เลขที่: {leave.id?.slice(0, 8).toUpperCase()}</span>
               </div>
 
               <div className="flex flex-col lg:flex-row">
                 {/* Left: Employee Info */}
-                <div className="lg:w-1/4 bg-gradient-to-br from-blue-50 to-slate-50 p-6 border-b lg:border-b-0 lg:border-r-2 border-blue-100">
+                <div className="lg:w-1/4 bg-slate-50 p-6 border-b lg:border-b-0 lg:border-r border-slate-200">
                   <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-800 to-blue-900 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg border-4 border-yellow-400">
+                    <div className="w-14 h-14 bg-slate-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md">
                       {leave.employee?.name?.charAt(0) || 'U'}
                     </div>
                     <div>
-                      <h3 className="font-bold text-blue-900 text-lg">
+                      <h3 className="font-bold text-slate-800 text-lg">
                         {leave.employee?.name || 'ไม่ระบุชื่อ'}
                       </h3>
-                      <p className="text-sm text-gray-600">รหัสบุคลากร: <span className="font-mono font-semibold">{leave.employee?.employeeCode}</span></p>
-                      <span className="inline-block mt-2 px-4 py-1 bg-blue-900 text-yellow-400 text-xs font-bold rounded-full border border-yellow-400">
+                      <p className="text-sm text-slate-500">รหัสบุคลากร: <span className="font-mono font-semibold">{leave.employee?.employeeCode}</span></p>
+                      <span className="inline-block mt-2 px-3 py-1 bg-slate-600 text-white text-xs font-medium rounded-full">
                         {getDepartmentThaiCode(leave.employee?.department) || 'ไม่ระบุสังกัด'}
                       </span>
                     </div>
@@ -302,44 +399,44 @@ export default function DashboardDirector() {
 
                 {/* Center: Leave Details */}
                 <div className="lg:w-1/2 p-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-4 border-2 border-amber-200">
-                      <div className="flex items-center gap-2 text-amber-700 mb-1">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
+                      <div className="flex items-center gap-2 text-blue-600 mb-1">
                         <FileText className="w-4 h-4" />
-                        <span className="text-xs font-bold uppercase">ประเภทการลา</span>
+                        <span className="text-xs font-medium">ประเภทการลา</span>
                       </div>
-                      <p className="font-bold text-blue-900 text-lg">{leave.leaveType || 'N/A'}</p>
+                      <p className="font-semibold text-slate-800">{leave.leaveType || 'N/A'}</p>
                     </div>
-                    <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-4 border-2 border-purple-200">
-                      <div className="flex items-center gap-2 text-purple-700 mb-1">
+                    <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                      <div className="flex items-center gap-2 text-slate-500 mb-1">
                         <Clock className="w-4 h-4" />
-                        <span className="text-xs font-bold uppercase">จำนวนวัน</span>
+                        <span className="text-xs font-medium">จำนวนวัน</span>
                       </div>
-                      <p className="font-bold text-blue-900 text-lg">{leave.totalDays} วัน</p>
+                      <p className="font-semibold text-slate-800">{leave.totalDays} วัน</p>
                     </div>
-                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border-2 border-green-200">
-                      <div className="flex items-center gap-2 text-green-700 mb-1">
+                    <div className="bg-green-50 rounded-lg p-4 border border-green-100">
+                      <div className="flex items-center gap-2 text-green-600 mb-1">
                         <Calendar className="w-4 h-4" />
-                        <span className="text-xs font-bold uppercase">วันที่เริ่มต้น</span>
+                        <span className="text-xs font-medium">วันที่เริ่มต้น</span>
                       </div>
-                      <p className="font-bold text-blue-900">{formatDate(leave.startDate)}</p>
+                      <p className="font-semibold text-slate-800">{formatDate(leave.startDate)}</p>
                     </div>
-                    <div className="bg-gradient-to-br from-red-50 to-rose-50 rounded-xl p-4 border-2 border-red-200">
-                      <div className="flex items-center gap-2 text-red-700 mb-1">
+                    <div className="bg-rose-50 rounded-lg p-4 border border-rose-100">
+                      <div className="flex items-center gap-2 text-rose-500 mb-1">
                         <Calendar className="w-4 h-4" />
-                        <span className="text-xs font-bold uppercase">วันที่สิ้นสุด</span>
+                        <span className="text-xs font-medium">วันที่สิ้นสุด</span>
                       </div>
-                      <p className="font-bold text-blue-900">{formatDate(leave.endDate)}</p>
+                      <p className="font-semibold text-slate-800">{formatDate(leave.endDate)}</p>
                     </div>
                   </div>
 
                   {/* Selected Dates */}
                   {leave.selectedDates && leave.selectedDates.length > 0 && (
                     <div className="mt-4">
-                      <p className="text-sm font-bold text-blue-800 mb-2 uppercase">วันที่ลาเลือก:</p>
+                      <p className="text-sm font-medium text-slate-600 mb-2">วันที่ลาเลือก:</p>
                       <div className="flex flex-wrap gap-2">
                         {leave.selectedDates.map((date, index) => (
-                          <span key={index} className="bg-blue-900 text-yellow-400 px-3 py-1 rounded-full text-sm font-semibold border border-yellow-400">
+                          <span key={index} className="bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-medium">
                             {formatDate(date)}
                           </span>
                         ))}
@@ -349,60 +446,60 @@ export default function DashboardDirector() {
 
                   {/* Reason */}
                   {leave.reason && (
-                    <div className="mt-4 bg-gradient-to-br from-slate-50 to-gray-50 rounded-xl p-4 border-2 border-slate-200">
-                      <p className="text-sm font-bold text-blue-800 mb-1 uppercase">เหตุผลการลา:</p>
-                      <p className="text-gray-800">{leave.reason}</p>
+                    <div className="mt-4 bg-slate-50 rounded-lg p-4 border border-slate-200">
+                      <p className="text-sm font-medium text-slate-600 mb-1">เหตุผลการลา:</p>
+                      <p className="text-slate-700">{leave.reason}</p>
                     </div>
                   )}
                 </div>
 
                 {/* Right: Actions */}
-                <div className="lg:w-1/4 p-6 bg-gradient-to-br from-slate-50 to-blue-50 flex flex-col justify-center border-l-2 border-blue-100">
+                <div className="lg:w-1/4 p-6 bg-slate-50 flex flex-col justify-center border-l border-slate-200">
                   {selectedLeave === leave.id ? (
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       <textarea
                         value={remarks}
                         onChange={(e) => setRemarks(e.target.value)}
                         placeholder="บันทึกข้อความ / หมายเหตุ..."
-                        className="w-full px-4 py-3 border-2 border-blue-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 resize-none bg-white"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 resize-none bg-white text-sm"
                         rows="3"
                       />
                       <button
                         onClick={() => handleApprove(leave.id)}
                         disabled={actionLoading}
-                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-green-700 text-white font-bold py-3 rounded-xl hover:from-green-700 hover:to-green-800 transition-all shadow-lg disabled:opacity-50 border-2 border-green-400"
+                        className="w-full flex items-center justify-center gap-2 bg-green-600 text-white font-medium py-2.5 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
                       >
-                        <CheckCircle className="w-5 h-5" />
+                        <CheckCircle className="w-4 h-4" />
                         {actionLoading ? 'กำลังดำเนินการ...' : 'อนุมัติ'}
                       </button>
                       <button
                         onClick={() => handleReject(leave.id)}
                         disabled={actionLoading}
-                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 to-red-700 text-white font-bold py-3 rounded-xl hover:from-red-700 hover:to-red-800 transition-all shadow-lg disabled:opacity-50 border-2 border-red-400"
+                        className="w-full flex items-center justify-center gap-2 bg-red-500 text-white font-medium py-2.5 rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
                       >
-                        <XCircle className="w-5 h-5" />
+                        <XCircle className="w-4 h-4" />
                         ไม่อนุมัติ
                       </button>
                       <button
                         onClick={() => { setSelectedLeave(null); setRemarks(''); }}
                         disabled={actionLoading}
-                        className="w-full text-gray-600 font-semibold py-2 hover:text-blue-900 transition-colors border-2 border-gray-300 rounded-xl hover:border-blue-400 bg-white"
+                        className="w-full text-slate-500 font-medium py-2 hover:text-slate-700 transition-colors border border-slate-300 rounded-lg hover:border-slate-400 bg-white text-sm"
                       >
                         ยกเลิก
                       </button>
                     </div>
                   ) : (
                     <div className="text-center">
-                      <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-100 text-amber-800 rounded-full text-sm font-bold mb-4 border-2 border-amber-300">
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-full text-sm font-medium mb-4 border border-amber-200">
                         <AlertCircle className="w-4 h-4" />
                         รอการพิจารณา
                       </div>
                       <button
                         onClick={() => setSelectedLeave(leave.id)}
-                        className="w-full bg-gradient-to-r from-blue-800 to-blue-900 text-white font-bold py-3 rounded-xl hover:from-blue-900 hover:to-blue-950 transition-all shadow-lg border-2 border-yellow-400"
+                        className="w-full bg-slate-600 text-white font-medium py-2.5 rounded-lg hover:bg-slate-700 transition-colors"
                       >
                         <span className="flex items-center justify-center gap-2">
-                          <Stamp className="w-5 h-5 text-yellow-400" />
+                          <Stamp className="w-4 h-4" />
                           พิจารณาการลา
                         </span>
                       </button>

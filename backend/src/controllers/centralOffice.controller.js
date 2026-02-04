@@ -65,35 +65,42 @@ export const getPendingLeavesStaff = async (req, res) => {
       res,
       HTTP_STATUS.OK,
       'Pending leaves for staff review retrieved successfully',
-      leavesWithApprovals.map(leave => ({
-        id: leave.id,
-        leaveNumber: leave.leave_number,
-        leaveType: leave.leave_types?.type_name || 'N/A',
-        leaveTypeCode: leave.leave_types?.type_code || 'N/A',
-        startDate: leave.start_date,
-        endDate: leave.end_date,
-        totalDays: leave.total_days,
-        reason: leave.reason,
-        documentUrl: leave.document_url,
-        contactAddress: leave.contact_address,
-        contactPhone: leave.contact_phone,
-        selectedDates: leave.selected_dates,
-        createdAt: leave.created_at,
-        employee: {
-          employeeCode: leave.users?.employee_code,
-          name: `${leave.users?.title || ''}${leave.users?.first_name || ''} ${leave.users?.last_name || ''}`,
-          position: leave.users?.position,
-          department: leave.users?.department || 'N/A',
-          phone: leave.users?.phone
-        },
-        directorApproval: {
-          approvedAt: leave.level1Approval?.action_date,
-          remarks: leave.level1Approval?.comment,
-          approver: leave.level1Approval?.approver 
-            ? `${leave.level1Approval.approver.title}${leave.level1Approval.approver.first_name} ${leave.level1Approval.approver.last_name}` 
-            : null
-        }
-      }))
+      leavesWithApprovals.map(leave => {
+        // ตรวจสอบว่าเป็น user ที่ข้าม Director มาหรือไม่ (กอง GOK/กองอำนวยการ)
+        const isGOKDepartment = leave.users?.department === 'GOK' || leave.users?.department === 'กองอำนวยการ';
+        const skippedDirector = isGOKDepartment && !leave.level1Approval;
+
+        return {
+          id: leave.id,
+          leaveNumber: leave.leave_number,
+          leaveType: leave.leave_types?.type_name || 'N/A',
+          leaveTypeCode: leave.leave_types?.type_code || 'N/A',
+          startDate: leave.start_date,
+          endDate: leave.end_date,
+          totalDays: leave.total_days,
+          reason: leave.reason,
+          documentUrl: leave.document_url,
+          contactAddress: leave.contact_address,
+          contactPhone: leave.contact_phone,
+          selectedDates: leave.selected_dates,
+          createdAt: leave.created_at,
+          employee: {
+            employeeCode: leave.users?.employee_code,
+            name: `${leave.users?.title || ''}${leave.users?.first_name || ''} ${leave.users?.last_name || ''}`,
+            position: leave.users?.position,
+            department: leave.users?.department || 'N/A',
+            phone: leave.users?.phone
+          },
+          skippedDirector, // flag บอกว่าข้าม Director มา (ชั้น 3)
+          directorApproval: skippedDirector ? null : {
+            approvedAt: leave.level1Approval?.action_date,
+            remarks: leave.level1Approval?.comment,
+            approver: leave.level1Approval?.approver 
+              ? `${leave.level1Approval.approver.title}${leave.level1Approval.approver.first_name} ${leave.level1Approval.approver.last_name}` 
+              : null
+          }
+        };
+      })
     );
   } catch (error) {
     console.error('Get pending leaves (staff) error:', error);
