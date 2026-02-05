@@ -7,7 +7,7 @@ import { Card } from '../../components/common/Card';
 import { useConfirm } from '../../components/common/ConfirmDialog';
 import DateEditModal from '../../components/common/DateEditModal';
 import toast from 'react-hot-toast';
-import { CheckCircle, XCircle, Clock, Calendar, FileText, Shield, User, Filter, Users, Building2, Edit3 } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Calendar, FileText, Shield, User, Filter, Users, Building2, Edit3, Search } from 'lucide-react';
 
 // Helper function to parse reason from JSON
 const parseReason = (reason) => {
@@ -58,6 +58,7 @@ export default function CentralOfficeHeadDashboard() {
   const [selectedDepartment, setSelectedDepartment] = useState('all');
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingLeave, setEditingLeave] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Get unique departments from pending leaves and count
   const departmentStats = pendingLeaves.reduce((acc, leave) => {
@@ -66,10 +67,16 @@ export default function CentralOfficeHeadDashboard() {
     return acc;
   }, {});
 
-  // Filter leaves by selected department
-  const filteredLeaves = selectedDepartment === 'all' 
-    ? pendingLeaves 
-    : pendingLeaves.filter(leave => leave.employee?.department === selectedDepartment);
+  // Filter leaves by selected department and search term
+  const filteredLeaves = pendingLeaves.filter(leave => {
+    const matchDept = selectedDepartment === 'all' || leave.employee?.department === selectedDepartment;
+    const matchSearch = !searchTerm || 
+      leave.employee?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      leave.employee?.employeeCode?.includes(searchTerm) ||
+      leave.leaveNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      leave.id?.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchDept && matchSearch;
+  });
 
   useEffect(() => {
     loadPendingLeaves();
@@ -264,6 +271,35 @@ export default function CentralOfficeHeadDashboard() {
               <span>แสดงเฉพาะ:</span>
               <span className="font-semibold">{DEPARTMENT_NAMES[selectedDepartment] || selectedDepartment}</span>
               <span className="text-slate-400">({filteredLeaves.length} รายการ)</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Search Box */}
+      {pendingLeaves.length > 0 && (
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+            <input
+              type="text"
+              placeholder="ค้นหาด้วยชื่อพนักงาน, รหัสพนักงาน หรือเลขที่ใบลา..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-all"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+          {searchTerm && (
+            <div className="mt-2 text-sm text-slate-600">
+              พบ {filteredLeaves.length} รายการ
             </div>
           )}
         </div>

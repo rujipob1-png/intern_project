@@ -798,7 +798,7 @@ export const getLeaveBalance = async (req, res) => {
     const { data: sickType } = await supabaseAdmin
       .from('leave_types')
       .select('id')
-      .eq('type_code', 'sick')
+      .eq('type_code', 'SICK')
       .single();
 
     let sickDaysUsed = 0;
@@ -812,9 +812,13 @@ export const getLeaveBalance = async (req, res) => {
         .eq('leave_type_id', sickType.id)
         .eq('status', 'approved_final');
 
+      console.log('Sick leaves found:', sickLeaves);
+
       if (sickLeaves && sickLeaves.length > 0) {
         sickDaysUsed = sickLeaves.reduce((sum, leave) => sum + (leave.total_days || 0), 0);
       }
+    } else {
+      console.log('Sick leave type not found');
     }
 
     return successResponse(

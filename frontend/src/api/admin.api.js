@@ -60,4 +60,16 @@ export const adminAPI = {
     const response = await axios.put(`/admin/cancel-requests/${leaveId}/reject`, { remarks });
     return response.data;
   },
+
+  // Get approval history (leaves that admin has processed)
+  getApprovalHistory: async () => {
+    const response = await axios.get('/admin/leaves/history');
+    return response.data;
+  },
+
+  // Get cancel history (cancelled leaves history)
+  getCancelHistory: async () => {
+    const response = await axios.get('/admin/cancel-requests/history');
+    return response.data;
+  },
 };

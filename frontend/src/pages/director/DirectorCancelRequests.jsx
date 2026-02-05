@@ -6,7 +6,7 @@ import { getDepartmentThaiCode } from '../../utils/departmentMapping';
 import { Card } from '../../components/common/Card';
 import { useConfirm } from '../../components/common/ConfirmDialog';
 import toast from 'react-hot-toast';
-import { XCircle, CheckCircle, Clock, Calendar, FileText, AlertCircle, User, AlertTriangle, ArrowLeft, Filter, Users, Building2 } from 'lucide-react';
+import { XCircle, CheckCircle, Clock, Calendar, FileText, AlertCircle, User, AlertTriangle, ArrowLeft, Filter, Users, Building2, Search } from 'lucide-react';
 
 // Department names mapping
 const DEPARTMENT_NAMES = {
@@ -39,6 +39,7 @@ export default function DirectorCancelRequests() {
   const [remarks, setRemarks] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Get unique departments and counts
   const departmentStats = pendingCancels.reduce((acc, leave) => {
@@ -47,10 +48,16 @@ export default function DirectorCancelRequests() {
     return acc;
   }, {});
 
-  // Filter by department
-  const filteredCancels = selectedDepartment === 'all'
-    ? pendingCancels
-    : pendingCancels.filter(leave => leave.employee?.department === selectedDepartment);
+  // Filter by department and search term
+  const filteredCancels = pendingCancels.filter(leave => {
+    const matchDept = selectedDepartment === 'all' || leave.employee?.department === selectedDepartment;
+    const matchSearch = !searchTerm || 
+      leave.employee?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      leave.employee?.employeeCode?.includes(searchTerm) ||
+      leave.leaveNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      leave.id?.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchDept && matchSearch;
+  });
 
   useEffect(() => {
     loadPendingCancels();
@@ -200,6 +207,35 @@ export default function DirectorCancelRequests() {
               </button>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Search Box */}
+      {pendingCancels.length > 0 && (
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+            <input
+              type="text"
+              placeholder="ค้นหาด้วยชื่อพนักงาน, รหัสพนักงาน หรือเลขที่ใบลา..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-all"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+          {searchTerm && (
+            <div className="mt-2 text-sm text-slate-600">
+              พบ {filteredCancels.length} รายการ
+            </div>
+          )}
         </div>
       )}
 

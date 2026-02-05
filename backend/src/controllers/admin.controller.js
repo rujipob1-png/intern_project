@@ -160,6 +160,102 @@ export const getPendingLeaves = async (req, res) => {
 };
 
 /**
+ * ดูประวัติการอนุมัติ (ใบลาที่ผ่านการอนุมัติขั้นสุดท้ายแล้ว)
+ */
+export const getApprovalHistory = async (req, res) => {
+  try {
+    // ดึงใบลาที่มีสถานะ approved, rejected, cancelled
+    const { data: leaves, error } = await supabaseAdmin
+      .from('leaves')
+      .select(`
+        *,
+        leave_types (
+          type_name,
+          type_code
+        ),
+        users!leaves_user_id_fkey (
+          id,
+          employee_code,
+          title,
+          first_name,
+          last_name,
+          position,
+          department
+        )
+      `)
+      .in('status', ['approved', 'approved_final', 'rejected', 'cancelled', 'partial_approved'])
+      .order('updated_at', { ascending: false })
+      .limit(100);
+
+    if (error) {
+      throw error;
+    }
+
+    // ดึงข้อมูลการอนุมัติ level 4 (Admin) สำหรับแต่ละ leave
+    const leavesWithApprovals = await Promise.all(
+      leaves.map(async (leave) => {
+        const { data: adminApproval } = await supabaseAdmin
+          .from('approvals')
+          .select(`
+            *,
+            approver:users!approvals_approver_id_fkey (
+              title,
+              first_name,
+              last_name
+            )
+          `)
+          .eq('leave_id', leave.id)
+          .eq('approval_level', 4)
+          .single();
+
+        return {
+          ...leave,
+          adminApproval
+        };
+      })
+    );
+
+    return successResponse(
+      res,
+      HTTP_STATUS.OK,
+      'Approval history retrieved successfully',
+      leavesWithApprovals.map(leave => ({
+        id: leave.id,
+        leaveNumber: leave.leave_number,
+        leaveType: leave.leave_types?.type_name || 'N/A',
+        leaveTypeCode: leave.leave_types?.type_code || 'N/A',
+        startDate: leave.start_date,
+        endDate: leave.end_date,
+        totalDays: leave.total_days,
+        reason: leave.reason,
+        status: leave.status,
+        createdAt: leave.created_at,
+        updatedAt: leave.updated_at,
+        approvedAt: leave.adminApproval?.action_date,
+        remarks: leave.adminApproval?.comment,
+        employee: {
+          id: leave.users?.id,
+          employeeCode: leave.users?.employee_code,
+          name: `${leave.users?.title || ''}${leave.users?.first_name || ''} ${leave.users?.last_name || ''}`,
+          position: leave.users?.position,
+          department: leave.users?.department || 'N/A'
+        },
+        approver: leave.adminApproval?.approver 
+          ? `${leave.adminApproval.approver.title}${leave.adminApproval.approver.first_name} ${leave.adminApproval.approver.last_name}` 
+          : null
+      }))
+    );
+  } catch (error) {
+    console.error('Get approval history error:', error);
+    return errorResponse(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      'Failed to retrieve approval history'
+    );
+  }
+};
+
+/**
  * อนุมัติคำขอลาขั้นสุดท้าย (Admin - Level 4)
  * และหักยอดวันลาจาก leave balance
  */
@@ -254,11 +350,11 @@ export const approveLeaveFinal = async (req, res) => {
         updateBalance = null;
     }
 
-    // อัพเดทสถานะเป็น approved (final)
+    // อัพเดทสถานะเป็น approved_final (final)
     const { error: updateLeaveError } = await supabaseAdmin
       .from('leaves')
       .update({
-        status: 'approved',
+        status: 'approved_final',
         current_approval_level: 4,
         updated_at: new Date().toISOString()
       })
@@ -312,7 +408,7 @@ export const approveLeaveFinal = async (req, res) => {
       'Leave approved successfully. Leave balance has been deducted.',
       {
         leaveId: id,
-        status: 'approved',
+        status: 'approved_final',
         deductedDays: updateBalance ? totalDays : 0,
         balanceField: balanceField || 'none',
         newBalance: updateBalance ? updateBalance[balanceField] : null
@@ -525,7 +621,7 @@ export const partialApproveLeaveFinal = async (req, res) => {
     const { error: updateError } = await supabaseAdmin
       .from('leaves')
       .update({
-        status: 'approved',
+        status: 'approved_final',
         current_approval_level: 4,
         total_days: newTotalDays,
         start_date: newStartDate,
@@ -597,7 +693,7 @@ export const partialApproveLeaveFinal = async (req, res) => {
       'Leave partially approved successfully',
       {
         leaveId: id,
-        status: 'approved',
+        status: 'approved_final',
         approvedDates,
         rejectedDates,
         newTotalDays,
@@ -816,6 +912,104 @@ export const rejectCancelFinal = async (req, res) => {
   } catch (error) {
     console.error('Reject cancel final error:', error);
     return errorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Failed to reject cancel');
+  }
+};
+
+/**
+ * ดูประวัติการยกเลิกการลา
+ */
+export const getCancelHistory = async (req, res) => {
+  try {
+    // ดึงใบลาที่ยกเลิกแล้ว หรือปฏิเสธการยกเลิก (approved_final หลังจากผ่านกระบวนการยกเลิก)
+    const { data: leaves, error } = await supabaseAdmin
+      .from('leaves')
+      .select(`
+        *,
+        leave_types (
+          type_name,
+          type_code
+        ),
+        users!leaves_user_id_fkey (
+          id,
+          employee_code,
+          title,
+          first_name,
+          last_name,
+          position,
+          department
+        )
+      `)
+      .eq('status', 'cancelled')
+      .order('cancelled_at', { ascending: false })
+      .limit(100);
+
+    if (error) {
+      throw error;
+    }
+
+    // ดึงข้อมูลการอนุมัติ level 4 (Admin) สำหรับแต่ละ leave
+    const leavesWithApprovals = await Promise.all(
+      leaves.map(async (leave) => {
+        const { data: adminApproval } = await supabaseAdmin
+          .from('approvals')
+          .select(`
+            *,
+            approver:users!approvals_approver_id_fkey (
+              title,
+              first_name,
+              last_name
+            )
+          `)
+          .eq('leave_id', leave.id)
+          .eq('approval_level', 4)
+          .in('action', ['cancel_approved_final', 'cancel_rejected'])
+          .single();
+
+        return {
+          ...leave,
+          adminApproval
+        };
+      })
+    );
+
+    return successResponse(
+      res,
+      HTTP_STATUS.OK,
+      'Cancel history retrieved successfully',
+      leavesWithApprovals.map(leave => ({
+        id: leave.id,
+        leaveNumber: leave.leave_number,
+        leaveType: leave.leave_types?.type_name || 'N/A',
+        leaveTypeCode: leave.leave_types?.type_code || 'N/A',
+        startDate: leave.start_date,
+        endDate: leave.end_date,
+        totalDays: leave.total_days,
+        reason: leave.reason,
+        cancelledReason: leave.cancelled_reason,
+        status: leave.status,
+        createdAt: leave.created_at,
+        updatedAt: leave.updated_at,
+        cancelledAt: leave.cancelled_at,
+        remarks: leave.adminApproval?.comment,
+        employee: {
+          id: leave.users?.id,
+          employeeCode: leave.users?.employee_code,
+          name: `${leave.users?.title || ''}${leave.users?.first_name || ''} ${leave.users?.last_name || ''}`,
+          position: leave.users?.position,
+          department: leave.users?.department || 'N/A'
+        },
+        approver: leave.adminApproval?.approver 
+          ? `${leave.adminApproval.approver.title}${leave.adminApproval.approver.first_name} ${leave.adminApproval.approver.last_name}` 
+          : null
+      }))
+    );
+  } catch (error) {
+    console.error('Get cancel history error:', error);
+    return errorResponse(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      'Failed to retrieve cancel history'
+    );
   }
 };
 

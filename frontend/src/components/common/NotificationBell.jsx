@@ -253,9 +253,10 @@ export const NotificationBell = () => {
       {/* Bell Button */}
       <button
         onClick={handleBellClick}
-        className="relative p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+        className="relative p-2 text-gray-700 hover:bg-slate-100 rounded-lg transition-colors"
+        style={{ color: '#374151' }}
       >
-        <Bell className="w-6 h-6" />
+        <Bell className="w-6 h-6" style={{ color: '#374151' }} />
         {unreadCount > 0 && (
           <span className="absolute top-0 right-0 flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full animate-pulse">
             {unreadCount > 9 ? '9+' : unreadCount}

@@ -18,7 +18,9 @@ import CentralOfficeStaffCancelRequests from './pages/centralOffice/CentralOffic
 import CentralOfficeHeadDashboard from './pages/centralOffice/CentralOfficeHeadDashboard';
 import CentralOfficeHeadCancelRequests from './pages/centralOffice/CentralOfficeHeadCancelRequests';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminApprovalHistory from './pages/admin/AdminApprovalHistory';
 import AdminCancelRequests from './pages/admin/AdminCancelRequests';
+import AdminCancelHistory from './pages/admin/AdminCancelHistory';
 import UserManagementPage from './pages/admin/UserManagementPage';
 
 function App() {
@@ -149,10 +151,26 @@ function App() {
             } 
           />
           <Route 
+            path="/admin/approval-history" 
+            element={
+              <ProtectedRoute>
+                <AdminApprovalHistory />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
             path="/admin/cancel-requests" 
             element={
               <ProtectedRoute>
                 <AdminCancelRequests />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/cancel-history" 
+            element={
+              <ProtectedRoute>
+                <AdminCancelHistory />
               </ProtectedRoute>
             } 
           />

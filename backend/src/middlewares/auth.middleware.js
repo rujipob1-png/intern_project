@@ -78,8 +78,8 @@ export const authenticate = async (req, res, next) => {
       department: user.department,
       phone: user.phone,
       roleId: user.role_id,
-      roleName: user.roles.role_name,
-      roleLevel: user.roles.role_level,
+      roleName: user.roles?.role_name || null,
+      roleLevel: user.roles?.role_level || null,
       leaveBalance: {
         sick: user.sick_leave_balance,
         personal: user.personal_leave_balance,

@@ -149,7 +149,7 @@ export const Sidebar = () => {
         },
         {
           title: 'ประวัติการอนุมัติ',
-          path: '/admin/history',
+          path: '/admin/approval-history',
           roles: [ROLES.ADMIN],
         },
       ],
@@ -179,6 +179,11 @@ export const Sidebar = () => {
         {
           title: 'อนุมัติยกเลิกขั้นสุดท้าย (ผู้บริหาร)',
           path: '/admin/cancel-requests',
+          roles: [ROLES.ADMIN],
+        },
+        {
+          title: 'ประวัติการยกเลิก',
+          path: '/admin/cancel-history',
           roles: [ROLES.ADMIN],
         },
       ],

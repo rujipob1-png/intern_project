@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { centralOfficeAPI } from '../../api/centralOffice.api';
 import { LEAVE_STATUS } from '../../utils/constants';
 import { formatDate } from '../../utils/formatDate';
@@ -6,7 +7,7 @@ import { getDepartmentThaiCode } from '../../utils/departmentMapping';
 import { Card } from '../../components/common/Card';
 import { useConfirm } from '../../components/common/ConfirmDialog';
 import toast from 'react-hot-toast';
-import { CheckCircle, XCircle, Clock, Calendar, FileText, AlertCircle, ClipboardCheck, User, Eye, Download, X, Phone, MapPin, Filter, Building2, Users } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Calendar, FileText, AlertCircle, ClipboardCheck, User, Eye, Download, X, Phone, MapPin, Filter, Building2, Users, ArrowLeft, Search } from 'lucide-react';
 
 // Helper function to parse reason from JSON
 const parseReason = (reason) => {
@@ -50,6 +51,7 @@ const DEPARTMENT_NAMES = {
 };
 
 export default function CentralOfficeStaffDashboard() {
+  const navigate = useNavigate();
   const { confirm } = useConfirm();
   const [pendingLeaves, setPendingLeaves] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -57,6 +59,7 @@ export default function CentralOfficeStaffDashboard() {
   const [detailModalLeave, setDetailModalLeave] = useState(null);
   const [remarks, setRemarks] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Get unique departments from pending leaves and count
   const departmentStats = pendingLeaves.reduce((acc, leave) => {
@@ -65,10 +68,15 @@ export default function CentralOfficeStaffDashboard() {
     return acc;
   }, {});
 
-  // Filter leaves by selected department
-  const filteredLeaves = selectedDepartment === 'all' 
-    ? pendingLeaves 
-    : pendingLeaves.filter(leave => leave.employee?.department === selectedDepartment);
+  // Filter leaves by selected department and search term
+  const filteredLeaves = pendingLeaves.filter(leave => {
+    const matchDept = selectedDepartment === 'all' || leave.employee?.department === selectedDepartment;
+    const matchSearch = !searchTerm || 
+      leave.employee?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      leave.employee?.employeeCode?.includes(searchTerm) ||
+      leave.leaveNumber?.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchDept && matchSearch;
+  });
   const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
@@ -176,7 +184,20 @@ export default function CentralOfficeStaffDashboard() {
 
       {/* Department Filter Tabs */}
       {pendingLeaves.length > 0 && (
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200 space-y-4">
+          {/* Search Box */}
+          <div className="relative">
+            <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="ค้นหาชื่อพนักงาน, รหัสพนักงาน, เลขที่ใบลา..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
+            />
+          </div>
+
+          {/* Department Filter */}
           <div className="flex items-center gap-3 mb-3">
             <Filter className="w-5 h-5 text-slate-500" />
             <h2 className="font-semibold text-slate-700">กรองตามกอง/ฝ่าย</h2>

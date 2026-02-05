@@ -4,9 +4,11 @@ import {
   approveLeaveFinal,
   rejectLeaveFinal,
   partialApproveLeaveFinal,
+  getApprovalHistory,
   getPendingCancelRequests,
   approveCancelFinal,
   rejectCancelFinal,
+  getCancelHistory,
   getAllUsers,
   updateUser
 } from '../controllers/admin.controller.js';
@@ -48,9 +50,17 @@ router.put('/leaves/:id/reject', rejectLeaveFinal);
 router.put('/leaves/:id/partial-approve', partialApproveLeaveFinal);
 
 /**
+ * @route   GET /api/admin/leaves/history
+ * @desc    ดูประวัติการอนุมัติทั้งหมด (Level 4)
+ * @access  Private (Admin)
+ */
+router.get('/leaves/history', getApprovalHistory);
+
+/**
  * ==================== Cancel Request Routes (Final) ====================
  */
 router.get('/cancel-requests/pending', getPendingCancelRequests);
+router.get('/cancel-requests/history', getCancelHistory);
 router.put('/cancel-requests/:id/approve', approveCancelFinal);
 router.put('/cancel-requests/:id/reject', rejectCancelFinal);
 
