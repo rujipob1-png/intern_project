@@ -8,6 +8,7 @@ import { getDepartmentThaiCode } from '../../utils/departmentMapping';
 import { Button } from '../../components/common/Button';
 import { Card } from '../../components/common/Card';
 import { useConfirm } from '../../components/common/ConfirmDialog';
+import { useRealtime } from '../../contexts/RealtimeContext';
 import toast from 'react-hot-toast';
 import { CheckCircle, XCircle, Clock, User, Calendar, FileText, AlertCircle, ArrowLeft, Building2, Stamp, Bell, Trash2, Filter, Users, Search } from 'lucide-react';
 
@@ -42,6 +43,7 @@ const DEPARTMENT_NAMES = {
 export default function DashboardDirector() {
   const navigate = useNavigate();
   const { confirm } = useConfirm();
+  const { leaveUpdate, approvalUpdate, notificationUpdate } = useRealtime();
   const [pendingLeaves, setPendingLeaves] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedLeave, setSelectedLeave] = useState(null);
@@ -73,7 +75,7 @@ export default function DashboardDirector() {
   useEffect(() => {
     loadPendingLeaves();
     loadNotifications();
-  }, []);
+  }, [leaveUpdate, approvalUpdate, notificationUpdate]);
 
   const loadNotifications = async () => {
     try {

@@ -10,6 +10,7 @@ import { leaveAPI } from '../../api/leave.api';
 import { formatDate, formatDateTime } from '../../utils/formatDate';
 import { LEAVE_TYPE_NAMES, LEAVE_STATUS_TEXT } from '../../utils/constants';
 import { useAuth } from '../../contexts/AuthContext';
+import { useRealtime } from '../../contexts/RealtimeContext';
 import toast from 'react-hot-toast';
 import {
   ArrowLeft,
@@ -30,6 +31,7 @@ export const LeaveDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { leaveUpdate, approvalUpdate } = useRealtime();
   const pdfFormRef = useRef();
   const leaveFormPdfRef = useRef();
   const [loading, setLoading] = useState(true);
@@ -55,7 +57,7 @@ export const LeaveDetailPage = () => {
 
   useEffect(() => {
     loadLeaveDetail();
-  }, [id]);
+  }, [id, leaveUpdate, approvalUpdate]);
 
   const loadLeaveDetail = async () => {
     setLoading(true);

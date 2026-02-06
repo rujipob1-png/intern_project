@@ -1,4 +1,5 @@
 import { useAuth } from '../contexts/AuthContext';
+import { useRealtime } from '../contexts/RealtimeContext';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { MainLayout } from '../components/layout/MainLayout';
@@ -23,6 +24,7 @@ import {
 export const DashboardPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { leaveUpdate, approvalUpdate } = useRealtime();
   const [recentLeaves, setRecentLeaves] = useState([]);
   const [loading, setLoading] = useState(true);
   const [leaveBalance, setLeaveBalance] = useState(null);
@@ -31,6 +33,7 @@ export const DashboardPage = () => {
   const userRole = user?.role_name;
 
   // Load recent leaves and balance for USER only
+  // Also reload when realtime updates occur
   useEffect(() => {
     if (userRole === ROLES.USER) {
       loadRecentLeaves();
@@ -38,7 +41,7 @@ export const DashboardPage = () => {
     } else {
       setLoading(false);
     }
-  }, [userRole]);
+  }, [userRole, leaveUpdate, approvalUpdate]);
 
   const loadRecentLeaves = async () => {
     try {
@@ -282,12 +285,13 @@ export const DashboardPage = () => {
                           </p>
                         </div>
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          leave.status === 'approved' ? 'bg-green-100 text-green-800' :
+                          leave.status === 'approved' || leave.status === 'approved_final' ? 'bg-green-100 text-green-800' :
                           leave.status === 'rejected' ? 'bg-red-100 text-red-800' :
                           leave.status === 'cancelled' ? 'bg-gray-100 text-gray-800' :
                           'bg-yellow-100 text-yellow-800'
                         }`}>
                           {leave.status === 'approved' ? 'อนุมัติ' :
+                           leave.status === 'approved_final' ? 'อนุมัติแล้ว' :
                            leave.status === 'rejected' ? 'ไม่อนุมัติ' :
                            leave.status === 'cancelled' ? 'ยกเลิก' : 'รอพิจารณา'}
                         </span>

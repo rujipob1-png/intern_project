@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
+import { RealtimeProvider } from './contexts/RealtimeContext';
 import { ConfirmProvider } from './components/common/ConfirmDialog';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 import { LoginPage } from './pages/auth/LoginPage';
@@ -26,6 +27,7 @@ import UserManagementPage from './pages/admin/UserManagementPage';
 function App() {
   return (
     <AuthProvider>
+      <RealtimeProvider>
       <ConfirmProvider>
       <BrowserRouter>
         <Routes>
@@ -220,6 +222,7 @@ function App() {
         }}
       />
       </ConfirmProvider>
+      </RealtimeProvider>
     </AuthProvider>
   );
 }

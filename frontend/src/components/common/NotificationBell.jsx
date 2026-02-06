@@ -8,10 +8,12 @@ import { Bell, Check, CheckCheck, X, Trash2 } from 'lucide-react';
 import { notificationAPI } from '../../api/notification.api';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useRealtime } from '../../contexts/RealtimeContext';
 import toast from 'react-hot-toast';
 
 export const NotificationBell = () => {
   const { user } = useAuth();
+  const { notificationUpdate, isRealtimeEnabled } = useRealtime();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
@@ -19,16 +21,21 @@ export const NotificationBell = () => {
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
+  // Fetch on mount and when realtime triggers update
   useEffect(() => {
     fetchUnreadCount();
+  }, [notificationUpdate]);
+
+  // Fallback polling if realtime is not enabled (every 30 seconds)
+  useEffect(() => {
+    if (isRealtimeEnabled) return; // Skip polling if realtime is enabled
     
-    // Auto refresh every 30 seconds
     const interval = setInterval(() => {
       fetchUnreadCount();
     }, 30000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [isRealtimeEnabled]);
 
   // Close dropdown when clicking outside
   useEffect(() => {

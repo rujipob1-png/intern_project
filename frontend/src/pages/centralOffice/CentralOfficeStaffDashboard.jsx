@@ -6,6 +6,7 @@ import { formatDate } from '../../utils/formatDate';
 import { getDepartmentThaiCode } from '../../utils/departmentMapping';
 import { Card } from '../../components/common/Card';
 import { useConfirm } from '../../components/common/ConfirmDialog';
+import { useRealtime } from '../../contexts/RealtimeContext';
 import toast from 'react-hot-toast';
 import { CheckCircle, XCircle, Clock, Calendar, FileText, AlertCircle, ClipboardCheck, User, Eye, Download, X, Phone, MapPin, Filter, Building2, Users, ArrowLeft, Search } from 'lucide-react';
 
@@ -53,6 +54,7 @@ const DEPARTMENT_NAMES = {
 export default function CentralOfficeStaffDashboard() {
   const navigate = useNavigate();
   const { confirm } = useConfirm();
+  const { leaveUpdate, approvalUpdate } = useRealtime();
   const [pendingLeaves, setPendingLeaves] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedLeave, setSelectedLeave] = useState(null);
@@ -81,7 +83,7 @@ export default function CentralOfficeStaffDashboard() {
 
   useEffect(() => {
     loadPendingLeaves();
-  }, []);
+  }, [leaveUpdate, approvalUpdate]);
 
   const loadPendingLeaves = async () => {
     try {

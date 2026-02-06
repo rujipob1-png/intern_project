@@ -7,6 +7,7 @@ import { Input } from '../../components/common/Input';
 import { leaveAPI } from '../../api/leave.api';
 import { formatDate } from '../../utils/formatDate';
 import { LEAVE_STATUS, LEAVE_STATUS_COLORS, LEAVE_TYPE_CODES } from '../../utils/constants';
+import { useRealtime } from '../../contexts/RealtimeContext';
 import toast from 'react-hot-toast';
 import { 
   Search, 
@@ -21,6 +22,7 @@ import {
 
 export const MyLeavesPage = () => {
   const navigate = useNavigate();
+  const { leaveUpdate, approvalUpdate } = useRealtime();
   const [loading, setLoading] = useState(false);
   const [leaves, setLeaves] = useState([]);
   const [filteredLeaves, setFilteredLeaves] = useState([]);
@@ -33,10 +35,10 @@ export const MyLeavesPage = () => {
     status: 'all',
   });
 
-  // Load leaves
+  // Load leaves on mount and when realtime updates occur
   useEffect(() => {
     loadLeaves();
-  }, []);
+  }, [leaveUpdate, approvalUpdate]);
 
   // Apply filters
   useEffect(() => {
