@@ -24,4 +24,13 @@ export const authAPI = {
     });
     return response.data;
   },
+
+  // Update notification settings (email)
+  updateNotificationSettings: async (email, emailNotifications) => {
+    const response = await axios.put('/auth/notification-settings', {
+      email,
+      emailNotifications,
+    });
+    return response.data;
+  },
 };

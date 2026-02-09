@@ -23,7 +23,7 @@ INSERT INTO departments (department_code, department_name) VALUES
   ('GTS', 'กลุ่มงานเทคโนโลยีสารสนเทศ (กทส.)'),
   ('GTP', 'กลุ่มงานติดตามประเมินผลด้านสารสนเทศและการสื่อสาร (กตป.)'),
   ('GSS', 'กลุ่มงานเทคโนโลยีการสื่อสาร (กสส.)'),
-  ('GKC', 'กลุ่มงานโครงสร้างพื้นฐานด้านสารสนเทศและการสื่อสาร (กคช.)')
+  ('GKC', 'กลุ่มงานโครงสร้างพื้นฐานด้านสารสนเทศและการสื่อสาร (กคฐ.)')
 ON CONFLICT (department_code) DO UPDATE SET
   department_name = EXCLUDED.department_name;
 
@@ -47,7 +47,7 @@ INSERT INTO users (employee_code, password_hash, title, first_name, last_name, p
 -- กสส. (ชั้น 4) - ผอ.กสส.
 ('51430', '$2b$10$/4pSD6HlFYNNTEjihi6bE.1ZRDZdczPqrrQSIbWz.GGvc1mTqRzC.', 'นาย', 'ศมิท', 'คงเมือง', 'ผอ.กสส.', 'GSS', '0883313003', (SELECT id FROM roles WHERE role_name = 'director'), true),
 
--- กคช. (ชั้น 5) - ผอ.กคช.
+-- กคช. (ชั้น 5) - ผอ.กคฐ.
 ('51450', '$2b$10$/4pSD6HlFYNNTEjihi6bE.1ZRDZdczPqrrQSIbWz.GGvc1mTqRzC.', 'นาย', 'ณฤกิตติ์', 'ดวงชะลา', 'ผอ.กคช.', 'GKC', '0814404972', (SELECT id FROM roles WHERE role_name = 'director'), true);
 
 -- ============================================
@@ -148,7 +148,7 @@ INSERT INTO users (employee_code, password_hash, title, first_name, last_name, p
 ('51463', '$2b$10$/4pSD6HlFYNNTEjihi6bE.1ZRDZdczPqrrQSIbWz.GGvc1mTqRzC.', 'นาย', 'สุวัฒน์', 'เต็มวัฒน์ชัยกุล', 'ฝ่ายระบบวิทยุฯ', 'GSS', '0632131159', (SELECT id FROM roles WHERE role_name = 'user'), true);
 
 -- ============================================
--- STEP 9: เพิ่มพนักงาน กคช. (ชั้น 5)
+-- STEP 9: เพิ่มพนักงาน กคฐ. (ชั้น 5)
 -- ============================================
 INSERT INTO users (employee_code, password_hash, title, first_name, last_name, position, department, phone, role_id, is_active) VALUES
 -- งานบริหารทั่วไป

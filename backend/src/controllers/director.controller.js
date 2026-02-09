@@ -2,6 +2,7 @@ import { supabaseAdmin } from '../config/supabase.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 import { HTTP_STATUS } from '../config/constants.js';
 import { createNotification } from './notification.controller.js';
+import { EmailService } from '../utils/emailService.js';
 
 /**
  * ดูรายการคำขอลาที่รออนุมัติ (Director Role - Level 1)
@@ -256,6 +257,11 @@ export const approveLeave = async (req, res) => {
             id,
             'leave'
           );
+          
+          // ส่ง email แจ้งเตือน central_office_staff
+          EmailService.notifyNewLeaveRequest(id, staff.id).catch(err => {
+            console.error('Email notification error:', err.message);
+          });
         }
       }
     }
@@ -390,6 +396,11 @@ export const rejectLeave = async (req, res) => {
       id,
       'leave'
     );
+
+    // ส่ง email แจ้งเตือนผู้ขอลา
+    EmailService.notifyLeaveRejected(id, remarks).catch(err => {
+      console.error('Email notification error:', err.message);
+    });
 
     return successResponse(
       res,

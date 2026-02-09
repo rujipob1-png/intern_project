@@ -74,6 +74,12 @@ export const Sidebar = () => {
           path: '/dashboard',
           roles: [ROLES.USER, ROLES.DIRECTOR, ROLES.CENTRAL_OFFICE_STAFF, ROLES.CENTRAL_OFFICE_HEAD, ROLES.ADMIN],
         },
+        {
+          title: 'ตั้งค่า',
+          icon: Settings,
+          path: '/settings',
+          roles: [ROLES.USER, ROLES.DIRECTOR, ROLES.CENTRAL_OFFICE_STAFF, ROLES.CENTRAL_OFFICE_HEAD, ROLES.ADMIN],
+        },
       ],
     },
     {

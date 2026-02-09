@@ -10,6 +10,7 @@ import {
 } from '../controllers/director.controller.js';
 import { authenticate } from '../middlewares/auth.middleware.js';
 import { requireRole } from '../middlewares/role.middleware.js';
+import { approvalValidation } from '../middlewares/validation.middleware.js';
 
 const router = express.Router();
 
@@ -36,14 +37,14 @@ router.get('/leaves/history', getApprovalHistory);
  * @desc    อนุมัติคำขอลา (Level 1)
  * @access  Private (Director)
  */
-router.post('/leaves/:id/approve', approveLeave);
+router.post('/leaves/:id/approve', approvalValidation, approveLeave);
 
 /**
  * @route   POST /api/director/leaves/:id/reject
  * @desc    ปฏิเสธคำขอลา (Level 1)
  * @access  Private (Director)
  */
-router.post('/leaves/:id/reject', rejectLeave);
+router.post('/leaves/:id/reject', approvalValidation, rejectLeave);
 
 // ============= CANCEL REQUESTS =============
 /**
@@ -58,13 +59,13 @@ router.get('/cancel-requests/pending', getPendingCancelRequests);
  * @desc    อนุมัติคำขอยกเลิก (Level 1)
  * @access  Private (Director)
  */
-router.post('/cancel-requests/:id/approve', approveCancelRequest);
+router.post('/cancel-requests/:id/approve', approvalValidation, approveCancelRequest);
 
 /**
  * @route   POST /api/director/cancel-requests/:id/reject
  * @desc    ปฏิเสธคำขอยกเลิก
  * @access  Private (Director)
  */
-router.post('/cancel-requests/:id/reject', rejectCancelRequest);
+router.post('/cancel-requests/:id/reject', approvalValidation, rejectCancelRequest);
 
 export default router;

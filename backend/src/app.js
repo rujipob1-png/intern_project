@@ -10,12 +10,18 @@ import uploadRoutes from './routes/upload.routes.js';
 import reportsRoutes from './routes/reports.routes.js';
 import actingRoutes from './routes/acting.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
+import healthRoutes from './routes/health.routes.js';
 import { errorResponse } from './utils/response.js';
 import { HTTP_STATUS } from './config/constants.js';
+import { apiLimiter } from './middlewares/rateLimit.middleware.js';
+import { securityHeaders, csrfProtection, sanitizeBody } from './middlewares/security.middleware.js';
 
 dotenv.config();
 
 const app = express();
+
+// Security Headers
+app.use(securityHeaders);
 
 // Middleware
 app.use(cors({
@@ -25,6 +31,15 @@ app.use(cors({
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Sanitize request body
+app.use(sanitizeBody);
+
+// CSRF Protection (for production)
+app.use(csrfProtection);
+
+// Global Rate Limiting (100 requests/minute)
+app.use('/api', apiLimiter);
 
 // Health check route
 app.get('/', (req, res) => {
@@ -37,6 +52,7 @@ app.get('/', (req, res) => {
 });
 
 // API Routes
+app.use('/api', healthRoutes); // Health check (no rate limit)
 app.use('/api/auth', authRoutes);
 app.use('/api/leaves', leaveRoutes);
 app.use('/api/director', directorRoutes);
@@ -46,6 +62,19 @@ app.use('/api/uploads', uploadRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/acting', actingRoutes);
 app.use('/api/notifications', notificationRoutes);
+
+// Swagger API Documentation (only in development)
+if (process.env.NODE_ENV !== 'production') {
+  import('swagger-ui-express').then(swaggerUi => {
+    import('./config/swagger.js').then(({ swaggerSpec }) => {
+      app.use('/api-docs', swaggerUi.default.serve, swaggerUi.default.setup(swaggerSpec, {
+        customCss: '.swagger-ui .topbar { display: none }',
+        customSiteTitle: 'ระบบการลาออนไลน์ - API Documentation'
+      }));
+      console.log('📚 API Docs available at: http://localhost:3000/api-docs');
+    });
+  });
+}
 
 // 404 Handler
 app.use((req, res) => {

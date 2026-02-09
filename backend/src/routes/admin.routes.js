@@ -10,10 +10,18 @@ import {
   rejectCancelFinal,
   getCancelHistory,
   getAllUsers,
-  updateUser
+  updateUser,
+  getLeaveReports,
+  getDepartments,
+  getAuditLogsController
 } from '../controllers/admin.controller.js';
 import { authenticate } from '../middlewares/auth.middleware.js';
 import { requireRole } from '../middlewares/role.middleware.js';
+import { 
+  approvalValidation, 
+  partialApprovalValidation, 
+  updateUserValidation 
+} from '../middlewares/validation.middleware.js';
 
 const router = express.Router();
 
@@ -33,21 +41,21 @@ router.get('/leaves/pending', getPendingLeaves);
  * @desc    อนุมัติคำขอลาขั้นสุดท้ายและหักวันลา (Level 4)
  * @access  Private (Admin)
  */
-router.put('/leaves/:id/approve', approveLeaveFinal);
+router.put('/leaves/:id/approve', approvalValidation, approveLeaveFinal);
 
 /**
  * @route   PUT /api/admin/leaves/:id/reject
  * @desc    ปฏิเสธคำขอลาขั้นสุดท้าย (Level 4)
  * @access  Private (Admin)
  */
-router.put('/leaves/:id/reject', rejectLeaveFinal);
+router.put('/leaves/:id/reject', approvalValidation, rejectLeaveFinal);
 
 /**
  * @route   PUT /api/admin/leaves/:id/partial-approve
  * @desc    อนุมัติบางวัน (Partial Approval) ขั้นสุดท้าย (Level 4)
  * @access  Private (Admin)
  */
-router.put('/leaves/:id/partial-approve', partialApproveLeaveFinal);
+router.put('/leaves/:id/partial-approve', partialApprovalValidation, partialApproveLeaveFinal);
 
 /**
  * @route   GET /api/admin/leaves/history
@@ -61,13 +69,24 @@ router.get('/leaves/history', getApprovalHistory);
  */
 router.get('/cancel-requests/pending', getPendingCancelRequests);
 router.get('/cancel-requests/history', getCancelHistory);
-router.put('/cancel-requests/:id/approve', approveCancelFinal);
-router.put('/cancel-requests/:id/reject', rejectCancelFinal);
+router.put('/cancel-requests/:id/approve', approvalValidation, approveCancelFinal);
+router.put('/cancel-requests/:id/reject', approvalValidation, rejectCancelFinal);
 
 /**
  * ==================== User Management Routes ====================
  */
 router.get('/users', getAllUsers);
-router.put('/users/:id', updateUser);
+router.put('/users/:id', updateUserValidation, updateUser);
+
+/**
+ * ==================== Reports Routes ====================
+ */
+router.get('/reports/leaves', getLeaveReports);
+router.get('/departments', getDepartments);
+
+/**
+ * ==================== Audit Log Routes ====================
+ */
+router.get('/audit-logs', getAuditLogsController);
 
 export default router;

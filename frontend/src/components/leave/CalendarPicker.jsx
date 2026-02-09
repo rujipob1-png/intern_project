@@ -9,7 +9,9 @@ export const CalendarPicker = ({
   onChange, 
   disabled = false,
   showWeekends = true,
-  minDate = null
+  minDate = null,
+  allowPastDates = false,
+  maxPastDays = 30
 }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [showMonthPicker, setShowMonthPicker] = useState(false);
@@ -47,11 +49,13 @@ export const CalendarPicker = ({
   const years = useMemo(() => {
     const currentYear = new Date().getFullYear();
     const yearList = [];
-    for (let y = currentYear - 2; y <= currentYear + 5; y++) {
+    // ถ้าอนุญาตให้เลือกย้อนหลัง ให้แสดงปีก่อนหน้ามากขึ้น
+    const startYear = allowPastDates ? currentYear - 5 : currentYear - 2;
+    for (let y = startYear; y <= currentYear + 5; y++) {
       yearList.push(y);
     }
     return yearList;
-  }, []);
+  }, [allowPastDates]);
 
   const prevMonth = () => {
     setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
@@ -95,7 +99,16 @@ export const CalendarPicker = ({
       minDateObj.setHours(0, 0, 0, 0);
       if (date < minDateObj) return;
     }
-    if (date < today) return;
+    
+    // ตรวจสอบวันย้อนหลัง
+    if (!allowPastDates && date < today) return;
+    
+    // ถ้าอนุญาตให้เลือกย้อนหลัง ตรวจสอบจำนวนวันย้อนหลังสูงสุด
+    if (allowPastDates && date < today) {
+      const maxPastDate = new Date(today);
+      maxPastDate.setDate(maxPastDate.getDate() - maxPastDays);
+      if (date < maxPastDate) return;
+    }
 
     let newDates;
     if (isSelected(date)) {
@@ -118,7 +131,17 @@ export const CalendarPicker = ({
   const isDateDisabled = (date) => {
     if (!date) return true;
     const dayOfWeek = date.getDay();
-    if (date < today) return true;
+    
+    // ตรวจสอบวันย้อนหลัง
+    if (!allowPastDates && date < today) return true;
+    
+    // ถ้าอนุญาตให้เลือกย้อนหลัง ตรวจสอบจำนวนวันย้อนหลังสูงสุด
+    if (allowPastDates && date < today) {
+      const maxPastDate = new Date(today);
+      maxPastDate.setDate(maxPastDate.getDate() - maxPastDays);
+      if (date < maxPastDate) return true;
+    }
+    
     if (minDate) {
       const minDateObj = new Date(minDate);
       minDateObj.setHours(0, 0, 0, 0);

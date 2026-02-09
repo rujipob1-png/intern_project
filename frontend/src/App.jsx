@@ -11,6 +11,7 @@ import { MyLeavesPage } from './pages/user/MyLeavesPage';
 import { LeaveDetailPage } from './pages/user/LeaveDetailPage';
 import { LeaveHistoryPage } from './pages/user/LeaveHistoryPage';
 import { ActingRequestsPage } from './pages/user/ActingRequestsPage';
+import { SettingsPage } from './pages/user/SettingsPage';
 import DashboardDirector from './pages/director/DashboardDirector';
 import ApprovalHistoryPage from './pages/director/ApprovalHistoryPage';
 import DirectorCancelRequests from './pages/director/DirectorCancelRequests';
@@ -77,6 +78,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <ActingRequestsPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/settings" 
+            element={
+              <ProtectedRoute>
+                <SettingsPage />
               </ProtectedRoute>
             } 
           />

@@ -50,6 +50,8 @@ export const login = async (req, res) => {
         position,
         department,
         phone,
+        email,
+        email_notifications,
         role_id,
         is_active,
         sick_leave_balance,
@@ -122,6 +124,8 @@ export const login = async (req, res) => {
           position: user.position,
           department: user.department,
           phone: user.phone,
+          email: user.email,
+          emailNotifications: user.email_notifications ?? true,
           role_name: user.roles.role_name, // เพิ่ม role_name ตรงๆ
           roleLevel: user.roles.role_level, // เพิ่ม roleLevel ตรงๆ
           role: {
@@ -166,6 +170,8 @@ export const getProfile = async (req, res) => {
         position,
         department,
         phone,
+        email,
+        email_notifications,
         sick_leave_balance,
         personal_leave_balance,
         vacation_leave_balance,
@@ -202,6 +208,8 @@ export const getProfile = async (req, res) => {
         position: user.position,
         department: user.department,
         phone: user.phone,
+        email: user.email,
+        emailNotifications: user.email_notifications ?? true,
         role: {
           id: user.roles.id,
           name: user.roles.role_name,
@@ -301,6 +309,59 @@ export const changePassword = async (req, res) => {
       res,
       HTTP_STATUS.INTERNAL_SERVER_ERROR,
       'Failed to change password: ' + error.message
+    );
+  }
+};
+
+/**
+ * อัพเดทการตั้งค่าการแจ้งเตือน (Email)
+ */
+export const updateNotificationSettings = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { email, emailNotifications } = req.body;
+
+    // Validate email format
+    if (email && !email.includes('@')) {
+      return errorResponse(
+        res,
+        HTTP_STATUS.BAD_REQUEST,
+        'รูปแบบ Email ไม่ถูกต้อง'
+      );
+    }
+
+    // Build update object
+    const updateData = {};
+    if (email !== undefined) updateData.email = email || null;
+    if (emailNotifications !== undefined) updateData.email_notifications = emailNotifications;
+
+    if (Object.keys(updateData).length === 0) {
+      return errorResponse(
+        res,
+        HTTP_STATUS.BAD_REQUEST,
+        'ไม่มีข้อมูลที่จะอัพเดท'
+      );
+    }
+
+    const { error } = await supabaseAdmin
+      .from('users')
+      .update(updateData)
+      .eq('id', userId);
+
+    if (error) throw error;
+
+    return successResponse(
+      res,
+      HTTP_STATUS.OK,
+      'อัพเดทการตั้งค่าสำเร็จ',
+      updateData
+    );
+  } catch (error) {
+    console.error('Update notification settings error:', error);
+    return errorResponse(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      'ไม่สามารถอัพเดทการตั้งค่าได้: ' + error.message
     );
   }
 };

@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { Card } from '../../components/common/Card';
+import { sanitizeString, loginSchema, validateData } from '../../utils/validation';
 import toast from 'react-hot-toast';
 import { LogIn, Building2, AlertCircle, XCircle } from 'lucide-react';
 
@@ -18,7 +19,9 @@ export const LoginPage = () => {
 
   // Clear specific error when user starts typing
   const handleEmployeeCodeChange = (e) => {
-    setEmployeeCode(e.target.value.toUpperCase());
+    // Sanitize input to prevent XSS
+    const sanitized = sanitizeString(e.target.value.toUpperCase());
+    setEmployeeCode(sanitized);
     if (errors.employeeCode) {
       setErrors(prev => ({ ...prev, employeeCode: '' }));
     }

@@ -840,3 +840,165 @@ export const getLeaveBalance = async (req, res) => {
     );
   }
 };
+
+/**
+ * ดึงข้อมูลการลาสำหรับปฏิทิน
+ * - User: ดูการลาของตัวเอง + การลาที่อนุมัติแล้วในแผนกเดียวกัน
+ * - Director: ดูการลาของพนักงานในแผนก
+ * - Admin/Central: ดูทั้งหมด
+ */
+export const getCalendarLeaves = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const userRole = req.user.role;
+    const { status, department, startDate, endDate } = req.query;
+
+    // ดึงข้อมูลผู้ใช้
+    const { data: currentUser, error: userError } = await supabaseAdmin
+      .from('users')
+      .select('department')
+      .eq('id', userId)
+      .single();
+
+    if (userError) {
+      throw userError;
+    }
+
+    // สร้าง query พื้นฐาน
+    let query = supabaseAdmin
+      .from('leaves')
+      .select(`
+        id,
+        leave_number,
+        start_date,
+        end_date,
+        total_days,
+        status,
+        reason,
+        selected_dates,
+        leave_types (
+          id,
+          type_name,
+          type_code
+        ),
+        users!leaves_user_id_fkey (
+          id,
+          employee_code,
+          first_name,
+          last_name,
+          department
+        )
+      `)
+      .order('start_date', { ascending: false });
+
+    // Filter by role
+    if (userRole === 'user') {
+      // User sees their own leaves + approved leaves in same department
+      const { data: deptUsers } = await supabaseAdmin
+        .from('users')
+        .select('id')
+        .eq('department', currentUser.department);
+      
+      const deptUserIds = deptUsers?.map(u => u.id) || [userId];
+      
+      query = query.in('user_id', deptUserIds);
+      
+      // If not their own leave, only show approved
+      if (!status) {
+        query = query.or(`user_id.eq.${userId},status.eq.approved_final`);
+      }
+    } else if (userRole === 'director') {
+      // Director sees all leaves in their department
+      const { data: deptUsers } = await supabaseAdmin
+        .from('users')
+        .select('id')
+        .eq('department', currentUser.department);
+      
+      const deptUserIds = deptUsers?.map(u => u.id) || [];
+      query = query.in('user_id', deptUserIds);
+    }
+    // Admin and Central Office see all leaves
+
+    // Filter by status
+    if (status && status !== 'all') {
+      query = query.eq('status', status);
+    }
+
+    // Filter by department (for admin/central)
+    if (department && (userRole === 'admin' || userRole === 'central_office_staff' || userRole === 'central_office_head')) {
+      const { data: deptUsers } = await supabaseAdmin
+        .from('users')
+        .select('id')
+        .eq('department', department);
+      
+      const deptUserIds = deptUsers?.map(u => u.id) || [];
+      if (deptUserIds.length > 0) {
+        query = query.in('user_id', deptUserIds);
+      }
+    }
+
+    // Filter by date range
+    if (startDate) {
+      query = query.gte('start_date', startDate);
+    }
+    if (endDate) {
+      query = query.lte('end_date', endDate);
+    }
+
+    // Limit results
+    query = query.limit(500);
+
+    const { data: leaves, error } = await query;
+
+    if (error) {
+      throw error;
+    }
+
+    // Transform data for calendar
+    const calendarData = leaves.map(leave => {
+      // Parse selected_dates if it's a string
+      let selectedDates = leave.selected_dates;
+      if (selectedDates && typeof selectedDates === 'string') {
+        try {
+          selectedDates = JSON.parse(selectedDates);
+        } catch (e) {
+          selectedDates = [];
+        }
+      }
+
+      return {
+        id: leave.id,
+        leaveNumber: leave.leave_number,
+        startDate: leave.start_date,
+        endDate: leave.end_date,
+        totalDays: leave.total_days,
+        status: leave.status,
+        reason: leave.reason,
+        selectedDates: selectedDates,
+        leaveType: leave.leave_types?.type_name,
+        leaveTypeCode: leave.leave_types?.type_code,
+        user: leave.users ? {
+          id: leave.users.id,
+          employeeCode: leave.users.employee_code,
+          first_name: leave.users.first_name,
+          last_name: leave.users.last_name,
+          department: leave.users.department
+        } : null
+      };
+    });
+
+    return successResponse(
+      res,
+      HTTP_STATUS.OK,
+      'Calendar leaves retrieved successfully',
+      calendarData
+    );
+  } catch (error) {
+    console.error('Get calendar leaves error:', error);
+    return errorResponse(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      'Failed to retrieve calendar leaves: ' + error.message
+    );
+  }
+};

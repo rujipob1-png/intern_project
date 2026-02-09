@@ -85,6 +85,22 @@ export const AuthProvider = ({ children }) => {
     return user?.roleLevel >= requiredLevel;
   };
 
+  // Refresh user data from API
+  const refreshUser = async () => {
+    try {
+      const data = await authAPI.getProfile();
+      if (data.success) {
+        setUser(data.data);
+        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.data));
+        return { success: true };
+      }
+      return { success: false };
+    } catch (error) {
+      console.error('Error refreshing user:', error);
+      return { success: false };
+    }
+  };
+
   const value = {
     user,
     token,
@@ -93,6 +109,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     isAuthenticated,
     hasRole,
+    refreshUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

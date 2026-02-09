@@ -2,6 +2,8 @@ import { supabaseAdmin } from '../config/supabase.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 import { HTTP_STATUS } from '../config/constants.js';
 import { createNotification } from './notification.controller.js';
+import { EmailService } from '../utils/emailService.js';
+import { getAuditLogs, AuditActions, logLeaveAction } from '../utils/auditLog.js';
 
 /**
  * ดูรายการคำขอลาที่รออนุมัติ (Admin - Level 4 / Final)
@@ -402,6 +404,11 @@ export const approveLeaveFinal = async (req, res) => {
       'leave'
     );
 
+    // ส่ง email แจ้งเตือนผู้ขอลา
+    EmailService.notifyLeaveApproved(id).catch(err => {
+      console.error('Email notification error:', err.message);
+    });
+
     return successResponse(
       res,
       HTTP_STATUS.OK,
@@ -503,6 +510,11 @@ export const rejectLeaveFinal = async (req, res) => {
       id,
       'leave'
     );
+
+    // ส่ง email แจ้งเตือนผู้ขอลา
+    EmailService.notifyLeaveRejected(id, remarks).catch(err => {
+      console.error('Email notification error:', err.message);
+    });
 
     return successResponse(
       res,
@@ -1104,5 +1116,180 @@ export const updateUser = async (req, res) => {
   } catch (error) {
     console.error('Update user error:', error);
     return errorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Failed to update user');
+  }
+};
+
+/**
+ * ดึงข้อมูลการลาสำหรับรายงาน
+ */
+export const getLeaveReports = async (req, res) => {
+  try {
+    const { startDate, endDate, status, leaveType, department } = req.query;
+
+    // Build query
+    let query = supabaseAdmin
+      .from('leaves')
+      .select(`
+        id,
+        leave_number,
+        start_date,
+        end_date,
+        total_days,
+        status,
+        reason,
+        created_at,
+        leave_types (
+          id,
+          type_name,
+          type_code
+        ),
+        users!leaves_user_id_fkey (
+          id,
+          employee_code,
+          first_name,
+          last_name,
+          department
+        )
+      `)
+      .order('created_at', { ascending: false });
+
+    // Apply filters
+    if (startDate) {
+      query = query.gte('start_date', startDate);
+    }
+    if (endDate) {
+      query = query.lte('end_date', endDate);
+    }
+    if (status) {
+      query = query.eq('status', status);
+    }
+    if (leaveType) {
+      // Need to filter by leave type code
+      const { data: leaveTypeData } = await supabaseAdmin
+        .from('leave_types')
+        .select('id')
+        .eq('type_code', leaveType)
+        .single();
+      
+      if (leaveTypeData) {
+        query = query.eq('leave_type_id', leaveTypeData.id);
+      }
+    }
+    if (department) {
+      const { data: deptUsers } = await supabaseAdmin
+        .from('users')
+        .select('id')
+        .eq('department', department);
+      
+      const userIds = deptUsers?.map(u => u.id) || [];
+      if (userIds.length > 0) {
+        query = query.in('user_id', userIds);
+      }
+    }
+
+    // Limit results
+    query = query.limit(1000);
+
+    const { data: leaves, error } = await query;
+
+    if (error) {
+      throw error;
+    }
+
+    return successResponse(
+      res,
+      HTTP_STATUS.OK,
+      'Leave reports retrieved successfully',
+      leaves
+    );
+  } catch (error) {
+    console.error('Get leave reports error:', error);
+    return errorResponse(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      'Failed to get leave reports: ' + error.message
+    );
+  }
+};
+
+/**
+ * ดึง departments ทั้งหมด
+ */
+export const getDepartments = async (req, res) => {
+  try {
+    const { data: departments, error } = await supabaseAdmin
+      .from('users')
+      .select('department')
+      .not('department', 'is', null);
+
+    if (error) {
+      throw error;
+    }
+
+    // Get unique departments
+    const uniqueDepartments = [...new Set(departments.map(d => d.department))]
+      .filter(d => d)
+      .map(name => ({ name }));
+
+    return successResponse(
+      res,
+      HTTP_STATUS.OK,
+      'Departments retrieved successfully',
+      uniqueDepartments
+    );
+  } catch (error) {
+    console.error('Get departments error:', error);
+    return errorResponse(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      'Failed to get departments'
+    );
+  }
+};
+
+/**
+ * ดึง Audit Logs
+ */
+export const getAuditLogsController = async (req, res) => {
+  try {
+    const { 
+      userId, 
+      action, 
+      entityType, 
+      entityId,
+      startDate,
+      endDate,
+      limit = 50,
+      offset = 0
+    } = req.query;
+
+    const filters = {};
+    if (userId) filters.userId = userId;
+    if (action) filters.action = action;
+    if (entityType) filters.entityType = entityType;
+    if (entityId) filters.entityId = entityId;
+    if (startDate) filters.startDate = startDate;
+    if (endDate) filters.endDate = endDate;
+
+    const result = await getAuditLogs(
+      filters,
+      parseInt(limit),
+      parseInt(offset)
+    );
+
+    return successResponse(
+      res,
+      HTTP_STATUS.OK,
+      'Audit logs retrieved successfully',
+      result.data,
+      { pagination: result.pagination }
+    );
+  } catch (error) {
+    console.error('Get audit logs error:', error);
+    return errorResponse(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      'Failed to get audit logs'
+    );
   }
 };

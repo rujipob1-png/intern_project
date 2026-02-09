@@ -9,6 +9,7 @@ import { CalendarPicker } from '../../components/leave/CalendarPicker';
 import { leaveAPI } from '../../api/leave.api';
 import { calculateDays } from '../../utils/formatDate';
 import { LEAVE_TYPE_NAMES, STORAGE_KEYS } from '../../utils/constants';
+import { sanitizeString, leaveRequestSchema, validateData } from '../../utils/validation';
 import toast from 'react-hot-toast';
 import { FileText, Calendar, AlertCircle, Upload, X, Info, AlertTriangle, CheckCircle } from 'lucide-react';
 
@@ -214,7 +215,9 @@ export const CreateLeavePage = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    // Sanitize text input to prevent XSS
+    const sanitizedValue = sanitizeString(value);
+    setFormData(prev => ({ ...prev, [name]: sanitizedValue }));
   };
 
   // Handle calendar date selection
@@ -669,11 +672,16 @@ export const CreateLeavePage = () => {
                     <p className="mb-3 text-sm text-gray-600 flex items-center gap-2">
                       <Calendar className="w-4 h-4" />
                       คลิกที่วันในปฏิทินเพื่อเลือกหรือยกเลิก (เลือกได้หลายวัน)
+                      {selectedLeaveType?.type_code === 'SICK' && (
+                        <span className="text-blue-600">(ลาป่วยสามารถเลือกวันย้อนหลังได้ไม่เกิน 30 วัน)</span>
+                      )}
                     </p>
                     <CalendarPicker
                       selectedDates={formData.selectedDates}
                       onChange={handleCalendarChange}
                       showWeekends={true}
+                      allowPastDates={selectedLeaveType?.type_code === 'SICK'}
+                      maxPastDays={30}
                     />
                   </div>
                 )}
