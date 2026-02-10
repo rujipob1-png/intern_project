@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { adminAPI } from '../../api/admin.api';
 import { LEAVE_STATUS } from '../../utils/constants';
@@ -30,7 +30,7 @@ const DEPARTMENT_NAMES = {
   'GTS': 'กทส.',
   'GTP': 'กตป.',
   'GSS': 'กสส.',
-  'GKC': 'กคช.',
+  'GKC': 'กคฐ.',
   'GPS': 'กปส.',
   'GKM': 'กกม.',
   'SLK': 'สลก.',
@@ -42,7 +42,7 @@ const DEPARTMENT_NAMES = {
   'กลุ่มงานเทคโนโลยีสารสนเทศ': 'กทส.',
   'กลุ่มงานติดตามประเมินผลด้านสารสนเทศและการสื่อสาร': 'กตป.',
   'กลุ่มงานเทคโนโลยีการสื่อสาร': 'กสส.',
-  'กลุ่มงานโครงสร้างพื้นฐานด้านสารสนเทศและการสื่อสาร': 'กคช.',
+  'กลุ่มงานโครงสร้างพื้นฐานด้านสารสนเทศและการสื่อสาร': 'กคฐ.',
   'กองหลักประกันสุขภาพ': 'กปส.',
   'กองกฎหมาย': 'กกม.',
   'สำนักงานเลขานุการกรม': 'สลก.',

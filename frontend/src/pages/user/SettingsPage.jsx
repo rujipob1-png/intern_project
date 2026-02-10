@@ -28,7 +28,9 @@ import {
   Shield,
   Camera,
   Trash2,
-  Loader2
+  Loader2,
+  X,
+  AlertTriangle
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -40,6 +42,7 @@ export const SettingsPage = () => {
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const fileInputRef = useRef(null);
 
   // Load current settings from user profile
@@ -93,12 +96,15 @@ export const SettingsPage = () => {
     }
   };
 
-  // Handle image delete
-  const handleDeleteImage = async () => {
+  // Handle image delete - open modal
+  const handleDeleteImage = () => {
     if (!user?.profileImageUrl) return;
-    
-    if (!confirm('ต้องการลบรูปโปรไฟล์หรือไม่?')) return;
+    setShowDeleteModal(true);
+  };
 
+  // Confirm delete image
+  const confirmDeleteImage = async () => {
+    setShowDeleteModal(false);
     setUploadingImage(true);
     try {
       await authAPI.deleteProfileImage();
@@ -363,6 +369,63 @@ export const SettingsPage = () => {
 
       </div>
     </div>
+
+    {/* Delete Confirmation Modal */}
+    {showDeleteModal && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center">
+        {/* Backdrop */}
+        <div 
+          className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          onClick={() => setShowDeleteModal(false)}
+        />
+        
+        {/* Modal */}
+        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-in fade-in zoom-in duration-200">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 border-b border-slate-200">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5 text-red-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-slate-800">ยืนยันการลบ</h3>
+            </div>
+            <button
+              onClick={() => setShowDeleteModal(false)}
+              className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+            >
+              <X className="w-5 h-5 text-slate-500" />
+            </button>
+          </div>
+          
+          {/* Content */}
+          <div className="p-6">
+            <p className="text-slate-600 text-center">
+              ต้องการลบรูปโปรไฟล์หรือไม่?
+            </p>
+            <p className="text-sm text-slate-400 text-center mt-2">
+              การดำเนินการนี้ไม่สามารถย้อนกลับได้
+            </p>
+          </div>
+          
+          {/* Actions */}
+          <div className="flex gap-3 p-4 bg-slate-50 border-t border-slate-200">
+            <button
+              onClick={() => setShowDeleteModal(false)}
+              className="flex-1 px-4 py-2.5 bg-white border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-colors"
+            >
+              ยกเลิก
+            </button>
+            <button
+              onClick={confirmDeleteImage}
+              className="flex-1 px-4 py-2.5 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              ลบรูปโปรไฟล์
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     </MainLayout>
   );
 };

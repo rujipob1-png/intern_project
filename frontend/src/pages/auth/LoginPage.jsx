@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/common/Button';
@@ -241,7 +241,7 @@ export const LoginPage = () => {
             <div className="mt-3 text-xs text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-200">
               <span className="font-semibold">ทุกบัญชีใช้รหัสผ่าน: 123456</span>
               <br />
-              <span className="text-slate-500">กลุ่มงาน: กยส., กทส., กอก., กตป., กสส., กคช.</span>
+              <span className="text-slate-500">กลุ่มงาน: กยส., กทส., กอก., กตป., กสส., กคฐ.</span>
             </div>
             <p className="text-xs text-red-600 mt-3 bg-red-50 p-2 rounded-lg border border-red-200">
               หาก Login ไม่ได้ กรุณาเปิด Backend server ที่ Terminal ก่อน: <code className="bg-white px-2 py-0.5 rounded font-mono">npm run dev</code>

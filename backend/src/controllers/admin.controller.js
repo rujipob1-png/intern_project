@@ -1,3 +1,4 @@
+import bcrypt from 'bcrypt';
 import { supabaseAdmin } from '../config/supabase.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 import { HTTP_STATUS } from '../config/constants.js';
@@ -1042,6 +1043,9 @@ export const getAllUsers = async (req, res) => {
         position,
         department,
         phone,
+        email,
+        email_notifications,
+        profile_image_url,
         is_active,
         sick_leave_balance,
         personal_leave_balance,
@@ -1069,6 +1073,9 @@ export const getAllUsers = async (req, res) => {
       full_name: `${user.title || ''}${user.first_name} ${user.last_name}`,
       position: user.position,
       phone: user.phone,
+      email: user.email,
+      email_notifications: user.email_notifications,
+      profile_image_url: user.profile_image_url,
       is_active: user.is_active,
       department_code: user.department,
       role_name: user.roles?.role_name,
@@ -1292,5 +1299,322 @@ export const getAuditLogsController = async (req, res) => {
       HTTP_STATUS.INTERNAL_SERVER_ERROR,
       'Failed to get audit logs'
     );
+  }
+};
+
+/**
+ * ดึง Roles ทั้งหมด (สำหรับ dropdown)
+ */
+export const getAllRoles = async (req, res) => {
+  try {
+    const { data: roles, error } = await supabaseAdmin
+      .from('roles')
+      .select('id, role_name, role_level, description')
+      .order('role_level', { ascending: true });
+
+    if (error) {
+      throw error;
+    }
+
+    return successResponse(res, HTTP_STATUS.OK, 'Roles retrieved successfully', roles);
+  } catch (error) {
+    console.error('Get all roles error:', error);
+    return errorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Failed to get roles');
+  }
+};
+
+/**
+ * สร้างผู้ใช้ใหม่ (Admin only)
+ */
+export const createUser = async (req, res) => {
+  try {
+    const {
+      employee_code,
+      password,
+      title,
+      first_name,
+      last_name,
+      position,
+      department,
+      phone,
+      email,
+      role_id,
+      sick_leave_balance = 30,
+      personal_leave_balance = 0,
+      vacation_leave_balance = 10
+    } = req.body;
+
+    // Check if employee_code already exists
+    const { data: existingUser } = await supabaseAdmin
+      .from('users')
+      .select('id')
+      .eq('employee_code', employee_code.toUpperCase())
+      .single();
+
+    if (existingUser) {
+      return errorResponse(res, HTTP_STATUS.BAD_REQUEST, 'รหัสพนักงานนี้มีอยู่ในระบบแล้ว');
+    }
+
+    // Hash password
+    const password_hash = await bcrypt.hash(password, 10);
+
+    // Create user
+    const { data: newUser, error } = await supabaseAdmin
+      .from('users')
+      .insert({
+        employee_code: employee_code.toUpperCase(),
+        password_hash,
+        title,
+        first_name,
+        last_name,
+        position,
+        department,
+        phone,
+        email,
+        role_id,
+        sick_leave_balance,
+        personal_leave_balance,
+        vacation_leave_balance,
+        is_active: true
+      })
+      .select(`
+        id,
+        employee_code,
+        title,
+        first_name,
+        last_name,
+        position,
+        department,
+        phone,
+        email,
+        is_active,
+        sick_leave_balance,
+        personal_leave_balance,
+        vacation_leave_balance,
+        roles (
+          id,
+          role_name,
+          role_level
+        )
+      `)
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    return successResponse(
+      res, 
+      HTTP_STATUS.CREATED, 
+      'สร้างบุคลากรใหม่สำเร็จ', 
+      {
+        ...newUser,
+        full_name: `${newUser.title || ''}${newUser.first_name} ${newUser.last_name}`,
+        role_name: newUser.roles?.role_name,
+        role_level: newUser.roles?.role_level
+      }
+    );
+  } catch (error) {
+    console.error('Create user error:', error);
+    return errorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, 'ไม่สามารถสร้างบุคลากรได้: ' + error.message);
+  }
+};
+
+/**
+ * ลบ/ปิดการใช้งานผู้ใช้ (Soft delete - set is_active = false)
+ */
+export const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { permanent = false } = req.body;
+    const currentUserId = req.user?.id;
+
+    // ป้องกัน Admin ปิดการใช้งานตัวเอง
+    if (id === currentUserId) {
+      return errorResponse(res, HTTP_STATUS.BAD_REQUEST, 'ไม่สามารถปิดการใช้งานบัญชีตัวเองได้');
+    }
+
+    // Check if user exists
+    const { data: user, error: fetchError } = await supabaseAdmin
+      .from('users')
+      .select('id, employee_code, first_name, last_name')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !user) {
+      return errorResponse(res, HTTP_STATUS.NOT_FOUND, 'ไม่พบข้อมูลบุคลากร');
+    }
+
+    if (permanent) {
+      // Hard delete - only if no leaves exist
+      const { data: leaves } = await supabaseAdmin
+        .from('leaves')
+        .select('id')
+        .eq('user_id', id)
+        .limit(1);
+
+      if (leaves && leaves.length > 0) {
+        return errorResponse(
+          res, 
+          HTTP_STATUS.BAD_REQUEST, 
+          'ไม่สามารถลบถาวรได้เนื่องจากมีประวัติการลาในระบบ กรุณาใช้การปิดการใช้งานแทน'
+        );
+      }
+
+      const { error: deleteError } = await supabaseAdmin
+        .from('users')
+        .delete()
+        .eq('id', id);
+
+      if (deleteError) {
+        throw deleteError;
+      }
+
+      return successResponse(res, HTTP_STATUS.OK, 'ลบบุคลากรถาวรสำเร็จ');
+    } else {
+      // Soft delete - set is_active = false
+      const { data: updatedUser, error: updateError } = await supabaseAdmin
+        .from('users')
+        .update({ is_active: false, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      return successResponse(res, HTTP_STATUS.OK, 'ปิดการใช้งานบุคลากรสำเร็จ', updatedUser);
+    }
+  } catch (error) {
+    console.error('Delete user error:', error);
+    return errorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, 'ไม่สามารถลบบุคลากรได้: ' + error.message);
+  }
+};
+
+/**
+ * เปิดการใช้งานผู้ใช้ที่ถูกปิดไว้
+ */
+export const activateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { data: user, error } = await supabaseAdmin
+      .from('users')
+      .update({ is_active: true, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    return successResponse(res, HTTP_STATUS.OK, 'เปิดการใช้งานบุคลากรสำเร็จ', user);
+  } catch (error) {
+    console.error('Activate user error:', error);
+    return errorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, 'ไม่สามารถเปิดการใช้งานได้');
+  }
+};
+
+/**
+ * Reset รหัสผ่านผู้ใช้ (Admin only)
+ */
+export const resetUserPassword = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { new_password } = req.body;
+
+    if (!new_password || new_password.length < 6) {
+      return errorResponse(res, HTTP_STATUS.BAD_REQUEST, 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร');
+    }
+
+    // Check if user exists
+    const { data: user, error: fetchError } = await supabaseAdmin
+      .from('users')
+      .select('id, employee_code, first_name, last_name')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !user) {
+      return errorResponse(res, HTTP_STATUS.NOT_FOUND, 'ไม่พบข้อมูลบุคลากร');
+    }
+
+    // Hash new password
+    const password_hash = await bcrypt.hash(new_password, 10);
+
+    // Update password
+    const { error: updateError } = await supabaseAdmin
+      .from('users')
+      .update({ password_hash, updated_at: new Date().toISOString() })
+      .eq('id', id);
+
+    if (updateError) {
+      throw updateError;
+    }
+
+    return successResponse(
+      res, 
+      HTTP_STATUS.OK, 
+      `รีเซ็ตรหัสผ่านของ ${user.first_name} ${user.last_name} สำเร็จ`
+    );
+  } catch (error) {
+    console.error('Reset password error:', error);
+    return errorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, 'ไม่สามารถรีเซ็ตรหัสผ่านได้');
+  }
+};
+
+/**
+ * อัพเดตวันลาคงเหลือของผู้ใช้ (Admin only)
+ */
+export const updateLeaveBalance = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { sick_leave_balance, personal_leave_balance, vacation_leave_balance } = req.body;
+
+    // Check if user exists
+    const { data: user, error: fetchError } = await supabaseAdmin
+      .from('users')
+      .select('id, first_name, last_name, sick_leave_balance, personal_leave_balance, vacation_leave_balance')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !user) {
+      return errorResponse(res, HTTP_STATUS.NOT_FOUND, 'ไม่พบข้อมูลบุคลากร');
+    }
+
+    // Build update object
+    const updateData = { updated_at: new Date().toISOString() };
+    
+    if (sick_leave_balance !== undefined) {
+      updateData.sick_leave_balance = parseInt(sick_leave_balance);
+    }
+    if (personal_leave_balance !== undefined) {
+      updateData.personal_leave_balance = parseInt(personal_leave_balance);
+    }
+    if (vacation_leave_balance !== undefined) {
+      updateData.vacation_leave_balance = parseInt(vacation_leave_balance);
+    }
+
+    const { data: updatedUser, error: updateError } = await supabaseAdmin
+      .from('users')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (updateError) {
+      throw updateError;
+    }
+
+    return successResponse(
+      res, 
+      HTTP_STATUS.OK, 
+      `อัพเดตวันลาของ ${user.first_name} ${user.last_name} สำเร็จ`,
+      updatedUser
+    );
+  } catch (error) {
+    console.error('Update leave balance error:', error);
+    return errorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, 'ไม่สามารถอัพเดตวันลาได้');
   }
 };

@@ -30,15 +30,52 @@ export const adminAPI = {
     return response.data;
   },
 
+  // ============= USER MANAGEMENT =============
+  // Get all roles (for dropdowns)
+  getAllRoles: async () => {
+    const response = await axios.get('/admin/roles');
+    return response.data;
+  },
+
   // Get all users (for user management)
   getAllUsers: async () => {
     const response = await axios.get('/admin/users');
     return response.data;
   },
 
+  // Create new user
+  createUser: async (userData) => {
+    const response = await axios.post('/admin/users', userData);
+    return response.data;
+  },
+
   // Update user
   updateUser: async (userId, data) => {
     const response = await axios.put(`/admin/users/${userId}`, data);
+    return response.data;
+  },
+
+  // Delete/disable user (soft delete by default)
+  deleteUser: async (userId, permanent = false) => {
+    const response = await axios.delete(`/admin/users/${userId}`, { data: { permanent } });
+    return response.data;
+  },
+
+  // Activate user (re-enable disabled user)
+  activateUser: async (userId) => {
+    const response = await axios.put(`/admin/users/${userId}/activate`);
+    return response.data;
+  },
+
+  // Reset user password
+  resetUserPassword: async (userId, newPassword) => {
+    const response = await axios.put(`/admin/users/${userId}/reset-password`, { new_password: newPassword });
+    return response.data;
+  },
+
+  // Update leave balance
+  updateLeaveBalance: async (userId, balanceData) => {
+    const response = await axios.put(`/admin/users/${userId}/leave-balance`, balanceData);
     return response.data;
   },
 

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Acting Person Controller
  * จัดการเรื่องผู้ปฏิบัติหน้าที่แทนและการแจ้งเตือน
  */
@@ -128,7 +128,7 @@ export const getSameLevelEmployees = async (req, res) => {
       'GTS': 'กทส.',
       'GTP': 'กตป.',
       'GSS': 'กสส.',
-      'GKC': 'กคช.',
+      'GKC': 'กคฐ.',
     };
 
     // Format ข้อมูลให้พร้อมใช้งาน

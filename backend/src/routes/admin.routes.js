@@ -11,6 +11,12 @@ import {
   getCancelHistory,
   getAllUsers,
   updateUser,
+  createUser,
+  deleteUser,
+  activateUser,
+  resetUserPassword,
+  updateLeaveBalance,
+  getAllRoles,
   getLeaveReports,
   getDepartments,
   getAuditLogsController
@@ -20,7 +26,9 @@ import { requireRole } from '../middlewares/role.middleware.js';
 import { 
   approvalValidation, 
   partialApprovalValidation, 
-  updateUserValidation 
+  updateUserValidation,
+  createUserValidation,
+  idParamValidation
 } from '../middlewares/validation.middleware.js';
 
 const router = express.Router();
@@ -75,8 +83,14 @@ router.put('/cancel-requests/:id/reject', approvalValidation, rejectCancelFinal)
 /**
  * ==================== User Management Routes ====================
  */
+router.get('/roles', getAllRoles);
 router.get('/users', getAllUsers);
+router.post('/users', createUserValidation, createUser);
 router.put('/users/:id', updateUserValidation, updateUser);
+router.delete('/users/:id', idParamValidation, deleteUser);
+router.put('/users/:id/activate', idParamValidation, activateUser);
+router.put('/users/:id/reset-password', idParamValidation, resetUserPassword);
+router.put('/users/:id/leave-balance', idParamValidation, updateLeaveBalance);
 
 /**
  * ==================== Reports Routes ====================

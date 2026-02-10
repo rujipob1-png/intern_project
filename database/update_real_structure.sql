@@ -1,4 +1,4 @@
--- ============================================
+﻿-- ============================================
 -- อัพเดทโครงสร้างให้ตรงกับองค์กรจริง
 -- 6 กลุ่มงาน + Directors + พนักงาน
 -- ============================================
@@ -47,8 +47,8 @@ INSERT INTO users (employee_code, password_hash, title, first_name, last_name, p
 -- กสส. (ชั้น 4) - ผอ.กสส.
 ('51430', '$2b$10$/4pSD6HlFYNNTEjihi6bE.1ZRDZdczPqrrQSIbWz.GGvc1mTqRzC.', 'นาย', 'ศมิท', 'คงเมือง', 'ผอ.กสส.', 'GSS', '0883313003', (SELECT id FROM roles WHERE role_name = 'director'), true),
 
--- กคช. (ชั้น 5) - ผอ.กคฐ.
-('51450', '$2b$10$/4pSD6HlFYNNTEjihi6bE.1ZRDZdczPqrrQSIbWz.GGvc1mTqRzC.', 'นาย', 'ณฤกิตติ์', 'ดวงชะลา', 'ผอ.กคช.', 'GKC', '0814404972', (SELECT id FROM roles WHERE role_name = 'director'), true);
+-- กคฐ. (ชั้น 5) - ผอ.กคฐ.
+('51450', '$2b$10$/4pSD6HlFYNNTEjihi6bE.1ZRDZdczPqrrQSIbWz.GGvc1mTqRzC.', 'นาย', 'ณฤกิตติ์', 'ดวงชะลา', 'ผอ.กคฐ.', 'GKC', '0814404972', (SELECT id FROM roles WHERE role_name = 'director'), true);
 
 -- ============================================
 -- STEP 4: เพิ่มพนักงาน กยส. (ชั้น 2)

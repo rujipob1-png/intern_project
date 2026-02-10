@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Email Service
  * บริการส่ง email notifications
  */
@@ -29,7 +29,7 @@ function getDepartmentThaiName(code) {
     'GTP': 'กทป.',
     'GSS': 'กสส.',
     'GYS': 'กยส.',
-    'GKC': 'กคช.',
+    'GKC': 'กคฐ.',
     'GKS': 'กคส.'
   };
   return deptMap[code] || code || 'ไม่ระบุ';
