@@ -188,6 +188,16 @@ export default function DashboardDirector() {
     const statusConfig = {
       [LEAVE_STATUS.PENDING]: { label: 'รอดำเนินการ', class: 'bg-yellow-100 text-yellow-800' },
       [LEAVE_STATUS.APPROVED_LEVEL1]: { label: 'ผอ.อนุมัติแล้ว', class: 'bg-blue-100 text-blue-800' },
+      approved_level2: { label: 'ระดับ 2 ผ่าน', class: 'bg-indigo-100 text-indigo-800' },
+      approved_level3: { label: 'ระดับ 3 ผ่าน', class: 'bg-purple-100 text-purple-800' },
+      approved_final: { label: 'อนุมัติแล้ว', class: 'bg-green-100 text-green-800' },
+      approved: { label: 'อนุมัติแล้ว', class: 'bg-green-100 text-green-800' },
+      rejected: { label: 'ไม่อนุมัติ', class: 'bg-red-100 text-red-800' },
+      cancelled: { label: 'ยกเลิกแล้ว', class: 'bg-gray-100 text-gray-800' },
+      cancel_level1: { label: 'รอพิจารณายกเลิก', class: 'bg-orange-100 text-orange-800' },
+      cancel_level2: { label: 'รอพิจารณายกเลิก', class: 'bg-orange-100 text-orange-800' },
+      cancel_level3: { label: 'รอพิจารณายกเลิก', class: 'bg-orange-100 text-orange-800' },
+      pending_cancel: { label: 'รอพิจารณายกเลิก', class: 'bg-orange-100 text-orange-800' },
     };
 
     const config = statusConfig[status] || { label: status, class: 'bg-gray-100 text-gray-800' };

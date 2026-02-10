@@ -48,12 +48,18 @@ const ApprovalHistoryPage = () => {
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      approved_level1: { label: 'อนุมัติระดับ 1', color: 'bg-blue-100 text-blue-800', icon: Clock },
-      approved_level2: { label: 'อนุมัติระดับ 2', color: 'bg-indigo-100 text-indigo-800', icon: Clock },
-      approved_level3: { label: 'อนุมัติระดับ 3', color: 'bg-purple-100 text-purple-800', icon: Clock },
+      pending: { label: 'รอพิจารณา', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
+      approved_level1: { label: 'ผอ.อนุมัติแล้ว', color: 'bg-blue-100 text-blue-800', icon: CheckCircle },
+      approved_level2: { label: 'ระดับ 2 ผ่าน', color: 'bg-indigo-100 text-indigo-800', icon: CheckCircle },
+      approved_level3: { label: 'ระดับ 3 ผ่าน', color: 'bg-purple-100 text-purple-800', icon: CheckCircle },
+      approved_final: { label: 'อนุมัติแล้ว', color: 'bg-green-100 text-green-800', icon: CheckCircle },
       approved: { label: 'อนุมัติแล้ว', color: 'bg-green-100 text-green-800', icon: CheckCircle },
-      rejected: { label: 'ปฏิเสธ', color: 'bg-red-100 text-red-800', icon: XCircle },
-      cancelled: { label: 'ยกเลิก', color: 'bg-gray-100 text-gray-800', icon: XCircle },
+      rejected: { label: 'ไม่อนุมัติ', color: 'bg-red-100 text-red-800', icon: XCircle },
+      cancelled: { label: 'ยกเลิกแล้ว', color: 'bg-gray-100 text-gray-800', icon: XCircle },
+      cancel_level1: { label: 'รอพิจารณายกเลิก', color: 'bg-orange-100 text-orange-800', icon: Clock },
+      cancel_level2: { label: 'รอพิจารณายกเลิก', color: 'bg-orange-100 text-orange-800', icon: Clock },
+      cancel_level3: { label: 'รอพิจารณายกเลิก', color: 'bg-orange-100 text-orange-800', icon: Clock },
+      pending_cancel: { label: 'รอพิจารณายกเลิก', color: 'bg-orange-100 text-orange-800', icon: Clock },
     };
     
     const config = statusConfig[status] || { label: status, color: 'bg-gray-100 text-gray-800', icon: Clock };

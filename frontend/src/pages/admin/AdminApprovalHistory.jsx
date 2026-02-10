@@ -45,11 +45,19 @@ const DEPARTMENT_NAMES = {
 
 const getStatusBadge = (status) => {
   const statusConfig = {
+    'pending': { label: 'รอพิจารณา', className: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
     'approved': { label: 'อนุมัติแล้ว', className: 'bg-green-100 text-green-700 border-green-200' },
     'approved_final': { label: 'อนุมัติแล้ว', className: 'bg-green-100 text-green-700 border-green-200' },
+    'approved_level1': { label: 'ผอ.อนุมัติแล้ว', className: 'bg-blue-100 text-blue-700 border-blue-200' },
+    'approved_level2': { label: 'ระดับ 2 ผ่าน', className: 'bg-indigo-100 text-indigo-700 border-indigo-200' },
+    'approved_level3': { label: 'ระดับ 3 ผ่าน', className: 'bg-purple-100 text-purple-700 border-purple-200' },
     'rejected': { label: 'ไม่อนุมัติ', className: 'bg-red-100 text-red-700 border-red-200' },
     'cancelled': { label: 'ยกเลิกแล้ว', className: 'bg-gray-100 text-gray-700 border-gray-200' },
     'partial_approved': { label: 'อนุมัติบางส่วน', className: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
+    'cancel_level1': { label: 'รอพิจารณายกเลิก', className: 'bg-orange-100 text-orange-700 border-orange-200' },
+    'cancel_level2': { label: 'รอพิจารณายกเลิก', className: 'bg-orange-100 text-orange-700 border-orange-200' },
+    'cancel_level3': { label: 'รอพิจารณายกเลิก', className: 'bg-orange-100 text-orange-700 border-orange-200' },
+    'pending_cancel': { label: 'รอพิจารณายกเลิก', className: 'bg-orange-100 text-orange-700 border-orange-200' },
   };
 
   const config = statusConfig[status] || { label: status, className: 'bg-gray-100 text-gray-700' };

@@ -512,7 +512,8 @@ export const rejectLeaveFinal = async (req, res) => {
     );
 
     // ส่ง email แจ้งเตือนผู้ขอลา
-    EmailService.notifyLeaveRejected(id, remarks).catch(err => {
+    const rejecterName = (req.user.title || '') + req.user.firstName + ' ' + req.user.lastName + (req.user.position ? ' (' + req.user.position + ')' : '');
+    EmailService.notifyLeaveRejected(id, remarks, rejecterName).catch(err => {
       console.error('Email notification error:', err.message);
     });
 

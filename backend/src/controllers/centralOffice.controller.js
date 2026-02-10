@@ -2,6 +2,7 @@ import { supabaseAdmin } from '../config/supabase.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 import { HTTP_STATUS } from '../config/constants.js';
 import { createNotification } from './notification.controller.js';
+import { EmailService } from '../utils/emailService.js';
 
 /**
  * ดูรายการคำขอลาที่รออนุมัติ (Central Office Staff - Level 2)
@@ -185,6 +186,14 @@ export const approveLeavLevel2 = async (req, res) => {
       'leave'
     );
 
+    // ส่ง email แจ้งผู้ขอลาว่าอนุมัติระดับ 2 แล้ว
+    EmailService.notifyStatusUpdate(id, 'approved_level2', {
+      approverName: (req.user.title || '') + req.user.firstName + ' ' + req.user.lastName + (req.user.position ? ' (' + req.user.position + ')' : ''),
+      comment: remarks || 'อนุมัติ'
+    }).catch(err => {
+      console.error('Email notification error:', err.message);
+    });
+
     // ส่งแจ้งเตือนให้ central_office_head (ผอ.กอก.)
     const { data: headRole } = await supabaseAdmin
       .from('roles')
@@ -211,6 +220,11 @@ export const approveLeavLevel2 = async (req, res) => {
         }
       }
     }
+
+    // ส่ง email แจ้งเตือน central_office_head ทุกคน
+    EmailService.notifyApprovers(id, 'central_office_head').catch(err => {
+      console.error('Email notification to central_office_head error:', err.message);
+    });
 
     return successResponse(
       res,
@@ -311,6 +325,14 @@ export const rejectLeaveLevel2 = async (req, res) => {
       id,
       'leave'
     );
+
+    // ส่ง email แจ้งผู้ขอลาว่าถูกปฏิเสธ
+    EmailService.notifyStatusUpdate(id, 'rejected', {
+      approverName: (req.user.title || '') + req.user.firstName + ' ' + req.user.lastName + (req.user.position ? ' (' + req.user.position + ')' : ''),
+      comment: remarks
+    }).catch(err => {
+      console.error('Email notification error:', err.message);
+    });
 
     return successResponse(
       res,
@@ -529,6 +551,14 @@ export const approveLeaveLevel3 = async (req, res) => {
       'leave'
     );
 
+    // ส่ง email แจ้งผู้ขอลาว่าอนุมัติระดับ 3 แล้ว
+    EmailService.notifyStatusUpdate(id, 'approved_level3', {
+      approverName: (req.user.title || '') + req.user.firstName + ' ' + req.user.lastName + (req.user.position ? ' (' + req.user.position + ')' : ''),
+      comment: remarks || 'อนุมัติ'
+    }).catch(err => {
+      console.error('Email notification error:', err.message);
+    });
+
     // ส่งแจ้งเตือนให้ admin (ผู้บริหารสูงสุด)
     const { data: adminRole } = await supabaseAdmin
       .from('roles')
@@ -555,6 +585,11 @@ export const approveLeaveLevel3 = async (req, res) => {
         }
       }
     }
+
+    // ส่ง email แจ้งเตือน admin ทุกคน
+    EmailService.notifyApprovers(id, 'admin').catch(err => {
+      console.error('Email notification to admin error:', err.message);
+    });
 
     return successResponse(
       res,
@@ -655,6 +690,14 @@ export const rejectLeaveLevel3 = async (req, res) => {
       id,
       'leave'
     );
+
+    // ส่ง email แจ้งผู้ขอลาว่าถูกปฏิเสธ
+    EmailService.notifyStatusUpdate(id, 'rejected', {
+      approverName: (req.user.title || '') + req.user.firstName + ' ' + req.user.lastName + (req.user.position ? ' (' + req.user.position + ')' : ''),
+      comment: remarks
+    }).catch(err => {
+      console.error('Email notification error:', err.message);
+    });
 
     return successResponse(
       res,

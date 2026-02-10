@@ -210,6 +210,8 @@ export const getProfile = async (req, res) => {
         phone: user.phone,
         email: user.email,
         emailNotifications: user.email_notifications ?? true,
+        role_name: user.roles.role_name, // เพิ่ม role_name สำหรับ Sidebar
+        roleLevel: user.roles.role_level, // เพิ่ม roleLevel สำหรับ permission check
         role: {
           id: user.roles.id,
           name: user.roles.role_name,

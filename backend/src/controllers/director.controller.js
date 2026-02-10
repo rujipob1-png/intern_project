@@ -233,6 +233,14 @@ export const approveLeave = async (req, res) => {
       'leave'
     );
 
+    // ส่ง email แจ้งผู้ขอลาว่าอนุมัติระดับ 1 แล้ว
+    EmailService.notifyStatusUpdate(id, 'approved_level1', {
+      approverName: (req.user.title || '') + req.user.firstName + ' ' + req.user.lastName + (req.user.position ? ' (' + req.user.position + ')' : ''),
+      comment: remarks || 'อนุมัติ'
+    }).catch(err => {
+      console.error('Email notification error:', err.message);
+    });
+
     // ส่งแจ้งเตือนให้ central_office_staff (หัวหน้าฝ่ายบริหารทั่วไป)
     const { data: staffRole } = await supabaseAdmin
       .from('roles')
@@ -257,14 +265,14 @@ export const approveLeave = async (req, res) => {
             id,
             'leave'
           );
-          
-          // ส่ง email แจ้งเตือน central_office_staff
-          EmailService.notifyNewLeaveRequest(id, staff.id).catch(err => {
-            console.error('Email notification error:', err.message);
-          });
         }
       }
     }
+
+    // ส่ง email แจ้งเตือน central_office_staff ทุกคน
+    EmailService.notifyApprovers(id, 'central_office_staff').catch(err => {
+      console.error('Email notification to central_office_staff error:', err.message);
+    });
 
     return successResponse(
       res,
@@ -398,7 +406,8 @@ export const rejectLeave = async (req, res) => {
     );
 
     // ส่ง email แจ้งเตือนผู้ขอลา
-    EmailService.notifyLeaveRejected(id, remarks).catch(err => {
+    const rejecterName = (req.user.title || '') + req.user.firstName + ' ' + req.user.lastName + (req.user.position ? ' (' + req.user.position + ')' : '');
+    EmailService.notifyLeaveRejected(id, remarks, rejecterName).catch(err => {
       console.error('Email notification error:', err.message);
     });
 

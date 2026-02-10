@@ -2,6 +2,7 @@ import { supabaseAdmin } from '../config/supabase.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 import { HTTP_STATUS, LEAVE_STATUS } from '../config/constants.js';
 import { createNotification } from './notification.controller.js';
+import emailService from '../utils/emailService.js';
 
 /**
  * ดึงประเภทการลาทั้งหมด
@@ -212,6 +213,19 @@ export const createLeave = async (req, res) => {
         action_by: userId,
         remarks: 'สร้างคำขอลา'
       });
+
+    // ส่ง email แจ้งเตือนผู้อนุมัติ
+    try {
+      if (isGOKDepartment) {
+        // GOK ข้าม Director ไป central_office_staff เลย
+        await emailService.notifyApprovers(leave.id, 'central_office_staff');
+      } else {
+        // แจ้ง Director ในกองเดียวกัน
+        await emailService.notifyApprovers(leave.id, 'director', requestor?.department);
+      }
+    } catch (emailError) {
+      console.log('Approver email notification skipped:', emailError.message);
+    }
 
     // แยก reason และ selected_dates
     let actualReason = leave.reason;

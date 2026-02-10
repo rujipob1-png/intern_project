@@ -178,8 +178,13 @@ export default function LeaveReportsPage() {
       approved_level2: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'ระดับ 2 ผ่าน' },
       approved_level3: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'ระดับ 3 ผ่าน' },
       approved_final: { bg: 'bg-green-100', text: 'text-green-800', label: 'อนุมัติแล้ว' },
-      rejected: { bg: 'bg-red-100', text: 'text-red-800', label: 'ถูกปฏิเสธ' },
-      cancelled: { bg: 'bg-gray-100', text: 'text-gray-800', label: 'ยกเลิก' }
+      approved: { bg: 'bg-green-100', text: 'text-green-800', label: 'อนุมัติแล้ว' },
+      rejected: { bg: 'bg-red-100', text: 'text-red-800', label: 'ไม่อนุมัติ' },
+      cancelled: { bg: 'bg-gray-100', text: 'text-gray-800', label: 'ยกเลิกแล้ว' },
+      cancel_level1: { bg: 'bg-orange-100', text: 'text-orange-800', label: 'รอพิจารณายกเลิก' },
+      cancel_level2: { bg: 'bg-orange-100', text: 'text-orange-800', label: 'รอพิจารณายกเลิก' },
+      cancel_level3: { bg: 'bg-orange-100', text: 'text-orange-800', label: 'รอพิจารณายกเลิก' },
+      pending_cancel: { bg: 'bg-orange-100', text: 'text-orange-800', label: 'รอพิจารณายกเลิก' },
     };
     
     const config = statusConfig[status] || statusConfig.pending;

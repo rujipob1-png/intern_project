@@ -144,7 +144,7 @@ export const EmailTemplates = {
   /**
    * ใบลาถูกปฏิเสธ (สำหรับ Requester)
    */
-  leaveRejected: (leave, requester, rejectReason) => ({
+  leaveRejected: (leave, requester, rejectReason, rejecterName) => ({
     subject: `[ระบบลา] ❌ ใบลาของคุณไม่ได้รับการอนุมัติ`,
     html: `
       <div style="font-family: 'Sarabun', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -157,12 +157,24 @@ export const EmailTemplates = {
           
           <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
             <tr>
-              <td style="padding: 8px; border: 1px solid #E5E7EB; background: white; width: 30%;"><strong>ประเภทการลา</strong></td>
+              <td style="padding: 8px; border: 1px solid #E5E7EB; background: white; width: 30%;"><strong>เลขที่ใบลา</strong></td>
+              <td style="padding: 8px; border: 1px solid #E5E7EB; background: white;">${leave.leave_number || '-'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border: 1px solid #E5E7EB; background: white;"><strong>ประเภทการลา</strong></td>
               <td style="padding: 8px; border: 1px solid #E5E7EB; background: white;">${leave.leave_type}</td>
             </tr>
             <tr>
               <td style="padding: 8px; border: 1px solid #E5E7EB; background: white;"><strong>วันที่ลา</strong></td>
               <td style="padding: 8px; border: 1px solid #E5E7EB; background: white;">${formatDate(leave.start_date)} - ${formatDate(leave.end_date)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border: 1px solid #E5E7EB; background: white;"><strong>จำนวนวัน</strong></td>
+              <td style="padding: 8px; border: 1px solid #E5E7EB; background: white;">${leave.total_days} วัน</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border: 1px solid #E5E7EB; background: white;"><strong>ผู้พิจารณา</strong></td>
+              <td style="padding: 8px; border: 1px solid #E5E7EB; background: white;">${rejecterName || 'ไม่ระบุ'}</td>
             </tr>
             <tr>
               <td style="padding: 8px; border: 1px solid #E5E7EB; background: white;"><strong>เหตุผลที่ไม่อนุมัติ</strong></td>
@@ -212,6 +224,64 @@ export const EmailTemplates = {
               ตอบรับการมอบหมาย
             </a>
           </div>
+        </div>
+        <div style="background: #6B7280; color: white; padding: 10px; text-align: center; border-radius: 0 0 8px 8px; font-size: 12px;">
+          ระบบลาออนไลน์ - อีเมลนี้ส่งโดยอัตโนมัติ กรุณาอย่าตอบกลับ
+        </div>
+      </div>
+    `
+  }),
+
+  /**
+   * แจ้งอัพเดทสถานะใบลา (สำหรับทุกระดับ)
+   */
+  leaveStatusUpdate: (leave, requester, statusInfo) => ({
+    subject: `[ระบบลา] 🔔 อัพเดทสถานะใบลา: ${statusInfo.statusText}`,
+    html: `
+      <div style="font-family: 'Sarabun', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: ${statusInfo.color || '#3B82F6'}; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+          <h1 style="margin: 0; font-size: 20px;">${statusInfo.icon || '🔔'} ${statusInfo.statusText}</h1>
+        </div>
+        <div style="background: #F9FAFB; padding: 20px; border: 1px solid #E5E7EB;">
+          <p>เรียน คุณ${requester.first_name},</p>
+          <p>${statusInfo.message}</p>
+          
+          <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+            <tr>
+              <td style="padding: 8px; border: 1px solid #E5E7EB; background: white; width: 30%;"><strong>เลขที่ใบลา</strong></td>
+              <td style="padding: 8px; border: 1px solid #E5E7EB; background: white;">${leave.leave_number || '-'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border: 1px solid #E5E7EB; background: white;"><strong>ประเภทการลา</strong></td>
+              <td style="padding: 8px; border: 1px solid #E5E7EB; background: white;">${leave.leave_type}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border: 1px solid #E5E7EB; background: white;"><strong>วันที่ลา</strong></td>
+              <td style="padding: 8px; border: 1px solid #E5E7EB; background: white;">${formatDate(leave.start_date)} - ${formatDate(leave.end_date)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border: 1px solid #E5E7EB; background: white;"><strong>จำนวนวัน</strong></td>
+              <td style="padding: 8px; border: 1px solid #E5E7EB; background: white;">${leave.total_days} วัน</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border: 1px solid #E5E7EB; background: white;"><strong>สถานะปัจจุบัน</strong></td>
+              <td style="padding: 8px; border: 1px solid #E5E7EB; background: ${statusInfo.bgColor || '#DBEAFE'}; color: ${statusInfo.textColor || '#1D4ED8'}; font-weight: bold;">${statusInfo.statusText}</td>
+            </tr>
+            ${(statusInfo.approverName && statusInfo.approverName !== 'undefined undefined' && !statusInfo.approverName.includes('undefined')) ? `
+            <tr>
+              <td style="padding: 8px; border: 1px solid #E5E7EB; background: white;"><strong>ผู้พิจารณา</strong></td>
+              <td style="padding: 8px; border: 1px solid #E5E7EB; background: white;">${statusInfo.approverName}</td>
+            </tr>
+            ` : ''}
+            ${statusInfo.comment ? `
+            <tr>
+              <td style="padding: 8px; border: 1px solid #E5E7EB; background: white;"><strong>หมายเหตุ</strong></td>
+              <td style="padding: 8px; border: 1px solid #E5E7EB; background: white;">${statusInfo.comment}</td>
+            </tr>
+            ` : ''}
+          </table>
+          
+          ${statusInfo.nextStep ? `<p style="color: #6B7280;">📌 ขั้นตอนถัดไป: ${statusInfo.nextStep}</p>` : ''}
         </div>
         <div style="background: #6B7280; color: white; padding: 10px; text-align: center; border-radius: 0 0 8px 8px; font-size: 12px;">
           ระบบลาออนไลน์ - อีเมลนี้ส่งโดยอัตโนมัติ กรุณาอย่าตอบกลับ

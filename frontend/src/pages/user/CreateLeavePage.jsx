@@ -222,6 +222,32 @@ export const CreateLeavePage = () => {
 
   // Handle calendar date selection
   const handleCalendarChange = (newDates) => {
+    // สำหรับลาช่วยภรรยาคลอดบุตร - เลือก 1 วัน แล้วคำนวณ 15 วันทำการอัตโนมัติ
+    if (selectedLeaveType?.type_code === 'PATERNITY') {
+      // หาวันที่ถูกเพิ่มใหม่ (ถ้ามี)
+      const addedDate = newDates.find(d => !formData.selectedDates.includes(d));
+      if (addedDate) {
+        // คำนวณ 15 วันทำการจากวันที่เลือก
+        const calculatedDates = calculate15WorkingDays(addedDate);
+        setFormData(prev => ({
+          ...prev,
+          selectedDates: calculatedDates,
+          totalDays: 15
+        }));
+        return;
+      }
+      // ถ้าคลิกเพื่อยกเลิก ให้ล้างทั้งหมด
+      if (newDates.length < formData.selectedDates.length) {
+        setFormData(prev => ({
+          ...prev,
+          selectedDates: [],
+          totalDays: 0
+        }));
+        return;
+      }
+    }
+    
+    // สำหรับประเภทอื่นๆ - เลือกได้หลายวันอิสระ
     setFormData(prev => ({
       ...prev,
       selectedDates: newDates,
@@ -626,65 +652,28 @@ export const CreateLeavePage = () => {
                   {isPaternityLeave ? 'เลือกวันเริ่มต้นลา' : 'เลือกวันที่ลา'} <span className="text-red-500">*</span>
                 </label>
                 
-                {/* สำหรับลาช่วยภรรยาคลอดบุตร - เลือกวันเริ่มต้นเท่านั้น */}
-                {isPaternityLeave ? (
-                  <div>
-                    <input
-                      type="date"
-                      value={formData.selectedDates[0] || ''}
-                      onChange={handlePaternityStartDate}
-                      className="input-field w-full"
-                      placeholder="เลือกวันเริ่มต้น"
-                    />
-                    <p className="mt-1 text-sm text-blue-600">
-                      ⓘ ระบบจะคำนวณ 15 วันทำการติดต่อกันให้อัตโนมัติ (ไม่นับเสาร์-อาทิตย์)
-                    </p>
-                    
-                    {/* แสดงวันที่ที่คำนวณได้ */}
-                    {formData.selectedDates.length > 0 && (
-                      <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-xl">
-                        <h4 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
-                          <CheckCircle className="w-5 h-5" />
-                          วันที่ลา 15 วันทำการติดต่อกัน:
-                        </h4>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                          {formData.selectedDates.map((date, index) => (
-                            <div
-                              key={index}
-                              className="flex items-center justify-between p-2 bg-white border border-green-300 rounded-lg"
-                            >
-                              <span className="text-sm text-green-900">
-                                {new Date(date + 'T00:00:00').toLocaleDateString('th-TH', {
-                                  weekday: 'short',
-                                  day: 'numeric',
-                                  month: 'short',
-                                })}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
+                <div>
+                  <p className="mb-3 text-sm text-gray-600 flex items-center gap-2">
+                    <Calendar className="w-4 h-4" />
+                    {isPaternityLeave ? (
+                      <span>คลิกเลือกวันเริ่มต้น ระบบจะคำนวณ 15 วันทำการติดต่อกันให้อัตโนมัติ (ไม่นับเสาร์-อาทิตย์)</span>
+                    ) : (
+                      <>
+                        คลิกที่วันในปฏิทินเพื่อเลือกหรือยกเลิก (เลือกได้หลายวัน)
+                        {selectedLeaveType?.type_code === 'SICK' && (
+                          <span className="text-blue-600">(ลาป่วยสามารถเลือกวันย้อนหลังได้ไม่เกิน 30 วัน)</span>
+                        )}
+                      </>
                     )}
-                  </div>
-                ) : (
-                  /* สำหรับประเภทอื่นๆ - ใช้ CalendarPicker */
-                  <div>
-                    <p className="mb-3 text-sm text-gray-600 flex items-center gap-2">
-                      <Calendar className="w-4 h-4" />
-                      คลิกที่วันในปฏิทินเพื่อเลือกหรือยกเลิก (เลือกได้หลายวัน)
-                      {selectedLeaveType?.type_code === 'SICK' && (
-                        <span className="text-blue-600">(ลาป่วยสามารถเลือกวันย้อนหลังได้ไม่เกิน 30 วัน)</span>
-                      )}
-                    </p>
-                    <CalendarPicker
-                      selectedDates={formData.selectedDates}
-                      onChange={handleCalendarChange}
-                      showWeekends={true}
-                      allowPastDates={selectedLeaveType?.type_code === 'SICK'}
-                      maxPastDays={30}
-                    />
-                  </div>
-                )}
+                  </p>
+                  <CalendarPicker
+                    selectedDates={formData.selectedDates}
+                    onChange={handleCalendarChange}
+                    showWeekends={true}
+                    allowPastDates={selectedLeaveType?.type_code === 'SICK'}
+                    maxPastDays={30}
+                  />
+                </div>
 
                 {/* Total Days Display */}
                 <div className="mt-4">
