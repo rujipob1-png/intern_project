@@ -253,11 +253,19 @@ export const Sidebar = () => {
           {/* Logo & User */}
           <div className="p-4 border-b border-slate-700">
             <div className={`flex items-center gap-3 ${!isOpen && 'lg:justify-center'}`}>
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-md">
-                <span className="text-white font-bold text-lg">
-                  {user?.firstName?.charAt(0) || 'U'}
-                </span>
-              </div>
+              {user?.profileImageUrl ? (
+                <img 
+                  src={user.profileImageUrl} 
+                  alt="Profile" 
+                  className="w-10 h-10 rounded-lg object-cover flex-shrink-0 shadow-md"
+                />
+              ) : (
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-md">
+                  <span className="text-white font-bold text-lg">
+                    {user?.firstName?.charAt(0) || 'U'}
+                  </span>
+                </div>
+              )}
               {isOpen && (
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-white truncate">

@@ -1,5 +1,5 @@
 import express from 'express';
-import { login, getProfile, changePassword, updateNotificationSettings } from '../controllers/auth.controller.js';
+import { login, getProfile, changePassword, updateNotificationSettings, uploadProfileImage, deleteProfileImage } from '../controllers/auth.controller.js';
 import { authenticate } from '../middlewares/auth.middleware.js';
 import { loginValidation } from '../middlewares/validation.middleware.js';
 import { loginLimiter, passwordChangeLimiter } from '../middlewares/rateLimit.middleware.js';
@@ -119,5 +119,47 @@ router.put('/change-password', authenticate, passwordChangeLimiter, changePasswo
  *         description: ข้อมูลไม่ถูกต้อง
  */
 router.put('/notification-settings', authenticate, updateNotificationSettings);
+
+/**
+ * @swagger
+ * /auth/profile-image:
+ *   post:
+ *     summary: อัพโหลดรูปโปรไฟล์
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - imageBase64
+ *             properties:
+ *               imageBase64:
+ *                 type: string
+ *                 description: รูปภาพในรูปแบบ Base64
+ *     responses:
+ *       200:
+ *         description: อัพโหลดสำเร็จ
+ *       400:
+ *         description: ข้อมูลไม่ถูกต้อง
+ */
+router.post('/profile-image', authenticate, uploadProfileImage);
+
+/**
+ * @swagger
+ * /auth/profile-image:
+ *   delete:
+ *     summary: ลบรูปโปรไฟล์
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: ลบสำเร็จ
+ */
+router.delete('/profile-image', authenticate, deleteProfileImage);
 
 export default router;

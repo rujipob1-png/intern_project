@@ -16,11 +16,17 @@ export const AuthProvider = ({ children }) => {
       const storedUser = localStorage.getItem(STORAGE_KEYS.USER);
 
       if (storedToken && storedUser) {
-        // Validate token with backend
+        // Validate token with backend and get fresh user data
         try {
-          await authAPI.getProfile(); // Call API to check if token is still valid
-          setToken(storedToken);
-          setUser(JSON.parse(storedUser));
+          const response = await authAPI.getProfile();
+          if (response.success) {
+            // Use fresh data from API
+            setToken(storedToken);
+            setUser(response.data);
+            localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(response.data));
+          } else {
+            throw new Error('Invalid token');
+          }
         } catch (error) {
           // Token invalid - clear localStorage
           console.log('Token invalid, clearing auth...');

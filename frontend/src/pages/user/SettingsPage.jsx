@@ -5,7 +5,7 @@
  * ============================================
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { authAPI } from '../../api/auth.api';
@@ -25,7 +25,10 @@ import {
   Building2,
   Briefcase,
   IdCard,
-  Shield
+  Shield,
+  Camera,
+  Trash2,
+  Loader2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -36,6 +39,8 @@ export const SettingsPage = () => {
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef(null);
 
   // Load current settings from user profile
   useEffect(() => {
@@ -44,6 +49,67 @@ export const SettingsPage = () => {
       setEmailNotifications(user.emailNotifications ?? true);
     }
   }, [user]);
+
+  // Handle image upload
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('กรุณาเลือกไฟล์รูปภาพ');
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('ขนาดรูปภาพต้องไม่เกิน 2MB');
+      return;
+    }
+
+    setUploadingImage(true);
+
+    try {
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const base64 = reader.result;
+          await authAPI.uploadProfileImage(base64);
+          toast.success('อัพโหลดรูปโปรไฟล์สำเร็จ');
+          if (refreshUser) await refreshUser();
+        } catch (error) {
+          console.error('Upload error:', error);
+          toast.error(error.response?.data?.message || 'ไม่สามารถอัพโหลดรูปภาพได้');
+        } finally {
+          setUploadingImage(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Read file error:', error);
+      toast.error('เกิดข้อผิดพลาดในการอ่านไฟล์');
+      setUploadingImage(false);
+    }
+  };
+
+  // Handle image delete
+  const handleDeleteImage = async () => {
+    if (!user?.profileImageUrl) return;
+    
+    if (!confirm('ต้องการลบรูปโปรไฟล์หรือไม่?')) return;
+
+    setUploadingImage(true);
+    try {
+      await authAPI.deleteProfileImage();
+      toast.success('ลบรูปโปรไฟล์สำเร็จ');
+      if (refreshUser) await refreshUser();
+    } catch (error) {
+      toast.error('ไม่สามารถลบรูปภาพได้');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -92,206 +158,207 @@ export const SettingsPage = () => {
 
   return (
     <MainLayout>
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-slate-50">
+      <div className="max-w-3xl mx-auto px-4 py-8">
         
-        {/* Header Section */}
+        {/* Header */}
         <div className="mb-8">
-          {/* Back Button */}
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="group flex items-center gap-2 text-slate-600 hover:text-blue-600 transition-colors mb-6"
-          >
-            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-            <span className="font-medium">กลับหน้าหลัก</span>
-          </button>
-
-          {/* Title */}
-          <div className="flex items-center gap-4">
-            <div className="p-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg shadow-blue-200">
-              <Settings className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-slate-800">ตั้งค่าบัญชี</h1>
-              <p className="text-slate-500 mt-1">จัดการข้อมูลส่วนตัวและการแจ้งเตือน</p>
-            </div>
-          </div>
+          <h1 className="text-2xl font-semibold text-slate-800">ตั้งค่าบัญชี</h1>
+          <p className="text-slate-500 text-sm mt-1">จัดการข้อมูลส่วนตัวและการแจ้งเตือน</p>
         </div>
 
-        {/* User Profile Card */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
-          {/* Header Banner */}
-          <div className="h-24 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 relative">
-            <div className="absolute inset-0 opacity-50"></div>
-          </div>
-          
-          {/* Profile Content */}
-          <div className="px-8 pb-8 -mt-12 relative">
-            {/* Avatar */}
-            <div className="w-24 h-24 bg-white rounded-2xl shadow-lg flex items-center justify-center border-4 border-white mb-6">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl flex items-center justify-center">
-                <User className="w-10 h-10 text-blue-600" />
+        {/* Profile Section */}
+        <div className="bg-white rounded-xl border border-slate-200 mb-6">
+          <div className="p-6 border-b border-slate-100">
+            <div className="flex items-center gap-5">
+              {/* Avatar */}
+              <div className="relative group">
+                <div className="w-24 h-24 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center overflow-hidden shadow-sm">
+                  {user?.profileImageUrl ? (
+                    <img 
+                      src={user.profileImageUrl} 
+                      alt="Profile" 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <User className="w-12 h-12 text-slate-400" />
+                  )}
+                </div>
+                
+                {/* Upload Button Overlay */}
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingImage}
+                  className="absolute inset-0 bg-slate-900/0 hover:bg-slate-900/40 rounded-2xl flex items-center justify-center transition-all duration-200 group cursor-pointer"
+                  title="อัพโหลดรูปภาพ"
+                >
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    {uploadingImage ? (
+                      <Loader2 className="w-6 h-6 text-white animate-spin" />
+                    ) : (
+                      <Camera className="w-6 h-6 text-white" />
+                    )}
+                  </div>
+                </button>
+                
+                {/* Small indicator */}
+                <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center shadow-lg border-2 border-white">
+                  <Camera className="w-4 h-4 text-white" />
+                </div>
+                
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+              </div>
+
+              {/* User Info */}
+              <div className="flex-1">
+                <h2 className="text-lg font-semibold text-slate-800">{user?.fullName}</h2>
+                <p className="text-sm text-slate-500">{user?.position}</p>
+                {user?.profileImageUrl && (
+                  <button
+                    onClick={handleDeleteImage}
+                    disabled={uploadingImage}
+                    className="text-xs text-red-500 hover:text-red-600 mt-2 flex items-center gap-1"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    ลบรูปโปรไฟล์
+                  </button>
+                )}
               </div>
             </div>
-
-            {/* User Name */}
-            <h2 className="text-2xl font-bold text-slate-800 mb-1">{user?.fullName}</h2>
-            <p className="text-slate-500 mb-6">{user?.position}</p>
-
-            {/* Info Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                <div className="flex items-center gap-3 mb-2">
-                  <IdCard className="w-5 h-5 text-blue-600" />
-                  <span className="text-sm text-slate-500">รหัสพนักงาน</span>
-                </div>
-                <p className="text-lg font-bold text-slate-800 font-mono">{user?.employeeCode}</p>
-              </div>
-
-              <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                <div className="flex items-center gap-3 mb-2">
-                  <Building2 className="w-5 h-5 text-indigo-600" />
-                  <span className="text-sm text-slate-500">สังกัด</span>
-                </div>
-                <p className="text-lg font-bold text-slate-800">{getDepartmentThaiCode(user?.department)}</p>
-              </div>
-
-              <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                <div className="flex items-center gap-3 mb-2">
-                  <Briefcase className="w-5 h-5 text-purple-600" />
-                  <span className="text-sm text-slate-500">ตำแหน่ง</span>
-                </div>
-                <p className="text-lg font-bold text-slate-800">{user?.position}</p>
-              </div>
-
-              <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                <div className="flex items-center gap-3 mb-2">
-                  <Shield className="w-5 h-5 text-green-600" />
-                  <span className="text-sm text-slate-500">ระดับสิทธิ์</span>
-                </div>
-                <p className="text-lg font-bold text-slate-800">{getRoleDisplayName(user?.role_name)}</p>
-              </div>
-            </div>
           </div>
-        </div>
 
-        {/* Email Notification Settings Card */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          {/* Card Header */}
-          <div className="px-8 py-6 border-b border-slate-100 bg-gradient-to-r from-green-50 to-emerald-50">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-md">
-                <Bell className="w-6 h-6 text-white" />
+          {/* Info Grid */}
+          <div className="p-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">รหัสพนักงาน</p>
+                <p className="text-sm font-medium text-slate-800 font-mono">{user?.employeeCode}</p>
               </div>
               <div>
-                <h2 className="text-xl font-bold text-slate-800">การแจ้งเตือนทาง Email</h2>
-                <p className="text-slate-500 text-sm mt-0.5">
-                  รับการแจ้งเตือนเมื่อใบลาของท่านถูกพิจารณา
-                </p>
+                <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">สังกัด</p>
+                <p className="text-sm font-medium text-slate-800">{getDepartmentThaiCode(user?.department)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">ตำแหน่ง</p>
+                <p className="text-sm font-medium text-slate-800">{user?.position}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">ระดับสิทธิ์</p>
+                <p className="text-sm font-medium text-slate-800">{getRoleDisplayName(user?.role_name)}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Email Notification Settings */}
+        <div className="bg-white rounded-xl border border-slate-200">
+          <div className="px-6 py-4 border-b border-slate-100">
+            <div className="flex items-center gap-3">
+              <Bell className="w-5 h-5 text-slate-400" />
+              <div>
+                <h2 className="font-medium text-slate-800">การแจ้งเตือนทาง Email</h2>
+                <p className="text-xs text-slate-500">รับการแจ้งเตือนเมื่อใบลาของท่านถูกพิจารณา</p>
               </div>
             </div>
           </div>
 
-          {/* Card Body */}
-          <div className="p-8">
+          <div className="p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
               
               {/* Email Input */}
               <div>
-                <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-3">
-                  <Mail className="w-4 h-4 text-slate-500" />
+                <label className="text-sm font-medium text-slate-700 mb-2 block">
                   Email สำหรับรับการแจ้งเตือน
                 </label>
-                <div className="relative max-w-lg">
+                <div className="relative">
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="กรอก Email ของท่าน เช่น name@example.com"
-                    className="w-full px-4 py-3 pl-12 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-slate-800 placeholder-slate-400"
+                    placeholder="name@example.com"
+                    className="w-full px-4 py-2.5 pl-10 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-200 focus:border-slate-400 transition-all text-slate-800 placeholder-slate-400 text-sm"
                   />
-                  <Mail className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                  <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 </div>
-                <p className="text-sm text-slate-500 mt-2 ml-1">
-                  ระบบจะส่ง Email แจ้งเตือนเมื่อใบลาของท่านได้รับการอนุมัติหรือไม่อนุมัติ
+                <p className="text-xs text-slate-400 mt-2">
+                  ระบบจะส่ง Email แจ้งเตือนเมื่อใบลาได้รับการอนุมัติหรือไม่อนุมัติ
                 </p>
               </div>
 
-              {/* Toggle Notifications */}
-              <div className="max-w-lg">
-                <div className="flex items-center justify-between p-5 bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl border border-slate-200">
-                  <div className="flex items-center gap-4">
-                    <div className={`p-2 rounded-lg ${emailNotifications ? 'bg-green-100' : 'bg-slate-200'} transition-colors`}>
-                      <Bell className={`w-5 h-5 ${emailNotifications ? 'text-green-600' : 'text-slate-500'}`} />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-slate-800">เปิดรับการแจ้งเตือน</p>
-                      <p className="text-sm text-slate-500">รับ Email เมื่อมีการอัพเดทสถานะใบลา</p>
-                    </div>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={emailNotifications}
-                      onChange={(e) => setEmailNotifications(e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-14 h-7 bg-slate-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all after:shadow-sm peer-checked:bg-gradient-to-r peer-checked:from-green-500 peer-checked:to-emerald-500"></div>
-                  </label>
-                </div>
-              </div>
-
-              {/* Warning Box - No Email */}
-              {!email && emailNotifications && (
-                <div className="max-w-lg flex items-start gap-4 p-5 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl">
-                  <div className="p-2 bg-amber-100 rounded-lg flex-shrink-0">
-                    <AlertCircle className="w-5 h-5 text-amber-600" />
+              {/* Toggle */}
+              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-100">
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${emailNotifications ? 'bg-slate-800' : 'bg-slate-200'} transition-colors`}>
+                    <Bell className={`w-4 h-4 ${emailNotifications ? 'text-white' : 'text-slate-500'}`} />
                   </div>
                   <div>
-                    <p className="font-semibold text-amber-800">ยังไม่ได้ระบุ Email</p>
-                    <p className="text-sm text-amber-700 mt-1">
-                      กรุณากรอก Email เพื่อรับการแจ้งเตือนเมื่อใบลาของท่านได้รับการพิจารณา
+                    <p className="text-sm font-medium text-slate-800">เปิดรับการแจ้งเตือน</p>
+                    <p className="text-xs text-slate-500">รับ Email เมื่อมีการอัพเดทสถานะใบลา</p>
+                  </div>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={emailNotifications}
+                    onChange={(e) => setEmailNotifications(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-slate-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-200 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-800"></div>
+                </label>
+              </div>
+
+              {/* Warning */}
+              {!email && emailNotifications && (
+                <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-100 rounded-lg">
+                  <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-amber-800">ยังไม่ได้ระบุ Email</p>
+                    <p className="text-xs text-amber-600 mt-0.5">
+                      กรุณากรอก Email เพื่อรับการแจ้งเตือน
                     </p>
                   </div>
                 </div>
               )}
 
-              {/* Success Message */}
+              {/* Success */}
               {saved && (
-                <div className="max-w-lg flex items-center gap-3 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl">
-                  <CheckCircle className="w-6 h-6 text-green-600" />
-                  <span className="font-medium text-green-800">บันทึกการตั้งค่าเรียบร้อยแล้ว</span>
+                <div className="flex items-center gap-2 p-3 bg-emerald-50 border border-emerald-100 rounded-lg">
+                  <CheckCircle className="w-4 h-4 text-emerald-600" />
+                  <span className="text-sm text-emerald-700">บันทึกการตั้งค่าเรียบร้อยแล้ว</span>
                 </div>
               )}
 
-              {/* Action Buttons */}
-              <div className="flex items-center gap-4 pt-4">
-                <Button
+              {/* Actions */}
+              <div className="flex items-center gap-3 pt-2">
+                <button
                   type="submit"
-                  loading={loading}
                   disabled={loading}
-                  className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-200 flex items-center gap-2 transition-all hover:shadow-xl"
+                  className="px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white text-sm font-medium rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
                 >
-                  <Save className="w-5 h-5" />
+                  {loading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4" />
+                  )}
                   บันทึกการตั้งค่า
-                </Button>
+                </button>
 
                 <button
                   type="button"
                   onClick={() => navigate('/dashboard')}
-                  className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl flex items-center gap-2 transition-all"
+                  className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-lg transition-colors"
                 >
-                  <ArrowLeft className="w-5 h-5" />
-                  กลับหน้าหลัก
+                  ยกเลิก
                 </button>
               </div>
             </form>
           </div>
-        </div>
-
-        {/* Footer */}
-        <div className="mt-8 text-center text-sm text-slate-500">
-          <p>ระบบลาออนไลน์ สำหรับข้าราชการและเจ้าหน้าที่</p>
         </div>
 
       </div>

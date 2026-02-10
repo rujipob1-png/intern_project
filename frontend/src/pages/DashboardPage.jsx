@@ -18,7 +18,15 @@ import {
   Clock, 
   CheckCircle,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  Plus,
+  History,
+  Bell,
+  ChevronRight,
+  Briefcase,
+  HeartPulse,
+  Palmtree,
+  User
 } from 'lucide-react';
 
 export const DashboardPage = () => {
@@ -105,266 +113,277 @@ export const DashboardPage = () => {
 
   const stats = [
     {
-      title: 'ลาป่วย (ป)',
+      title: 'ลาป่วย',
+      code: 'ป',
       value: leaveBalance?.sick || 0,
       total: null,
       suffix: 'วัน',
-      icon: AlertCircle,
-      color: 'text-slate-700',
-      bgColor: 'bg-slate-50',
-      borderColor: 'border-slate-200',
+      icon: HeartPulse,
+      description: 'ใช้ได้ตามจริง',
     },
     {
-      title: 'ลาพักผ่อน (พ)',
+      title: 'ลาพักผ่อน',
+      code: 'พ',
       value: leaveBalance?.vacation || 0,
       total: 10,
-      icon: Calendar,
-      color: 'text-blue-700',
-      bgColor: 'bg-blue-50',
-      borderColor: 'border-blue-200',
+      icon: Palmtree,
+      description: 'จากโควต้า 10 วัน',
     },
     {
-      title: 'ลากิจ (ก)',
+      title: 'ลากิจ',
+      code: 'ก',
       value: leaveBalance?.personal || 0,
       total: 3,
-      icon: Clock,
-      color: 'text-gray-700',
-      bgColor: 'bg-gray-50',
-      borderColor: 'border-gray-300',
-    },
-    {
-      title: 'คำขอทั้งหมด',
-      value: 0,
-      icon: FileText,
-      color: 'text-slate-700',
-      bgColor: 'bg-slate-50',
-      borderColor: 'border-slate-200',
+      icon: Briefcase,
+      description: 'จากโควต้า 3 วัน',
     },
   ];
 
   return (
     <MainLayout>
-      <div className="max-w-7xl mx-auto">
-        {/* Header Section */}
+      <div className="max-w-6xl mx-auto px-4 py-6">
+        {/* Welcome Section */}
         <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-slate-800 mb-1">
-                ระบบการลาออนไลน์
-              </h1>
-              <p className="text-slate-600 text-sm">
-                {user?.firstName} {user?.lastName} - {user?.position}
-              </p>
+          <div className="flex items-center gap-4 mb-2">
+            <div className="w-14 h-14 bg-gradient-to-br from-slate-700 to-slate-800 rounded-2xl flex items-center justify-center overflow-hidden shadow-lg">
+              {user?.profileImageUrl ? (
+                <img 
+                  src={user.profileImageUrl} 
+                  alt="Profile" 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <User className="w-7 h-7 text-white" />
+              )}
             </div>
-            <div className="text-right">
-              <p className="text-xs text-slate-500">กองหน้าที่ของคุณ</p>
-              <p className="text-sm font-semibold text-slate-700">{getDepartmentThaiCode(user?.department)}</p>
+            <div>
+              <h1 className="text-xl font-semibold text-slate-800">
+                สวัสดี, {user?.firstName}
+              </h1>
+              <p className="text-sm text-slate-500">
+                {user?.position} • {getDepartmentThaiCode(user?.department)}
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-          {stats.map((stat, index) => {
-            const Icon = stat.icon;
-            return (
-              <Card key={index} className={`border-l-4 ${stat.borderColor} hover:shadow-lg transition-shadow duration-200`}>
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <p className="text-xs font-medium text-slate-600 mb-2 uppercase tracking-wide">{stat.title}</p>
-                      {stat.suffix ? (
-                        <p className="text-2xl font-bold text-slate-800">
-                          {stat.value} <span className="text-sm font-normal text-slate-600">{stat.suffix}</span>
-                        </p>
-                      ) : (
-                        <p className="text-3xl font-bold text-slate-800">
-                          {stat.value}
-                          {stat.total && (
-                            <span className="text-lg text-slate-400"> / {stat.total}</span>
-                          )}
-                        </p>
-                      )}
+        {/* Leave Balance Section */}
+        <div className="mb-8">
+          <h2 className="text-sm font-medium text-slate-500 uppercase tracking-wider mb-4">วันลาคงเหลือ</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {stats.map((stat, index) => {
+              const Icon = stat.icon;
+              return (
+                <div 
+                  key={index} 
+                  className="bg-white rounded-xl p-5 border border-slate-200 hover:border-slate-300 transition-all"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">
+                      <Icon className="w-5 h-5 text-slate-600" />
                     </div>
-                    <div className={`${stat.bgColor} p-3 rounded-xl border ${stat.borderColor}`}>
-                      <Icon className={`w-6 h-6 ${stat.color}`} />
-                    </div>
+                    <span className="text-xs font-mono bg-slate-100 text-slate-600 px-2 py-1 rounded">
+                      {stat.code}
+                    </span>
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+                  <div>
+                    <p className="text-sm text-slate-500 mb-1">{stat.title}</p>
+                    <p className="text-3xl font-bold text-slate-800">
+                      {stat.value}
+                      {stat.total && (
+                        <span className="text-lg font-normal text-slate-400">/{stat.total}</span>
+                      )}
+                      {stat.suffix && (
+                        <span className="text-sm font-normal text-slate-400 ml-1">{stat.suffix}</span>
+                      )}
+                    </p>
+                    <p className="text-xs text-slate-400 mt-1">{stat.description}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* Quick Actions */}
-        <Card className="mb-8 border-0 shadow-md">
-          <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 border-b">
-            <CardTitle className="text-slate-800">เมนูด่วน</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <button 
-                onClick={() => navigate('/create-leave')}
-                className="flex items-center gap-4 p-5 bg-white border-2 border-blue-100 hover:border-blue-300 hover:shadow-md rounded-xl transition-all duration-200 group"
-              >
-                <div className="bg-blue-600 p-3 rounded-lg group-hover:bg-blue-700 transition-colors">
-                  <FileText className="w-6 h-6 text-white" />
-                </div>
-                <div className="text-left">
-                  <p className="font-semibold text-slate-800">สร้างคำขอลา</p>
-                  <p className="text-sm text-slate-600">ยื่นคำขอลาใหม่</p>
-                </div>
-              </button>
+        <div className="mb-8">
+          <h2 className="text-sm font-medium text-slate-500 uppercase tracking-wider mb-4">ดำเนินการ</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <button 
+              onClick={() => navigate('/create-leave')}
+              className="group bg-slate-800 hover:bg-slate-900 text-white rounded-xl p-5 text-left transition-all"
+            >
+              <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-white/20 transition-colors">
+                <Plus className="w-5 h-5" />
+              </div>
+              <p className="font-medium mb-1">สร้างคำขอลา</p>
+              <p className="text-sm text-slate-400">ยื่นคำขอลาใหม่</p>
+            </button>
 
-              <button 
-                onClick={() => navigate('/my-leaves')}
-                className="flex items-center gap-4 p-5 bg-white border-2 border-slate-100 hover:border-slate-300 hover:shadow-md rounded-xl transition-all duration-200 group"
-              >
-                <div className="bg-slate-600 p-3 rounded-lg group-hover:bg-slate-700 transition-colors">
-                  <CheckCircle className="w-6 h-6 text-white" />
-                </div>
-                <div className="text-left">
-                  <p className="font-semibold text-slate-800">คำขอของฉัน</p>
-                  <p className="text-sm text-slate-600">ดูรายการคำขอลา</p>
-                </div>
-              </button>
+            <button 
+              onClick={() => navigate('/my-leaves')}
+              className="group bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-xl p-5 text-left transition-all"
+            >
+              <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-slate-200 transition-colors">
+                <FileText className="w-5 h-5 text-slate-600" />
+              </div>
+              <p className="font-medium text-slate-800 mb-1">คำขอของฉัน</p>
+              <p className="text-sm text-slate-500">ดูรายการคำขอลาทั้งหมด</p>
+            </button>
 
-              <button 
-                onClick={() => navigate('/leave-history')}
-                className="flex items-center gap-4 p-5 bg-white border-2 border-gray-100 hover:border-gray-300 hover:shadow-md rounded-xl transition-all duration-200 group"
-              >
-                <div className="bg-gray-600 p-3 rounded-lg group-hover:bg-gray-700 transition-colors">
-                  <Calendar className="w-6 h-6 text-white" />
-                </div>
-                <div className="text-left">
-                  <p className="font-semibold text-slate-800">ประวัติการลา</p>
-                  <p className="text-sm text-slate-600">ดูประวัติการลา</p>
-                </div>
-              </button>
-            </div>
-          </CardContent>
-        </Card>
+            <button 
+              onClick={() => navigate('/leave-history')}
+              className="group bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-xl p-5 text-left transition-all"
+            >
+              <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-slate-200 transition-colors">
+                <History className="w-5 h-5 text-slate-600" />
+              </div>
+              <p className="font-medium text-slate-800 mb-1">ประวัติการลา</p>
+              <p className="text-sm text-slate-500">ดูประวัติการลาย้อนหลัง</p>
+            </button>
+          </div>
+        </div>
 
         {/* Recent Activities */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>คำขอลาล่าสุด</CardTitle>
-            </CardHeader>
-            <CardContent>
+          {/* Recent Leaves */}
+          <div className="bg-white rounded-xl border border-slate-200">
+            <div className="px-5 py-4 border-b border-slate-100">
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium text-slate-800">คำขอลาล่าสุด</h3>
+                {recentLeaves.length > 0 && (
+                  <button 
+                    onClick={() => navigate('/my-leaves')}
+                    className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1"
+                  >
+                    ดูทั้งหมด <ChevronRight className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="p-2">
               {loading ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-slate-300 border-t-slate-600 mx-auto"></div>
                 </div>
               ) : recentLeaves.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p>ยังไม่มีคำขอลา</p>
-                  <p className="text-sm mt-1">เริ่มต้นโดยการสร้างคำขอลาใหม่</p>
+                <div className="text-center py-12">
+                  <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <FileText className="w-6 h-6 text-slate-400" />
+                  </div>
+                  <p className="text-sm text-slate-500">ยังไม่มีคำขอลา</p>
+                  <button 
+                    onClick={() => navigate('/create-leave')}
+                    className="text-sm text-slate-700 hover:text-slate-900 font-medium mt-2"
+                  >
+                    สร้างคำขอลาใหม่ →
+                  </button>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {recentLeaves.map((leave) => (
+                <div className="divide-y divide-slate-100">
+                  {recentLeaves.slice(0, 5).map((leave) => (
                     <div
                       key={leave.id}
                       onClick={() => navigate(`/leave-detail/${leave.id}`)}
-                      className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+                      className="flex items-center gap-4 p-3 hover:bg-slate-50 rounded-lg cursor-pointer transition-colors"
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-sm font-medium text-gray-900">
-                              {leave.LeaveNumber || leave.leaveNumber}
-                            </span>
-                            <span className="text-xs text-gray-500">
-                              ({LEAVE_TYPE_CODES[leave.leaveTypeCode]})
-                            </span>
-                          </div>
-                          <p className="text-xs text-gray-600">
-                            {formatDate(leave.startDate)} - {formatDate(leave.endDate)} ({leave.totalDays} วัน)
-                          </p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-sm font-medium text-slate-800">
+                            {leave.LeaveNumber || leave.leaveNumber}
+                          </span>
+                          <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                            {LEAVE_TYPE_CODES[leave.leaveTypeCode]}
+                          </span>
                         </div>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          leave.status === 'approved' || leave.status === 'approved_final' ? 'bg-green-100 text-green-800' :
-                          leave.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                          leave.status === 'cancelled' ? 'bg-gray-100 text-gray-800' :
-                          'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {leave.status === 'approved' ? 'อนุมัติ' :
-                           leave.status === 'approved_final' ? 'อนุมัติแล้ว' :
-                           leave.status === 'rejected' ? 'ไม่อนุมัติ' :
-                           leave.status === 'cancelled' ? 'ยกเลิก' : 'รอพิจารณา'}
-                        </span>
+                        <p className="text-xs text-slate-500 truncate">
+                          {formatDate(leave.startDate)} - {formatDate(leave.endDate)} • {leave.totalDays} วัน
+                        </p>
                       </div>
+                      <span className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-medium ${
+                        leave.status === 'approved' || leave.status === 'approved_final' 
+                          ? 'bg-emerald-50 text-emerald-700' 
+                          : leave.status === 'rejected' 
+                          ? 'bg-red-50 text-red-700' 
+                          : leave.status === 'cancelled' 
+                          ? 'bg-slate-100 text-slate-600' 
+                          : leave.status?.includes('cancel') 
+                          ? 'bg-orange-50 text-orange-700'
+                          : 'bg-amber-50 text-amber-700'
+                      }`}>
+                        {leave.status === 'approved' || leave.status === 'approved_final' ? 'อนุมัติ' :
+                         leave.status === 'rejected' ? 'ไม่อนุมัติ' :
+                         leave.status === 'cancelled' ? 'ยกเลิก' : 
+                         leave.status?.includes('cancel') ? 'รอพิจารณายกเลิก' : 'รอพิจารณา'}
+                      </span>
                     </div>
                   ))}
-                  {recentLeaves.length >= 5 && (
-                    <button
-                      onClick={() => navigate('/my-leaves')}
-                      className="w-full text-center py-2 text-sm text-primary-600 hover:text-primary-700 font-medium"
-                    >
-                      ดูทั้งหมด →
-                    </button>
-                  )}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>การแจ้งเตือน</CardTitle>
-            </CardHeader>
-            <CardContent>
+          {/* Notifications */}
+          <div className="bg-white rounded-xl border border-slate-200">
+            <div className="px-5 py-4 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <Bell className="w-4 h-4 text-slate-400" />
+                <h3 className="font-medium text-slate-800">การแจ้งเตือน</h3>
+              </div>
+            </div>
+            <div className="p-2">
               {loading ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-slate-300 border-t-slate-600 mx-auto"></div>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="divide-y divide-slate-100">
                   {recentLeaves
-                    .filter(leave => ['approved', 'rejected'].includes(leave.status))
+                    .filter(leave => ['approved', 'approved_final', 'rejected'].includes(leave.status))
                     .slice(0, 5)
                     .map((leave) => (
                       <div
                         key={leave.id}
-                        className="p-4 bg-gray-50 rounded-lg"
+                        className="flex items-start gap-3 p-3 hover:bg-slate-50 rounded-lg transition-colors"
                       >
-                        <div className="flex items-start gap-3">
-                          <div className={`p-2 rounded-full ${
-                            leave.status === 'approved' ? 'bg-green-100' : 'bg-red-100'
-                          }`}>
-                            {leave.status === 'approved' ? (
-                              <CheckCircle className="w-4 h-4 text-green-600" />
-                            ) : (
-                              <XCircle className="w-4 h-4 text-red-600" />
-                            )}
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-900">
-                              คำขอลา {leave.LeaveNumber || leave.leaveNumber}
-                            </p>
-                            <p className="text-xs text-gray-600 mt-1">
-                              {leave.status === 'approved' ? 'ได้รับการอนุมัติแล้ว' : 'ไม่ได้รับการอนุมัติ'}
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1">
-                              {formatDate(leave.updatedAt || leave.updated_at)}
-                            </p>
-                          </div>
+                        <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                          leave.status === 'approved' || leave.status === 'approved_final' 
+                            ? 'bg-emerald-100' 
+                            : 'bg-red-100'
+                        }`}>
+                          {leave.status === 'approved' || leave.status === 'approved_final' ? (
+                            <CheckCircle className="w-4 h-4 text-emerald-600" />
+                          ) : (
+                            <XCircle className="w-4 h-4 text-red-600" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-slate-800">
+                            คำขอลา <span className="font-medium">{leave.LeaveNumber || leave.leaveNumber}</span>
+                          </p>
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            {leave.status === 'approved' || leave.status === 'approved_final' 
+                              ? 'ได้รับการอนุมัติแล้ว' 
+                              : 'ไม่ได้รับการอนุมัติ'}
+                          </p>
+                          <p className="text-xs text-slate-400 mt-1">
+                            {formatDate(leave.updatedAt || leave.updated_at)}
+                          </p>
                         </div>
                       </div>
                     ))}
-                  {recentLeaves.filter(leave => ['approved', 'rejected'].includes(leave.status)).length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
-                      <AlertCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                      <p>ไม่มีการแจ้งเตือน</p>
-                      <p className="text-sm mt-1">คุณไม่มีการแจ้งเตือนใหม่</p>
+                  {recentLeaves.filter(leave => ['approved', 'approved_final', 'rejected'].includes(leave.status)).length === 0 && (
+                    <div className="text-center py-12">
+                      <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <Bell className="w-6 h-6 text-slate-400" />
+                      </div>
+                      <p className="text-sm text-slate-500">ไม่มีการแจ้งเตือนใหม่</p>
                     </div>
                   )}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </MainLayout>

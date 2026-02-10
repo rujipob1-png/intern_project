@@ -35,12 +35,17 @@ const LEAVE_COLORS = {
 // Status labels
 const STATUS_LABELS = {
   pending: 'รอพิจารณา',
-  approved_level1: 'ผอ.อนุมัติแล้ว',
-  approved_level2: 'ระดับ 2 ผ่าน',
-  approved_level3: 'ระดับ 3 ผ่าน',
-  approved_final: 'อนุมัติแล้ว',
-  rejected: 'ถูกปฏิเสธ',
-  cancelled: 'ยกเลิกแล้ว'
+  approved_level1: 'รอพิจารณา',
+  approved_level2: 'รอพิจารณา',
+  approved_level3: 'รอพิจารณา',
+  approved: 'อนุมัติ',
+  approved_final: 'อนุมัติ',
+  rejected: 'ไม่อนุมัติ',
+  cancelled: 'ยกเลิก',
+  pending_cancel: 'รอพิจารณายกเลิก',
+  cancel_level1: 'รอพิจารณายกเลิก',
+  cancel_level2: 'รอพิจารณายกเลิก',
+  cancel_level3: 'รอพิจารณายกเลิก'
 };
 
 // Custom event component

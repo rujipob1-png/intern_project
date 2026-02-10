@@ -88,13 +88,33 @@ export const LeaveHistoryPage = () => {
   const getStatusBadge = (status) => {
     const statusLower = (status || '').toLowerCase();
     const statusConfig = {
+      pending: { 
+        label: 'รอพิจารณา', 
+        className: 'bg-yellow-100 text-yellow-800',
+        icon: Clock 
+      },
+      approved_level1: { 
+        label: 'รอพิจารณา', 
+        className: 'bg-yellow-100 text-yellow-800',
+        icon: Clock 
+      },
+      approved_level2: { 
+        label: 'รอพิจารณา', 
+        className: 'bg-yellow-100 text-yellow-800',
+        icon: Clock 
+      },
+      approved_level3: { 
+        label: 'รอพิจารณา', 
+        className: 'bg-yellow-100 text-yellow-800',
+        icon: Clock 
+      },
       approved: { 
-        label: 'อนุมัติแล้ว', 
+        label: 'อนุมัติ', 
         className: 'bg-green-100 text-green-800',
         icon: CheckCircle 
       },
       approved_final: { 
-        label: 'อนุมัติแล้ว', 
+        label: 'อนุมัติ', 
         className: 'bg-green-100 text-green-800',
         icon: CheckCircle 
       },
@@ -104,14 +124,9 @@ export const LeaveHistoryPage = () => {
         icon: XCircle 
       },
       cancelled: { 
-        label: 'ยกเลิกแล้ว', 
+        label: 'ยกเลิก', 
         className: 'bg-gray-100 text-gray-800',
         icon: Ban 
-      },
-      pending: { 
-        label: 'รออนุมัติ', 
-        className: 'bg-yellow-100 text-yellow-800',
-        icon: Clock 
       },
       // สถานะการยกเลิก
       pending_cancel: { 

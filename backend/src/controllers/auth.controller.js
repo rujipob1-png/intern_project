@@ -52,6 +52,7 @@ export const login = async (req, res) => {
         phone,
         email,
         email_notifications,
+        profile_image_url,
         role_id,
         is_active,
         sick_leave_balance,
@@ -126,6 +127,7 @@ export const login = async (req, res) => {
           phone: user.phone,
           email: user.email,
           emailNotifications: user.email_notifications ?? true,
+          profileImageUrl: user.profile_image_url,
           role_name: user.roles.role_name, // เพิ่ม role_name ตรงๆ
           roleLevel: user.roles.role_level, // เพิ่ม roleLevel ตรงๆ
           role: {
@@ -172,6 +174,7 @@ export const getProfile = async (req, res) => {
         phone,
         email,
         email_notifications,
+        profile_image_url,
         sick_leave_balance,
         personal_leave_balance,
         vacation_leave_balance,
@@ -210,6 +213,7 @@ export const getProfile = async (req, res) => {
         phone: user.phone,
         email: user.email,
         emailNotifications: user.email_notifications ?? true,
+        profileImageUrl: user.profile_image_url,
         role_name: user.roles.role_name, // เพิ่ม role_name สำหรับ Sidebar
         roleLevel: user.roles.role_level, // เพิ่ม roleLevel สำหรับ permission check
         role: {
@@ -364,6 +368,142 @@ export const updateNotificationSettings = async (req, res) => {
       res,
       HTTP_STATUS.INTERNAL_SERVER_ERROR,
       'ไม่สามารถอัพเดทการตั้งค่าได้: ' + error.message
+    );
+  }
+};
+
+/**
+ * อัพโหลดรูปโปรไฟล์
+ */
+export const uploadProfileImage = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { imageBase64 } = req.body;
+
+    if (!imageBase64) {
+      return errorResponse(
+        res,
+        HTTP_STATUS.BAD_REQUEST,
+        'กรุณาเลือกรูปภาพ'
+      );
+    }
+
+    // แปลง base64 เป็น buffer
+    const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
+    const buffer = Buffer.from(base64Data, 'base64');
+    
+    // ตรวจสอบขนาดไฟล์ (max 2MB)
+    if (buffer.length > 2 * 1024 * 1024) {
+      return errorResponse(
+        res,
+        HTTP_STATUS.BAD_REQUEST,
+        'ขนาดรูปภาพต้องไม่เกิน 2MB'
+      );
+    }
+
+    // หา file extension จาก base64 header
+    const mimeMatch = imageBase64.match(/^data:image\/(\w+);base64,/);
+    const extension = mimeMatch ? mimeMatch[1] : 'png';
+    
+    // สร้างชื่อไฟล์ unique
+    const fileName = `${userId}/${Date.now()}.${extension}`;
+
+    // อัพโหลดไปยัง Supabase Storage
+    const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
+      .from('images_profiles')
+      .upload(fileName, buffer, {
+        contentType: `image/${extension}`,
+        upsert: true
+      });
+
+    if (uploadError) {
+      console.error('Upload error:', uploadError);
+      return errorResponse(
+        res,
+        HTTP_STATUS.INTERNAL_SERVER_ERROR,
+        'ไม่สามารถอัพโหลดรูปภาพได้: ' + uploadError.message
+      );
+    }
+
+    // สร้าง public URL
+    const { data: { publicUrl } } = supabaseAdmin.storage
+      .from('images_profiles')
+      .getPublicUrl(fileName);
+
+    // อัพเดท profile_image_url ใน database
+    const { error: updateError } = await supabaseAdmin
+      .from('users')
+      .update({ profile_image_url: publicUrl })
+      .eq('id', userId);
+
+    if (updateError) {
+      console.error('Update profile error:', updateError);
+      return errorResponse(
+        res,
+        HTTP_STATUS.INTERNAL_SERVER_ERROR,
+        'ไม่สามารถอัพเดทข้อมูลได้'
+      );
+    }
+
+    return successResponse(
+      res,
+      HTTP_STATUS.OK,
+      'อัพโหลดรูปโปรไฟล์สำเร็จ',
+      { profileImageUrl: publicUrl }
+    );
+  } catch (error) {
+    console.error('Upload profile image error:', error);
+    return errorResponse(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      'เกิดข้อผิดพลาด: ' + error.message
+    );
+  }
+};
+
+/**
+ * ลบรูปโปรไฟล์
+ */
+export const deleteProfileImage = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // ดึง URL รูปปัจจุบัน
+    const { data: user } = await supabaseAdmin
+      .from('users')
+      .select('profile_image_url')
+      .eq('id', userId)
+      .single();
+
+    if (user?.profile_image_url) {
+      // ลบไฟล์จาก Storage
+      const filePath = user.profile_image_url.split('/images_profiles/')[1];
+      if (filePath) {
+        await supabaseAdmin.storage
+          .from('images_profiles')
+          .remove([filePath]);
+      }
+    }
+
+    // อัพเดท database ให้เป็น null
+    const { error } = await supabaseAdmin
+      .from('users')
+      .update({ profile_image_url: null })
+      .eq('id', userId);
+
+    if (error) throw error;
+
+    return successResponse(
+      res,
+      HTTP_STATUS.OK,
+      'ลบรูปโปรไฟล์สำเร็จ'
+    );
+  } catch (error) {
+    console.error('Delete profile image error:', error);
+    return errorResponse(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      'เกิดข้อผิดพลาด: ' + error.message
     );
   }
 };

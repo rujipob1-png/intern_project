@@ -106,12 +106,15 @@ export const LeaveDetailPage = () => {
   const getStatusBadge = (status) => {
     const config = {
       pending: { label: 'รอพิจารณา', className: 'bg-yellow-100 text-yellow-800' },
-      level_1_approved: { label: 'ผ่านหัวหน้า', className: 'bg-blue-100 text-blue-800' },
-      level_2_approved: { label: 'ผ่านกองกลาง', className: 'bg-indigo-100 text-indigo-800' },
+      approved_level1: { label: 'รอพิจารณา', className: 'bg-yellow-100 text-yellow-800' },
+      approved_level2: { label: 'รอพิจารณา', className: 'bg-yellow-100 text-yellow-800' },
+      approved_level3: { label: 'รอพิจารณา', className: 'bg-yellow-100 text-yellow-800' },
+      level_1_approved: { label: 'รอพิจารณา', className: 'bg-yellow-100 text-yellow-800' },
+      level_2_approved: { label: 'รอพิจารณา', className: 'bg-yellow-100 text-yellow-800' },
       approved: { label: 'อนุมัติ', className: 'bg-green-100 text-green-800' },
-      approved_final: { label: 'อนุมัติแล้ว', className: 'bg-green-100 text-green-800' },
+      approved_final: { label: 'อนุมัติ', className: 'bg-green-100 text-green-800' },
       rejected: { label: 'ไม่อนุมัติ', className: 'bg-red-100 text-red-800' },
-      cancelled: { label: 'ยกเลิกแล้ว', className: 'bg-gray-100 text-gray-800' },
+      cancelled: { label: 'ยกเลิก', className: 'bg-gray-100 text-gray-800' },
       // สถานะการยกเลิก
       pending_cancel: { label: 'รอพิจารณายกเลิก', className: 'bg-orange-100 text-orange-800' },
       cancel_level1: { label: 'รอพิจารณายกเลิก', className: 'bg-orange-100 text-orange-800' },

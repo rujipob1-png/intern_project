@@ -33,4 +33,18 @@ export const authAPI = {
     });
     return response.data;
   },
+
+  // Upload profile image
+  uploadProfileImage: async (imageBase64) => {
+    const response = await axios.post('/auth/profile-image', {
+      imageBase64,
+    });
+    return response.data;
+  },
+
+  // Delete profile image
+  deleteProfileImage: async () => {
+    const response = await axios.delete('/auth/profile-image');
+    return response.data;
+  },
 };

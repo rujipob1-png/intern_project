@@ -131,13 +131,28 @@ export const MyLeavesPage = () => {
         icon: Clock,
         className: 'bg-yellow-100 text-yellow-800 border-yellow-200',
       },
+      approved_level1: {
+        label: 'รอพิจารณา',
+        icon: Clock,
+        className: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      },
+      approved_level2: {
+        label: 'รอพิจารณา',
+        icon: Clock,
+        className: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      },
+      approved_level3: {
+        label: 'รอพิจารณา',
+        icon: Clock,
+        className: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      },
       approved: {
         label: 'อนุมัติ',
         icon: CheckCircle,
         className: 'bg-green-100 text-green-800 border-green-200',
       },
       approved_final: {
-        label: 'อนุมัติแล้ว',
+        label: 'อนุมัติ',
         icon: CheckCircle,
         className: 'bg-green-100 text-green-800 border-green-200',
       },
@@ -147,7 +162,7 @@ export const MyLeavesPage = () => {
         className: 'bg-red-100 text-red-800 border-red-200',
       },
       cancelled: {
-        label: 'ยกเลิกแล้ว',
+        label: 'ยกเลิก',
         icon: AlertCircle,
         className: 'bg-gray-100 text-gray-800 border-gray-200',
       },

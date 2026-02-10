@@ -119,7 +119,7 @@ export default function LeaveCalendarPage() {
               onChange={(e) => setFilterStatus(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="approved">อนุมัติแล้ว</option>
+              <option value="approved">อนุมัติ</option>
               <option value="pending">รอพิจารณา</option>
               <option value="all">ทั้งหมด</option>
             </select>
@@ -199,7 +199,7 @@ export default function LeaveCalendarPage() {
             <h3 className="text-lg font-semibold mb-3">สรุปข้อมูล</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-green-50 p-3 rounded-lg">
-                <p className="text-sm text-green-600">อนุมัติแล้ว</p>
+                <p className="text-sm text-green-600">อนุมัติ</p>
                 <p className="text-2xl font-bold text-green-700">
                   {leaves.filter(l => l.status === 'approved_final').length}
                 </p>
@@ -211,7 +211,7 @@ export default function LeaveCalendarPage() {
                 </p>
               </div>
               <div className="bg-red-50 p-3 rounded-lg">
-                <p className="text-sm text-red-600">ถูกปฏิเสธ</p>
+                <p className="text-sm text-red-600">ไม่อนุมัติ</p>
                 <p className="text-2xl font-bold text-red-700">
                   {leaves.filter(l => l.status === 'rejected').length}
                 </p>
