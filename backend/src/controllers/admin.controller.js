@@ -1050,6 +1050,9 @@ export const getAllUsers = async (req, res) => {
         sick_leave_balance,
         personal_leave_balance,
         vacation_leave_balance,
+        hire_date,
+        vacation_carryover,
+        last_carryover_fiscal_year,
         created_at,
         roles (
           id,
@@ -1083,6 +1086,10 @@ export const getAllUsers = async (req, res) => {
       sick_leave_balance: user.sick_leave_balance,
       personal_leave_balance: user.personal_leave_balance,
       vacation_leave_balance: user.vacation_leave_balance,
+      hire_date: user.hire_date,
+      vacation_carryover: user.vacation_carryover || 0,
+      last_carryover_fiscal_year: user.last_carryover_fiscal_year,
+      total_vacation_balance: (user.vacation_leave_balance || 0) + (user.vacation_carryover || 0),
       created_at: user.created_at
     }));
 
@@ -1339,8 +1346,9 @@ export const createUser = async (req, res) => {
       phone,
       email,
       role_id,
-      sick_leave_balance = 30,
-      personal_leave_balance = 0,
+      hire_date,
+      sick_leave_balance = 60,
+      personal_leave_balance = 15,
       vacation_leave_balance = 10
     } = req.body;
 
@@ -1372,9 +1380,11 @@ export const createUser = async (req, res) => {
         phone,
         email,
         role_id,
+        hire_date: hire_date || null,
         sick_leave_balance,
         personal_leave_balance,
         vacation_leave_balance,
+        vacation_carryover: 0,
         is_active: true
       })
       .select(`
@@ -1421,23 +1431,34 @@ export const createUser = async (req, res) => {
 };
 
 /**
- * ลบ/ปิดการใช้งานผู้ใช้ (Soft delete - set is_active = false)
+ * ลบ/ปิดการใช้งานผู้ใช้
+ * @param {string} mode - 'deactivate' | 'archive' | 'permanent'
+ *   - deactivate: ปิดการใช้งาน (soft delete) - สามารถเปิดใช้งานได้อีก
+ *   - archive: เก็บข้อมูลไว้ใน archived_users แล้วลบ user ออก
+ *   - permanent: ลบถาวรทั้งหมด รวมถึงประวัติการลา
  */
 export const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { permanent = false } = req.body;
+    const { mode = 'deactivate', reason = '' } = req.body;
     const currentUserId = req.user?.id;
 
-    // ป้องกัน Admin ปิดการใช้งานตัวเอง
+    // ป้องกัน Admin ลบ/ปิดการใช้งานตัวเอง
     if (id === currentUserId) {
-      return errorResponse(res, HTTP_STATUS.BAD_REQUEST, 'ไม่สามารถปิดการใช้งานบัญชีตัวเองได้');
+      return errorResponse(res, HTTP_STATUS.BAD_REQUEST, 'ไม่สามารถดำเนินการกับบัญชีตัวเองได้');
     }
 
-    // Check if user exists
+    // Check if user exists with full data
     const { data: user, error: fetchError } = await supabaseAdmin
       .from('users')
-      .select('id, employee_code, first_name, last_name')
+      .select(`
+        *,
+        roles (
+          id,
+          role_name,
+          role_level
+        )
+      `)
       .eq('id', id)
       .single();
 
@@ -1445,34 +1466,8 @@ export const deleteUser = async (req, res) => {
       return errorResponse(res, HTTP_STATUS.NOT_FOUND, 'ไม่พบข้อมูลบุคลากร');
     }
 
-    if (permanent) {
-      // Hard delete - only if no leaves exist
-      const { data: leaves } = await supabaseAdmin
-        .from('leaves')
-        .select('id')
-        .eq('user_id', id)
-        .limit(1);
-
-      if (leaves && leaves.length > 0) {
-        return errorResponse(
-          res, 
-          HTTP_STATUS.BAD_REQUEST, 
-          'ไม่สามารถลบถาวรได้เนื่องจากมีประวัติการลาในระบบ กรุณาใช้การปิดการใช้งานแทน'
-        );
-      }
-
-      const { error: deleteError } = await supabaseAdmin
-        .from('users')
-        .delete()
-        .eq('id', id);
-
-      if (deleteError) {
-        throw deleteError;
-      }
-
-      return successResponse(res, HTTP_STATUS.OK, 'ลบบุคลากรถาวรสำเร็จ');
-    } else {
-      // Soft delete - set is_active = false
+    // Mode: DEACTIVATE - ปิดการใช้งาน (Soft delete)
+    if (mode === 'deactivate') {
       const { data: updatedUser, error: updateError } = await supabaseAdmin
         .from('users')
         .update({ is_active: false, updated_at: new Date().toISOString() })
@@ -1480,12 +1475,130 @@ export const deleteUser = async (req, res) => {
         .select()
         .single();
 
-      if (updateError) {
-        throw updateError;
-      }
-
+      if (updateError) throw updateError;
       return successResponse(res, HTTP_STATUS.OK, 'ปิดการใช้งานบุคลากรสำเร็จ', updatedUser);
     }
+
+    // Mode: ARCHIVE - เก็บข้อมูลไว้ แล้วลบ user
+    if (mode === 'archive') {
+      // 1. บันทึกข้อมูลลง archived_users
+      const archiveData = {
+        original_user_id: user.id,
+        employee_code: user.employee_code,
+        title: user.title,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        position: user.position,
+        department: user.department,
+        phone: user.phone,
+        email: user.email,
+        role_name: user.roles?.role_name,
+        hire_date: user.hire_date,
+        last_sick_leave_balance: user.sick_leave_balance,
+        last_personal_leave_balance: user.personal_leave_balance,
+        last_vacation_leave_balance: user.vacation_leave_balance,
+        archived_by: currentUserId,
+        archive_reason: reason,
+        created_at: user.created_at
+      };
+
+      const { data: archivedUser, error: archiveError } = await supabaseAdmin
+        .from('archived_users')
+        .insert(archiveData)
+        .select()
+        .single();
+
+      if (archiveError) {
+        console.error('Archive error:', archiveError);
+        return errorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, 'ไม่สามารถเก็บข้อมูลได้: ' + archiveError.message);
+      }
+
+      // 2. อัพเดต leaves ให้ชี้ไปที่ archived_user_id
+      await supabaseAdmin
+        .from('leaves')
+        .update({ archived_user_id: archivedUser.id })
+        .eq('user_id', id);
+
+      // 3. ลบ approvals ที่เกี่ยวข้อง
+      const { data: userLeaves } = await supabaseAdmin
+        .from('leaves')
+        .select('id')
+        .eq('user_id', id);
+
+      if (userLeaves && userLeaves.length > 0) {
+        const leaveIds = userLeaves.map(l => l.id);
+        await supabaseAdmin
+          .from('approvals')
+          .delete()
+          .in('leave_id', leaveIds);
+      }
+
+      // 4. ลบ notifications
+      await supabaseAdmin
+        .from('notifications')
+        .delete()
+        .eq('user_id', id);
+
+      // 5. Set user_id ใน leaves เป็น null (เก็บ archived_user_id ไว้แล้ว)
+      await supabaseAdmin
+        .from('leaves')
+        .update({ user_id: null })
+        .eq('user_id', id);
+
+      // 6. ลบ user
+      const { error: deleteError } = await supabaseAdmin
+        .from('users')
+        .delete()
+        .eq('id', id);
+
+      if (deleteError) throw deleteError;
+
+      return successResponse(res, HTTP_STATUS.OK, 'ลบบุคลากรและเก็บข้อมูลสำเร็จ', {
+        archived: archivedUser,
+        message: 'ข้อมูลถูกเก็บไว้ใน archived_users และประวัติการลายังคงอยู่'
+      });
+    }
+
+    // Mode: PERMANENT - ลบถาวรทั้งหมด
+    if (mode === 'permanent') {
+      // 1. ลบ approvals ที่เกี่ยวข้อง
+      const { data: userLeaves } = await supabaseAdmin
+        .from('leaves')
+        .select('id')
+        .eq('user_id', id);
+
+      if (userLeaves && userLeaves.length > 0) {
+        const leaveIds = userLeaves.map(l => l.id);
+        await supabaseAdmin
+          .from('approvals')
+          .delete()
+          .in('leave_id', leaveIds);
+      }
+
+      // 2. ลบ leaves
+      await supabaseAdmin
+        .from('leaves')
+        .delete()
+        .eq('user_id', id);
+
+      // 3. ลบ notifications
+      await supabaseAdmin
+        .from('notifications')
+        .delete()
+        .eq('user_id', id);
+
+      // 4. ลบ user
+      const { error: deleteError } = await supabaseAdmin
+        .from('users')
+        .delete()
+        .eq('id', id);
+
+      if (deleteError) throw deleteError;
+
+      return successResponse(res, HTTP_STATUS.OK, 'ลบบุคลากรถาวรสำเร็จ (รวมประวัติการลาทั้งหมด)');
+    }
+
+    return errorResponse(res, HTTP_STATUS.BAD_REQUEST, 'mode ไม่ถูกต้อง (ต้องเป็น deactivate, archive, หรือ permanent)');
   } catch (error) {
     console.error('Delete user error:', error);
     return errorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, 'ไม่สามารถลบบุคลากรได้: ' + error.message);
@@ -1616,5 +1729,441 @@ export const updateLeaveBalance = async (req, res) => {
   } catch (error) {
     console.error('Update leave balance error:', error);
     return errorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, 'ไม่สามารถอัพเดตวันลาได้');
+  }
+};
+
+/**
+ * คำนวณปีงบประมาณไทย
+ * ปีงบประมาณเริ่ม 1 ตุลาคม - 30 กันยายน
+ * เช่น 1 ต.ค. 2567 - 30 ก.ย. 2568 = ปีงบ 2568
+ */
+const getCurrentFiscalYear = () => {
+  const today = new Date();
+  const month = today.getMonth(); // 0-11
+  const year = today.getFullYear() + 543; // พ.ศ.
+  
+  // If month >= October (9), fiscal year = current year + 1
+  if (month >= 9) {
+    return year + 1;
+  }
+  return year;
+};
+
+/**
+ * คำนวณอายุราชการ (ปี)
+ */
+const calculateServiceYears = (hireDate) => {
+  if (!hireDate) return 0;
+  
+  const hire = new Date(hireDate);
+  const today = new Date();
+  
+  let years = today.getFullYear() - hire.getFullYear();
+  const monthDiff = today.getMonth() - hire.getMonth();
+  
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < hire.getDate())) {
+    years--;
+  }
+  
+  return Math.max(0, years);
+};
+
+/**
+ * คำนวณเพดานสะสมวันลาพักผ่อน
+ * - อายุราชการ < 10 ปี: สูงสุด 20 วัน
+ * - อายุราชการ >= 10 ปี: สูงสุด 30 วัน
+ */
+const getVacationCarryoverLimit = (serviceYears) => {
+  return serviceYears >= 10 ? 30 : 20;
+};
+
+/**
+ * ยกยอดวันลาพักผ่อนข้ามปี สำหรับ user คนเดียว
+ */
+export const processVacationCarryover = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { force = false } = req.body; // force = true เพื่อบังคับยกยอดใหม่
+    
+    // ดึงข้อมูล user
+    const { data: user, error: fetchError } = await supabaseAdmin
+      .from('users')
+      .select('*')
+      .eq('id', id)
+      .single();
+      
+    if (fetchError || !user) {
+      return errorResponse(res, HTTP_STATUS.NOT_FOUND, 'ไม่พบข้อมูลบุคลากร');
+    }
+    
+    const currentFiscalYear = getCurrentFiscalYear();
+    
+    // ตรวจสอบว่ายกยอดปีนี้แล้วหรือยัง
+    if (!force && user.last_carryover_fiscal_year === currentFiscalYear) {
+      return errorResponse(res, HTTP_STATUS.BAD_REQUEST, `ยกยอดวันลาปีงบประมาณ ${currentFiscalYear} ไปแล้ว`);
+    }
+    
+    // คำนวณอายุราชการ
+    const serviceYears = calculateServiceYears(user.hire_date);
+    const carryoverLimit = getVacationCarryoverLimit(serviceYears);
+    
+    // วันลาพักผ่อนคงเหลือปีที่แล้ว (รวมยกยอดเก่า)
+    const previousRemaining = (user.vacation_leave_balance || 0) + (user.vacation_carryover || 0);
+    
+    // คำนวณวันที่ยกยอดได้ (ไม่เกินเพดาน - 10 วันใหม่)
+    const maxCarryover = Math.max(0, carryoverLimit - 10); // เพดาน - วันลาใหม่
+    const newCarryover = Math.min(previousRemaining, maxCarryover);
+    
+    // อัพเดท database
+    const { data: updatedUser, error: updateError } = await supabaseAdmin
+      .from('users')
+      .update({
+        vacation_leave_balance: 10, // Reset เป็น 10 วันใหม่
+        vacation_carryover: newCarryover,
+        last_carryover_fiscal_year: currentFiscalYear,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single();
+      
+    if (updateError) {
+      throw updateError;
+    }
+    
+    // บันทึก log
+    await supabaseAdmin.from('leave_balance_logs').insert({
+      user_id: id,
+      leave_type: 'vacation_leave',
+      change_amount: newCarryover - (user.vacation_carryover || 0),
+      balance_after: 10 + newCarryover,
+      reason: `annual_carryover_${currentFiscalYear}`
+    });
+    
+    return successResponse(res, HTTP_STATUS.OK, 'ยกยอดวันลาพักผ่อนสำเร็จ', {
+      user_id: id,
+      name: `${user.first_name} ${user.last_name}`,
+      service_years: serviceYears,
+      carryover_limit: carryoverLimit,
+      previous_remaining: previousRemaining,
+      new_carryover: newCarryover,
+      new_balance: 10,
+      total_available: 10 + newCarryover,
+      fiscal_year: currentFiscalYear
+    });
+  } catch (error) {
+    console.error('Process vacation carryover error:', error);
+    return errorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, 'ไม่สามารถยกยอดวันลาได้');
+  }
+};
+
+/**
+ * ยกยอดวันลาพักผ่อนข้ามปี สำหรับทุกคนในระบบ (ใช้ตอนเริ่มปีงบประมาณใหม่)
+ */
+export const processAllVacationCarryover = async (req, res) => {
+  try {
+    const { force = false } = req.body;
+    const currentFiscalYear = getCurrentFiscalYear();
+    
+    // ดึง users ที่ active ทั้งหมด
+    let query = supabaseAdmin
+      .from('users')
+      .select('*')
+      .eq('is_active', true);
+    
+    // ถ้าไม่ force ให้ดึงเฉพาะคนที่ยังไม่ได้ยกยอดปีนี้
+    if (!force) {
+      query = query.or(`last_carryover_fiscal_year.is.null,last_carryover_fiscal_year.neq.${currentFiscalYear}`);
+    }
+    
+    const { data: users, error: fetchError } = await query;
+    
+    if (fetchError) {
+      throw fetchError;
+    }
+    
+    if (users.length === 0) {
+      return successResponse(res, HTTP_STATUS.OK, 'ไม่มีรายการที่ต้องยกยอด', { processed: 0 });
+    }
+    
+    const results = [];
+    const errors = [];
+    
+    for (const user of users) {
+      try {
+        const serviceYears = calculateServiceYears(user.hire_date);
+        const carryoverLimit = getVacationCarryoverLimit(serviceYears);
+        const previousRemaining = (user.vacation_leave_balance || 0) + (user.vacation_carryover || 0);
+        const maxCarryover = Math.max(0, carryoverLimit - 10);
+        const newCarryover = Math.min(previousRemaining, maxCarryover);
+        
+        await supabaseAdmin
+          .from('users')
+          .update({
+            vacation_leave_balance: 10,
+            vacation_carryover: newCarryover,
+            last_carryover_fiscal_year: currentFiscalYear,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id);
+          
+        // บันทึก log
+        await supabaseAdmin.from('leave_balance_logs').insert({
+          user_id: user.id,
+          leave_type: 'vacation_leave',
+          change_amount: newCarryover - (user.vacation_carryover || 0),
+          balance_after: 10 + newCarryover,
+          reason: `annual_carryover_${currentFiscalYear}`
+        });
+        
+        results.push({
+          user_id: user.id,
+          name: `${user.first_name} ${user.last_name}`,
+          previous_remaining: previousRemaining,
+          new_carryover: newCarryover,
+          total_available: 10 + newCarryover
+        });
+      } catch (err) {
+        errors.push({
+          user_id: user.id,
+          name: `${user.first_name} ${user.last_name}`,
+          error: err.message
+        });
+      }
+    }
+    
+    return successResponse(res, HTTP_STATUS.OK, `ยกยอดวันลาสำเร็จ ${results.length} คน`, {
+      fiscal_year: currentFiscalYear,
+      processed: results.length,
+      failed: errors.length,
+      results,
+      errors
+    });
+  } catch (error) {
+    console.error('Process all vacation carryover error:', error);
+    return errorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, 'ไม่สามารถยกยอดวันลาได้');
+  }
+};
+
+/**
+ * Reset วันลาประจำปีใหม่ (ลาป่วย, ลากิจ) - ใช้ตอนเริ่มปีงบประมาณ
+ */
+export const resetAnnualLeaveBalance = async (req, res) => {
+  try {
+    const currentFiscalYear = getCurrentFiscalYear();
+    
+    // Reset วันลาป่วย = 60, ลากิจ = 15 สำหรับทุกคน
+    const { data, error } = await supabaseAdmin
+      .from('users')
+      .update({
+        sick_leave_balance: 60,
+        personal_leave_balance: 15,
+        updated_at: new Date().toISOString()
+      })
+      .eq('is_active', true)
+      .select();
+      
+    if (error) {
+      throw error;
+    }
+    
+    return successResponse(res, HTTP_STATUS.OK, `Reset วันลาประจำปี ${currentFiscalYear} สำเร็จ`, {
+      fiscal_year: currentFiscalYear,
+      updated_count: data.length,
+      sick_leave_balance: 60,
+      personal_leave_balance: 15
+    });
+  } catch (error) {
+    console.error('Reset annual leave balance error:', error);
+    return errorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, 'ไม่สามารถ reset วันลาได้');
+  }
+};
+
+/**
+ * ดูข้อมูลสรุปวันลาพักผ่อนพร้อมยกยอด
+ */
+export const getVacationSummary = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const { data: user, error } = await supabaseAdmin
+      .from('users')
+      .select('*')
+      .eq('id', id)
+      .single();
+      
+    if (error || !user) {
+      return errorResponse(res, HTTP_STATUS.NOT_FOUND, 'ไม่พบข้อมูลบุคลากร');
+    }
+    
+    const serviceYears = calculateServiceYears(user.hire_date);
+    const carryoverLimit = getVacationCarryoverLimit(serviceYears);
+    const currentFiscalYear = getCurrentFiscalYear();
+    
+    return successResponse(res, HTTP_STATUS.OK, 'ดึงข้อมูลสำเร็จ', {
+      user_id: user.id,
+      name: `${user.title || ''}${user.first_name} ${user.last_name}`,
+      hire_date: user.hire_date,
+      service_years: serviceYears,
+      carryover_limit: carryoverLimit,
+      current_balance: user.vacation_leave_balance || 0,
+      carryover: user.vacation_carryover || 0,
+      total_available: (user.vacation_leave_balance || 0) + (user.vacation_carryover || 0),
+      last_carryover_fiscal_year: user.last_carryover_fiscal_year,
+      current_fiscal_year: currentFiscalYear,
+      needs_carryover: user.last_carryover_fiscal_year !== currentFiscalYear
+    });
+  } catch (error) {
+    console.error('Get vacation summary error:', error);
+    return errorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, 'ไม่สามารถดึงข้อมูลได้');
+  }
+};
+
+/**
+ * ยกเลิกการยกยอดวันลาพักผ่อน - Reset กลับเป็นค่าเริ่มต้น
+ * vacation_leave_balance = 10, vacation_carryover = 0
+ */
+export const resetVacationCarryover = async (req, res) => {
+  try {
+    // Reset vacation_carryover = 0, vacation_leave_balance = 10, และ last_carryover_fiscal_year = null
+    const { data, error } = await supabaseAdmin
+      .from('users')
+      .update({
+        vacation_leave_balance: 10,
+        vacation_carryover: 0,
+        last_carryover_fiscal_year: null,
+        updated_at: new Date().toISOString()
+      })
+      .eq('is_active', true)
+      .select('id, first_name, last_name');
+      
+    if (error) {
+      throw error;
+    }
+    
+    return successResponse(res, HTTP_STATUS.OK, 'ยกเลิกการยกยอดวันลาพักผ่อนสำเร็จ', {
+      updated_count: data.length,
+      vacation_leave_balance: 10,
+      vacation_carryover: 0,
+      message: 'Reset วันลาพักผ่อน = 10 วัน, ยกยอด = 0 วัน สำหรับทุกคน'
+    });
+  } catch (error) {
+    console.error('Reset vacation carryover error:', error);
+    return errorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, 'ไม่สามารถยกเลิกการยกยอดได้');
+  }
+};
+
+/**
+ * ดึงข้อมูลบุคลากรที่ถูกเก็บถาวร (Archived Users)
+ */
+export const getArchivedUsers = async (req, res) => {
+  try {
+    const { data: archivedUsers, error } = await supabaseAdmin
+      .from('archived_users')
+      .select(`
+        *,
+        archived_by_user:users!archived_users_archived_by_fkey (
+          employee_code,
+          first_name,
+          last_name
+        )
+      `)
+      .order('archived_at', { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    // จัดรูปแบบข้อมูล
+    const formattedUsers = archivedUsers.map(user => ({
+      ...user,
+      full_name: `${user.title || ''}${user.first_name} ${user.last_name}`,
+      archived_by_name: user.archived_by_user 
+        ? `${user.archived_by_user.first_name} ${user.archived_by_user.last_name}`
+        : 'ไม่ทราบ'
+    }));
+
+    return successResponse(res, HTTP_STATUS.OK, 'ดึงข้อมูลบุคลากรที่เก็บถาวรสำเร็จ', formattedUsers);
+  } catch (error) {
+    console.error('Get archived users error:', error);
+    return errorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, 'ไม่สามารถดึงข้อมูลได้');
+  }
+};
+
+/**
+ * ลบข้อมูลบุคลากรที่เก็บถาวรออกถาวร
+ */
+export const deleteArchivedUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // ลบ leaves ที่เชื่อมกับ archived user นี้ (set archived_user_id = null)
+    await supabaseAdmin
+      .from('leaves')
+      .update({ archived_user_id: null })
+      .eq('archived_user_id', id);
+
+    // ลบข้อมูลจาก archived_users
+    const { error } = await supabaseAdmin
+      .from('archived_users')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      throw error;
+    }
+
+    return successResponse(res, HTTP_STATUS.OK, 'ลบข้อมูลถาวรสำเร็จ');
+  } catch (error) {
+    console.error('Delete archived user error:', error);
+    return errorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, 'ไม่สามารถลบข้อมูลได้');
+  }
+};
+
+/**
+ * ดูประวัติการลาของบุคลากรที่ถูกเก็บถาวร
+ */
+export const getArchivedUserLeaves = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // ดึงข้อมูล archived user
+    const { data: archivedUser, error: userError } = await supabaseAdmin
+      .from('archived_users')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (userError || !archivedUser) {
+      return errorResponse(res, HTTP_STATUS.NOT_FOUND, 'ไม่พบข้อมูลบุคลากร');
+    }
+
+    // ดึงประวัติการลา
+    const { data: leaves, error: leavesError } = await supabaseAdmin
+      .from('leaves')
+      .select(`
+        *,
+        leave_types (
+          type_name,
+          type_code
+        )
+      `)
+      .eq('archived_user_id', id)
+      .order('created_at', { ascending: false });
+
+    if (leavesError) {
+      throw leavesError;
+    }
+
+    return successResponse(res, HTTP_STATUS.OK, 'ดึงประวัติการลาสำเร็จ', {
+      user: {
+        ...archivedUser,
+        full_name: `${archivedUser.title || ''}${archivedUser.first_name} ${archivedUser.last_name}`
+      },
+      leaves: leaves || []
+    });
+  } catch (error) {
+    console.error('Get archived user leaves error:', error);
+    return errorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, 'ไม่สามารถดึงข้อมูลได้');
   }
 };

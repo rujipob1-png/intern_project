@@ -254,7 +254,7 @@ export const createUserValidation = [
     
   body('role_id')
     .notEmpty().withMessage('กรุณาเลือก Role')
-    .isInt({ min: 1 }).withMessage('Role ไม่ถูกต้อง'),
+    .isUUID().withMessage('Role ไม่ถูกต้อง'),
     
   body('password')
     .notEmpty().withMessage('กรุณากรอกรหัสผ่าน')

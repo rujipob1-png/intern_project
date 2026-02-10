@@ -19,7 +19,15 @@ import {
   getAllRoles,
   getLeaveReports,
   getDepartments,
-  getAuditLogsController
+  getAuditLogsController,
+  processVacationCarryover,
+  processAllVacationCarryover,
+  resetAnnualLeaveBalance,
+  getVacationSummary,
+  resetVacationCarryover,
+  getArchivedUsers,
+  deleteArchivedUser,
+  getArchivedUserLeaves
 } from '../controllers/admin.controller.js';
 import { authenticate } from '../middlewares/auth.middleware.js';
 import { requireRole } from '../middlewares/role.middleware.js';
@@ -91,6 +99,22 @@ router.delete('/users/:id', idParamValidation, deleteUser);
 router.put('/users/:id/activate', idParamValidation, activateUser);
 router.put('/users/:id/reset-password', idParamValidation, resetUserPassword);
 router.put('/users/:id/leave-balance', idParamValidation, updateLeaveBalance);
+
+/**
+ * ==================== Vacation Carryover Routes (ยกยอดวันลาพักผ่อน) ====================
+ */
+router.get('/users/:id/vacation-summary', idParamValidation, getVacationSummary);
+router.post('/users/:id/vacation-carryover', idParamValidation, processVacationCarryover);
+router.post('/vacation-carryover-all', processAllVacationCarryover);
+router.post('/reset-annual-leave', resetAnnualLeaveBalance);
+router.post('/reset-vacation-carryover', resetVacationCarryover);
+
+/**
+ * ==================== Archived Users Routes (บุคลากรที่เก็บถาวร) ====================
+ */
+router.get('/archived-users', getArchivedUsers);
+router.get('/archived-users/:id/leaves', getArchivedUserLeaves);
+router.delete('/archived-users/:id', deleteArchivedUser);
 
 /**
  * ==================== Reports Routes ====================

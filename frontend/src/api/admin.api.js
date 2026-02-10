@@ -55,9 +55,12 @@ export const adminAPI = {
     return response.data;
   },
 
-  // Delete/disable user (soft delete by default)
-  deleteUser: async (userId, permanent = false) => {
-    const response = await axios.delete(`/admin/users/${userId}`, { data: { permanent } });
+  // Delete/disable user
+  // mode: 'deactivate' | 'archive' | 'permanent'
+  deleteUser: async (userId, mode = 'deactivate', reason = '') => {
+    const response = await axios.delete(`/admin/users/${userId}`, { 
+      data: { mode, reason } 
+    });
     return response.data;
   },
 
@@ -107,6 +110,56 @@ export const adminAPI = {
   // Get cancel history (cancelled leaves history)
   getCancelHistory: async () => {
     const response = await axios.get('/admin/cancel-requests/history');
+    return response.data;
+  },
+
+  // ============= VACATION CARRYOVER (ยกยอดวันลาพักผ่อน) =============
+  // Get vacation summary for a user
+  getVacationSummary: async (userId) => {
+    const response = await axios.get(`/admin/users/${userId}/vacation-summary`);
+    return response.data;
+  },
+
+  // Process vacation carryover for a single user
+  processVacationCarryover: async (userId, force = false) => {
+    const response = await axios.post(`/admin/users/${userId}/vacation-carryover`, { force });
+    return response.data;
+  },
+
+  // Process vacation carryover for all users (fiscal year reset)
+  processAllVacationCarryover: async (force = false) => {
+    const response = await axios.post('/admin/vacation-carryover-all', { force });
+    return response.data;
+  },
+
+  // Reset annual leave balance (sick, personal) for all users
+  resetAnnualLeaveBalance: async () => {
+    const response = await axios.post('/admin/reset-annual-leave');
+    return response.data;
+  },
+
+  // Reset vacation carryover - ยกเลิกการยกยอด (vacation = 10, carryover = 0)
+  resetVacationCarryover: async () => {
+    const response = await axios.post('/admin/reset-vacation-carryover');
+    return response.data;
+  },
+
+  // ============= ARCHIVED USERS (บุคลากรที่เก็บถาวร) =============
+  // Get all archived users
+  getArchivedUsers: async () => {
+    const response = await axios.get('/admin/archived-users');
+    return response.data;
+  },
+
+  // Get archived user's leave history
+  getArchivedUserLeaves: async (archivedUserId) => {
+    const response = await axios.get(`/admin/archived-users/${archivedUserId}/leaves`);
+    return response.data;
+  },
+
+  // Delete archived user permanently
+  deleteArchivedUser: async (archivedUserId) => {
+    const response = await axios.delete(`/admin/archived-users/${archivedUserId}`);
     return response.data;
   },
 };

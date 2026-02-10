@@ -4,7 +4,8 @@ import {
   Shield, Building, Phone, Mail, ChevronDown, ChevronUp,
   Eye, EyeOff, Check, X, RefreshCw, Download, MoreHorizontal,
   Calendar, Clock, FileText, AlertCircle, Award, Briefcase,
-  Key, Power, PowerOff, Save, UserCircle
+  Key, Power, PowerOff, Save, UserCircle, RotateCcw, PlayCircle,
+  AlertTriangle, Sparkles, CheckCircle2, XCircle, Info, Archive
 } from 'lucide-react';
 import { MainLayout } from '../../components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
@@ -48,16 +49,41 @@ const UserManagementPage = () => {
   const [selectedRole, setSelectedRole] = useState('all');
   const [sortConfig, setSortConfig] = useState({ key: 'employee_code', direction: 'asc' });
   
+  // Tab state - 'current' หรือ 'archived'
+  const [activeTab, setActiveTab] = useState('current');
+  const [archivedUsers, setArchivedUsers] = useState([]);
+  const [archivedLoading, setArchivedLoading] = useState(false);
+  const [showArchivedDetailModal, setShowArchivedDetailModal] = useState(false);
+  const [selectedArchivedUser, setSelectedArchivedUser] = useState(null);
+  const [archivedUserLeaves, setArchivedUserLeaves] = useState([]);
+  
   // Modals
   const [selectedUser, setSelectedUser] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteMode, setDeleteMode] = useState('deactivate'); // 'deactivate' | 'archive' | 'permanent'
+  const [deleteReason, setDeleteReason] = useState('');
   const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
   const [showLeaveBalanceModal, setShowLeaveBalanceModal] = useState(false);
+  const [showCarryoverModal, setShowCarryoverModal] = useState(false);
+  const [carryoverProcessing, setCarryoverProcessing] = useState(false);
+  const [carryoverResults, setCarryoverResults] = useState(null);
   
-  // Form states
+  // Custom Confirm Modal
+  const [confirmModal, setConfirmModal] = useState({
+    show: false,
+    title: '',
+    message: '',
+    icon: null,
+    iconBg: '',
+    confirmText: 'ยืนยัน',
+    confirmColor: 'bg-red-500 hover:bg-red-600',
+    onConfirm: null
+  });
+  
+  // Form states - ค่าเริ่มต้นตามระเบียบสำนักนายกฯ พ.ศ. 2555
   const [formData, setFormData] = useState({
     employee_code: '',
     password: '',
@@ -69,9 +95,10 @@ const UserManagementPage = () => {
     phone: '',
     email: '',
     role_id: '',
-    sick_leave_balance: 30,
-    personal_leave_balance: 0,
-    vacation_leave_balance: 10
+    hire_date: '',                // วันเริ่มรับราชการ
+    sick_leave_balance: 60,       // สูงสุด 60 วัน/ปี
+    personal_leave_balance: 15,   // ปีแรก 15 วัน
+    vacation_leave_balance: 10    // 10 วัน/ปี
   });
   const [newPassword, setNewPassword] = useState('');
   const [leaveBalanceData, setLeaveBalanceData] = useState({ sick: 0, personal: 0, vacation: 0 });
@@ -84,6 +111,13 @@ const UserManagementPage = () => {
   useEffect(() => {
     filterUsers();
   }, [users, searchTerm, selectedDepartment, selectedRole, sortConfig]);
+
+  // Fetch archived users when tab changes
+  useEffect(() => {
+    if (activeTab === 'archived' && archivedUsers.length === 0) {
+      fetchArchivedUsers();
+    }
+  }, [activeTab]);
 
   const fetchData = async () => {
     try {
@@ -99,6 +133,48 @@ const UserManagementPage = () => {
       toast.error('ไม่สามารถโหลดข้อมูลได้');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch archived users
+  const fetchArchivedUsers = async () => {
+    try {
+      setArchivedLoading(true);
+      const response = await adminAPI.getArchivedUsers();
+      setArchivedUsers(response.data || []);
+    } catch (error) {
+      console.error('Error fetching archived users:', error);
+      toast.error('ไม่สามารถโหลดข้อมูลบุคลากรที่เก็บถาวรได้');
+    } finally {
+      setArchivedLoading(false);
+    }
+  };
+
+  // View archived user details (leave history)
+  const handleViewArchivedUser = async (archivedUser) => {
+    try {
+      setSelectedArchivedUser(archivedUser);
+      const response = await adminAPI.getArchivedUserLeaves(archivedUser.id);
+      setArchivedUserLeaves(response.data?.leaves || []);
+      setShowArchivedDetailModal(true);
+    } catch (error) {
+      console.error('Error fetching archived user leaves:', error);
+      toast.error('ไม่สามารถโหลดประวัติการลาได้');
+    }
+  };
+
+  // Delete archived user permanently
+  const handleDeleteArchivedUser = async (archivedUser) => {
+    if (!confirm(`ต้องการลบข้อมูล ${archivedUser.full_name} ออกถาวรหรือไม่?\nการดำเนินการนี้ไม่สามารถกู้คืนได้`)) {
+      return;
+    }
+    try {
+      await adminAPI.deleteArchivedUser(archivedUser.id);
+      toast.success('ลบข้อมูลถาวรสำเร็จ');
+      setArchivedUsers(prev => prev.filter(u => u.id !== archivedUser.id));
+    } catch (error) {
+      console.error('Error deleting archived user:', error);
+      toast.error('ไม่สามารถลบข้อมูลได้');
     }
   };
 
@@ -159,9 +235,10 @@ const UserManagementPage = () => {
       phone: '',
       email: '',
       role_id: roles.find(r => r.role_name === 'user')?.id || '',
-      sick_leave_balance: 30,
-      personal_leave_balance: 0,
-      vacation_leave_balance: 10
+      hire_date: '',              // วันเริ่มรับราชการ
+      sick_leave_balance: 60,      // สูงสุด 60 วัน/ปี
+      personal_leave_balance: 15,  // ปีแรก 15 วัน
+      vacation_leave_balance: 10   // 10 วัน/ปี
     });
     setShowCreateModal(true);
   };
@@ -240,12 +317,20 @@ const UserManagementPage = () => {
     }
   };
 
-  const handleDeleteUser = async (permanent = false) => {
+  const handleDeleteUser = async () => {
     try {
       setSubmitting(true);
-      await adminAPI.deleteUser(selectedUser.id, permanent);
-      toast.success(permanent ? 'ลบบุคลากรถาวรสำเร็จ' : 'ปิดการใช้งานบุคลากรสำเร็จ');
+      await adminAPI.deleteUser(selectedUser.id, deleteMode, deleteReason);
+      
+      const messages = {
+        deactivate: 'ปิดการใช้งานบุคลากรสำเร็จ',
+        archive: 'ลบบุคลากรและเก็บข้อมูลสำเร็จ',
+        permanent: 'ลบบุคลากรถาวรสำเร็จ'
+      };
+      toast.success(messages[deleteMode]);
       setShowDeleteModal(false);
+      setDeleteMode('deactivate');
+      setDeleteReason('');
       fetchData();
     } catch (error) {
       console.error('Delete user error:', error);
@@ -306,6 +391,93 @@ const UserManagementPage = () => {
     }
   };
 
+  // ================================
+  // Vacation Carryover Functions
+  // ================================
+  
+  // คำนวณปีงบประมาณไทย (1 ต.ค. - 30 ก.ย.)
+  const getCurrentFiscalYear = () => {
+    const today = new Date();
+    const month = today.getMonth();
+    const year = today.getFullYear() + 543;
+    return month >= 9 ? year + 1 : year;
+  };
+
+  // ยกยอดวันลาพักผ่อนสำหรับทุกคน
+  const handleProcessAllCarryover = async (force = false) => {
+    try {
+      setCarryoverProcessing(true);
+      const result = await adminAPI.processAllVacationCarryover(force);
+      setCarryoverResults(result.data);
+      toast.success(`ยกยอดวันลาสำเร็จ ${result.data.processed} คน`);
+      fetchData();
+    } catch (error) {
+      console.error('Process carryover error:', error);
+      toast.error(error.response?.data?.message || 'ไม่สามารถยกยอดวันลาได้');
+    } finally {
+      setCarryoverProcessing(false);
+    }
+  };
+
+  // Reset วันลาประจำปี (ลาป่วย, ลากิจ)
+  const handleResetAnnualLeave = async () => {
+    try {
+      setCarryoverProcessing(true);
+      const result = await adminAPI.resetAnnualLeaveBalance();
+      toast.success(`Reset วันลาประจำปีสำเร็จ ${result.data.updated_count} คน`);
+      fetchData();
+    } catch (error) {
+      console.error('Reset annual leave error:', error);
+      toast.error(error.response?.data?.message || 'ไม่สามารถ Reset วันลาได้');
+    } finally {
+      setCarryoverProcessing(false);
+    }
+  };
+
+  // ยกเลิกการยกยอดวันลาพักผ่อน (กลับเป็น 10 วัน, ยกยอด 0)
+  const handleResetVacationCarryover = () => {
+    setConfirmModal({
+      show: true,
+      title: 'ยกเลิกการยกยอดวันลาพักผ่อน',
+      message: 'ระบบจะ Reset วันลาพักผ่อนเป็นค่าเริ่มต้น',
+      details: [
+        { label: 'วันลาพักผ่อน', value: '10 วัน' },
+        { label: 'ยกยอด', value: '0 วัน' }
+      ],
+      warning: 'การดำเนินการนี้จะมีผลกับบุคลากรทุกคน',
+      icon: <AlertTriangle className="w-8 h-8" />,
+      iconBg: 'bg-red-100',
+      iconColor: 'text-red-600',
+      confirmText: 'ยืนยันยกเลิกการยกยอด',
+      confirmColor: 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700',
+      onConfirm: async () => {
+        try {
+          setCarryoverProcessing(true);
+          setConfirmModal(prev => ({ ...prev, show: false }));
+          const result = await adminAPI.resetVacationCarryover();
+          setCarryoverResults(null);
+          toast.success(
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-green-500" />
+              <span>ยกเลิกการยกยอดสำเร็จ <strong>{result.data.updated_count}</strong> คน</span>
+            </div>
+          );
+          fetchData();
+        } catch (error) {
+          console.error('Reset vacation carryover error:', error);
+          toast.error(
+            <div className="flex items-center gap-2">
+              <XCircle className="w-5 h-5 text-red-500" />
+              <span>{error.response?.data?.message || 'ไม่สามารถยกเลิกการยกยอดได้'}</span>
+            </div>
+          );
+        } finally {
+          setCarryoverProcessing(false);
+        }
+      }
+    });
+  };
+
   const getRoleStyle = (roleName) => {
     return ROLE_STYLES[roleName] || ROLE_STYLES['user'];
   };
@@ -341,27 +513,69 @@ const UserManagementPage = () => {
             </div>
             <div className="flex items-center gap-4">
               <div className="text-center px-5 py-2 bg-white/10 rounded-xl">
-                <p className="text-3xl font-bold text-white">{users.length}</p>
-                <p className="text-slate-300 text-xs">บุคลากรทั้งหมด</p>
+                <p className="text-3xl font-bold text-white">{activeTab === 'current' ? users.length : archivedUsers.length}</p>
+                <p className="text-slate-300 text-xs">{activeTab === 'current' ? 'บุคลากรทั้งหมด' : 'ข้อมูลที่เก็บถาวร'}</p>
               </div>
+              {activeTab === 'current' && (
+                <>
+                  <button 
+                    onClick={handleOpenCreateModal}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl transition-colors font-semibold shadow-lg"
+                  >
+                    <UserPlus className="w-5 h-5" />
+                    <span>เพิ่มบุคลากร</span>
+                  </button>
+                  <button 
+                    onClick={() => setShowCarryoverModal(true)}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl transition-colors font-semibold shadow-lg"
+                    title="ยกยอดวันลาพักผ่อนประจำปี"
+                  >
+                    <RotateCcw className="w-5 h-5" />
+                    <span>ยกยอดวันลา</span>
+                  </button>
+                </>
+              )}
               <button 
-                onClick={handleOpenCreateModal}
-                className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl transition-colors font-semibold shadow-lg"
-              >
-                <UserPlus className="w-5 h-5" />
-                <span>เพิ่มบุคลากร</span>
-              </button>
-              <button 
-                onClick={fetchData}
+                onClick={activeTab === 'current' ? fetchData : fetchArchivedUsers}
                 className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-700 rounded-xl transition-colors font-semibold shadow-lg"
               >
-                <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`w-5 h-5 ${(activeTab === 'current' ? loading : archivedLoading) ? 'animate-spin' : ''}`} />
                 <span>รีเฟรช</span>
               </button>
             </div>
           </div>
         </div>
 
+        {/* Tab Switcher */}
+        <div className="bg-white rounded-xl shadow-md border p-2 flex gap-2">
+          <button
+            onClick={() => setActiveTab('current')}
+            className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${
+              activeTab === 'current'
+                ? 'bg-slate-700 text-white shadow-lg'
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <Users className="w-5 h-5" />
+            <span>บุคลากรปัจจุบัน</span>
+            <span className="ml-2 px-2 py-0.5 bg-white/20 rounded-full text-sm">{users.length}</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('archived')}
+            className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${
+              activeTab === 'archived'
+                ? 'bg-slate-700 text-white shadow-lg'
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <Archive className="w-5 h-5" />
+            <span>ข้อมูลที่เก็บถาวร</span>
+            <span className="ml-2 px-2 py-0.5 bg-white/20 rounded-full text-sm">{archivedUsers.length}</span>
+          </button>
+        </div>
+
+        {activeTab === 'current' ? (
+          <>
         {/* Stats & Filters Combined Section */}
         <div className="bg-white rounded-xl shadow-md border overflow-hidden">
           {/* Stats Row */}
@@ -605,8 +819,11 @@ const UserManagementPage = () => {
                               <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs font-semibold border border-slate-300" title="ลากิจ">
                                 ก.{user.personal_leave_balance || 0}
                               </span>
-                              <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs font-semibold border border-slate-300" title="ลาพักผ่อน">
-                                พ.{user.vacation_leave_balance || 0}
+                              <span 
+                                className={`px-2 py-0.5 rounded text-xs font-semibold border ${user.vacation_carryover > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : 'bg-slate-100 text-slate-700 border-slate-300'}`} 
+                                title={user.vacation_carryover > 0 ? `ลาพักผ่อน (ปีนี้ ${user.vacation_leave_balance || 0} + ยกยอด ${user.vacation_carryover})` : 'ลาพักผ่อน'}
+                              >
+                                พ.{user.total_vacation_balance || (user.vacation_leave_balance || 0) + (user.vacation_carryover || 0)}
                               </span>
                             </div>
                           </td>
@@ -675,6 +892,106 @@ const UserManagementPage = () => {
             )}
           </CardContent>
         </Card>
+          </>
+        ) : (
+          /* Archived Users Tab */
+          <Card className="shadow-lg border overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-slate-700 to-slate-800 px-6 py-4">
+              <CardTitle className="text-lg font-semibold text-white flex items-center gap-2">
+                <Archive className="w-5 h-5" />
+                บุคลากรที่เก็บถาวร
+                <span className="ml-2 text-sm font-normal text-slate-300">({archivedUsers.length} รายการ)</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              {archivedLoading ? (
+                <div className="flex items-center justify-center py-20">
+                  <RefreshCw className="w-8 h-8 animate-spin text-slate-500" />
+                </div>
+              ) : archivedUsers.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 text-slate-500">
+                  <Archive className="w-16 h-16 text-slate-300 mb-4" />
+                  <p className="text-lg font-medium">ไม่มีข้อมูลบุคลากรที่เก็บถาวร</p>
+                  <p className="text-sm text-slate-400 mt-1">เมื่อลบบุคลากรแบบ "ลบและเก็บข้อมูล" ข้อมูลจะแสดงที่นี่</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-slate-50 border-b">
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">ลำดับ</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">รหัส</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">ชื่อ-นามสกุล</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">ตำแหน่ง</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">สังกัด</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">บทบาท</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">วันที่เก็บถาวร</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">เหตุผล</th>
+                        <th className="px-6 py-3 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider">ดำเนินการ</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200">
+                      {archivedUsers.map((user, index) => (
+                        <tr key={user.id} className="hover:bg-slate-50 transition-colors">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{index + 1}</td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="font-mono text-sm font-bold text-slate-700">{user.employee_code}</span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                                {user.first_name?.charAt(0) || 'U'}
+                              </div>
+                              <div>
+                                <p className="font-semibold text-slate-900">{user.title}{user.first_name} {user.last_name}</p>
+                                {user.phone && <p className="text-xs text-slate-500">{user.phone}</p>}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{user.position || '-'}</td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="px-2 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-700">
+                              {DEPARTMENT_CODES[user.department]?.short || user.department || '-'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="px-2 py-1 rounded-lg text-xs font-medium bg-blue-100 text-blue-700">
+                              {ROLE_STYLES[user.role_name]?.label || user.role_name || '-'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                            {user.archived_at ? new Date(user.archived_at).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 max-w-[150px] truncate" title={user.archive_reason}>
+                            {user.archive_reason || '-'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <button
+                                onClick={() => handleViewArchivedUser(user)}
+                                className="p-2 hover:bg-blue-100 rounded-lg transition-colors text-blue-600"
+                                title="ดูประวัติการลา"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteArchivedUser(user)}
+                                className="p-2 hover:bg-red-100 rounded-lg transition-colors text-red-600"
+                                title="ลบถาวร"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* User Detail Modal */}
         {showDetailModal && selectedUser && (
@@ -791,10 +1108,27 @@ const UserManagementPage = () => {
                       <div className="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-2 border border-slate-300">
                         <FileText className="w-7 h-7 text-slate-600" />
                       </div>
-                      <p className="text-3xl font-bold text-slate-700">{selectedUser.vacation_leave_balance || 0}</p>
+                      <p className="text-3xl font-bold text-emerald-600">{selectedUser.total_vacation_balance || (selectedUser.vacation_leave_balance || 0) + (selectedUser.vacation_carryover || 0)}</p>
                       <p className="text-sm text-slate-600 mt-1 font-medium">วันลาพักผ่อน</p>
+                      {(selectedUser.vacation_carryover > 0) && (
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          (ปีนี้ {selectedUser.vacation_leave_balance || 0} + ยกยอด {selectedUser.vacation_carryover})
+                        </p>
+                      )}
                     </div>
                   </div>
+                  
+                  {/* แสดงข้อมูลอายุราชการ */}
+                  {selectedUser.hire_date && (
+                    <div className="mt-4 pt-3 border-t border-slate-200">
+                      <p className="text-sm text-slate-600">
+                        <span className="font-semibold">วันเริ่มรับราชการ:</span> {new Date(selectedUser.hire_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}
+                        <span className="ml-3 text-slate-500">
+                          (อายุราชการ: {Math.max(0, Math.floor((new Date() - new Date(selectedUser.hire_date)) / (365.25 * 24 * 60 * 60 * 1000)))} ปี)
+                        </span>
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Action Buttons */}
@@ -959,38 +1293,109 @@ const UserManagementPage = () => {
                   </select>
                 </div>
 
+                {/* วันเริ่มรับราชการ */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">
+                    วันเริ่มรับราชการ
+                    <span className="font-normal text-slate-500 ml-1">(ใช้คำนวณสิทธิ์ยกยอดลาพักผ่อน)</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.hire_date}
+                    onChange={(e) => setFormData({ ...formData, hire_date: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-400"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    อายุราชการ &lt; 10 ปี: สะสมวันลาพักผ่อนได้สูงสุด 20 วัน | ≥ 10 ปี: สะสมได้สูงสุด 30 วัน
+                  </p>
+                </div>
+
                 <div className="border-t pt-4">
-                  <h4 className="font-semibold text-slate-700 mb-3">วันลาเริ่มต้น</h4>
+                  <h4 className="font-semibold text-slate-700 mb-3 flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-emerald-600" />
+                    สิทธิ์การลาเริ่มต้น (ตามระเบียบสำนักนายกรัฐมนตรี พ.ศ. 2555)
+                  </h4>
+                  
+                  {/* Info Box */}
+                  <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <div className="text-sm text-blue-800">
+                        <p className="font-semibold mb-1">หมายเหตุ:</p>
+                        <ul className="list-disc list-inside space-y-0.5 text-xs">
+                          <li>ลาป่วย: มาแล้วกี่วัน (เริ่มต้น 0 คือยังไม่เคยลา, สูงสุด 60 วัน/ปี)</li>
+                          <li>ลากิจ: ปีแรก 15 วัน, ปีต่อไป 45 วัน</li>
+                          <li>ลาพักผ่อน: 10 วัน/ปี (ผู้รับราชการยังไม่ถึง 6 เดือนไม่มีสิทธิ์)</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm text-slate-600 mb-1">ลาป่วย</label>
+                    <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                      <label className="block text-sm font-semibold text-slate-700 mb-1">
+                        ลาป่วยมาแล้ว (วัน)
+                      </label>
                       <input
                         type="number"
                         value={formData.sick_leave_balance}
                         onChange={(e) => setFormData({ ...formData, sick_leave_balance: parseInt(e.target.value) || 0 })}
-                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-400"
+                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-400 text-center font-bold text-lg"
                         min="0"
+                        max="60"
                       />
+                      <p className="text-xs text-slate-500 mt-1 text-center">สูงสุด 60 วัน/ปี</p>
                     </div>
-                    <div>
-                      <label className="block text-sm text-slate-600 mb-1">ลากิจ</label>
+                    <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                      <label className="block text-sm font-semibold text-slate-700 mb-1">
+                        ลากิจคงเหลือ (วัน)
+                      </label>
                       <input
                         type="number"
                         value={formData.personal_leave_balance}
                         onChange={(e) => setFormData({ ...formData, personal_leave_balance: parseInt(e.target.value) || 0 })}
-                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-400"
+                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-400 text-center font-bold text-lg"
                         min="0"
+                        max="45"
                       />
+                      <p className="text-xs text-slate-500 mt-1 text-center">ปีแรก 15 / ปีต่อไป 45 วัน</p>
                     </div>
-                    <div>
-                      <label className="block text-sm text-slate-600 mb-1">ลาพักผ่อน</label>
+                    <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                      <label className="block text-sm font-semibold text-slate-700 mb-1">
+                        ลาพักผ่อนคงเหลือ (วัน)
+                      </label>
                       <input
                         type="number"
                         value={formData.vacation_leave_balance}
                         onChange={(e) => setFormData({ ...formData, vacation_leave_balance: parseInt(e.target.value) || 0 })}
-                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-400"
+                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-400 text-center font-bold text-lg"
                         min="0"
+                        max="30"
                       />
+                      <p className="text-xs text-slate-500 mt-1 text-center">10 วัน/ปี (สะสมได้ 20-30 วัน)</p>
+                    </div>
+                  </div>
+
+                  {/* ประเภทลาอื่นๆ */}
+                  <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p className="text-sm font-semibold text-amber-800 mb-2">ประเภทลาอื่นๆ (ตามสิทธิ์อัตโนมัติ):</p>
+                    <div className="grid grid-cols-2 gap-2 text-xs text-amber-700">
+                      <div className="flex items-center gap-1">
+                        <Check className="w-3 h-3" />
+                        <span>ลาคลอดบุตร: 90 วัน/ครรภ์</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Check className="w-3 h-3" />
+                        <span>ลาช่วยภรรยาคลอด: 15 วัน/ครั้ง</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Check className="w-3 h-3" />
+                        <span>ลาอุปสมบท: 120 วัน</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Check className="w-3 h-3" />
+                        <span>ลาเข้ารับการตรวจเลือก: ตามจำเป็น</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1021,7 +1426,7 @@ const UserManagementPage = () => {
         {showEditModal && selectedUser && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
-              <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 flex items-center justify-between text-white">
+              <div className="bg-gradient-to-r from-slate-700 to-slate-800 px-6 py-4 flex items-center justify-between text-white">
                 <h3 className="text-xl font-bold flex items-center gap-2">
                   <Edit2 className="w-6 h-6" />
                   แก้ไขข้อมูลบุคลากร
@@ -1157,18 +1562,19 @@ const UserManagementPage = () => {
         {/* Delete/Disable User Modal */}
         {showDeleteModal && selectedUser && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full">
               <div className="bg-gradient-to-r from-red-600 to-red-700 px-6 py-4 flex items-center justify-between text-white">
                 <h3 className="text-xl font-bold flex items-center gap-2">
                   <AlertCircle className="w-6 h-6" />
-                  ยืนยันการดำเนินการ
+                  ลบ / จัดการบุคลากร
                 </h3>
-                <button onClick={() => setShowDeleteModal(false)} className="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors">
+                <button onClick={() => { setShowDeleteModal(false); setDeleteMode('deactivate'); setDeleteReason(''); }} className="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors">
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               <div className="p-6 space-y-4">
+                {/* User Info */}
                 <div className="flex items-center gap-4 p-4 bg-slate-100 rounded-xl">
                   {selectedUser.profile_image_url ? (
                     <img src={selectedUser.profile_image_url} alt="Profile" className="w-14 h-14 rounded-full object-cover" />
@@ -1183,29 +1589,131 @@ const UserManagementPage = () => {
                   </div>
                 </div>
 
-                <p className="text-slate-600">
-                  คุณต้องการ<span className="font-bold text-red-600">ปิดการใช้งาน</span>บุคลากรนี้หรือไม่?
-                </p>
-                <p className="text-sm text-slate-500">
-                  บุคลากรจะไม่สามารถเข้าสู่ระบบได้จนกว่าจะเปิดใช้งานอีกครั้ง
-                </p>
+                {/* Delete Options */}
+                <div className="space-y-3">
+                  <p className="font-semibold text-slate-700">เลือกวิธีการดำเนินการ:</p>
+                  
+                  {/* Option 1: Deactivate */}
+                  <label className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${deleteMode === 'deactivate' ? 'border-amber-500 bg-amber-50' : 'border-slate-200 hover:border-slate-300'}`}>
+                    <input
+                      type="radio"
+                      name="deleteMode"
+                      value="deactivate"
+                      checked={deleteMode === 'deactivate'}
+                      onChange={(e) => setDeleteMode(e.target.value)}
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <PowerOff className="w-5 h-5 text-amber-600" />
+                        <span className="font-semibold text-amber-700">ปิดการใช้งาน</span>
+                      </div>
+                      <p className="text-sm text-slate-500 mt-1">
+                        บุคลากรจะไม่สามารถเข้าสู่ระบบได้ แต่ข้อมูลยังคงอยู่และ<strong>สามารถเปิดใช้งานได้อีกครั้ง</strong>
+                      </p>
+                    </div>
+                  </label>
 
+                  {/* Option 2: Archive */}
+                  <label className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${deleteMode === 'archive' ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300'}`}>
+                    <input
+                      type="radio"
+                      name="deleteMode"
+                      value="archive"
+                      checked={deleteMode === 'archive'}
+                      onChange={(e) => setDeleteMode(e.target.value)}
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <Archive className="w-5 h-5 text-blue-600" />
+                        <span className="font-semibold text-blue-700">ลบและเก็บข้อมูล</span>
+                      </div>
+                      <p className="text-sm text-slate-500 mt-1">
+                        ลบบุคลากรออกจากระบบ แต่<strong>เก็บข้อมูลและประวัติการลาไว้</strong>สำหรับอ้างอิงในอนาคต
+                      </p>
+                    </div>
+                  </label>
+
+                  {/* Option 3: Permanent Delete */}
+                  <label className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${deleteMode === 'permanent' ? 'border-red-500 bg-red-50' : 'border-slate-200 hover:border-slate-300'}`}>
+                    <input
+                      type="radio"
+                      name="deleteMode"
+                      value="permanent"
+                      checked={deleteMode === 'permanent'}
+                      onChange={(e) => setDeleteMode(e.target.value)}
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <Trash2 className="w-5 h-5 text-red-600" />
+                        <span className="font-semibold text-red-700">ลบถาวรทั้งหมด</span>
+                      </div>
+                      <p className="text-sm text-slate-500 mt-1">
+                        ลบบุคลากรและประวัติการลาทั้งหมดออกจากระบบ <strong className="text-red-600">ไม่สามารถกู้คืนได้</strong>
+                      </p>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Reason input for archive/permanent */}
+                {(deleteMode === 'archive' || deleteMode === 'permanent') && (
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      เหตุผล (ไม่บังคับ)
+                    </label>
+                    <input
+                      type="text"
+                      value={deleteReason}
+                      onChange={(e) => setDeleteReason(e.target.value)}
+                      placeholder="เช่น ลาออก, เกษียณ, โอนย้าย..."
+                      className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                )}
+
+                {/* Warning for permanent delete */}
+                {deleteMode === 'permanent' && (
+                  <div className="flex items-start gap-3 p-3 bg-red-100 border border-red-300 rounded-xl">
+                    <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-red-700">
+                      <strong>คำเตือน:</strong> การดำเนินการนี้จะลบข้อมูลทั้งหมดของบุคลากรออกจากระบบอย่างถาวร รวมถึงประวัติการลาทั้งหมด ไม่สามารถกู้คืนได้
+                    </p>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
                 <div className="flex gap-3 pt-2">
                   <button
                     type="button"
-                    onClick={() => setShowDeleteModal(false)}
+                    onClick={() => { setShowDeleteModal(false); setDeleteMode('deactivate'); setDeleteReason(''); }}
                     className="flex-1 px-4 py-2.5 border border-slate-300 text-slate-700 rounded-xl hover:bg-slate-100 transition-colors font-semibold"
                   >
                     ยกเลิก
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleDeleteUser(false)}
+                    onClick={handleDeleteUser}
                     disabled={submitting}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl transition-colors font-semibold disabled:opacity-50"
+                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-white rounded-xl transition-colors font-semibold disabled:opacity-50 ${
+                      deleteMode === 'permanent' 
+                        ? 'bg-red-600 hover:bg-red-700' 
+                        : deleteMode === 'archive'
+                          ? 'bg-blue-600 hover:bg-blue-700'
+                          : 'bg-amber-500 hover:bg-amber-600'
+                    }`}
                   >
-                    {submitting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <PowerOff className="w-4 h-4" />}
-                    ปิดการใช้งาน
+                    {submitting ? (
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                    ) : deleteMode === 'permanent' ? (
+                      <Trash2 className="w-4 h-4" />
+                    ) : deleteMode === 'archive' ? (
+                      <Archive className="w-4 h-4" />
+                    ) : (
+                      <PowerOff className="w-4 h-4" />
+                    )}
+                    {deleteMode === 'permanent' ? 'ลบถาวร' : deleteMode === 'archive' ? 'ลบและเก็บข้อมูล' : 'ปิดการใช้งาน'}
                   </button>
                 </div>
               </div>
@@ -1357,6 +1865,371 @@ const UserManagementPage = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Vacation Carryover Modal - Modern Design */}
+        {showCarryoverModal && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden animate-in fade-in zoom-in duration-200">
+              {/* Header with gradient and pattern */}
+              <div className="relative bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 px-6 py-5 text-white overflow-hidden">
+                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzRjMC0yLjIwOS0xLjc5MS00LTQtNHMtNCAxLjc5MS00IDQgMS43OTEgNCA0IDQgNC0xLjc5MSA0LTR6bTAtMThjMC0yLjIwOS0xLjc5MS00LTQtNHMtNCAxLjc5MS00IDQgMS43OTEgNCA0IDQgNC0xLjc5MSA0LTR6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-30"></div>
+                <div className="relative flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-white/20 rounded-2xl backdrop-blur-sm">
+                      <Calendar className="w-7 h-7" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold">จัดการวันลาประจำปี</h3>
+                      <p className="text-amber-100 text-sm">ปีงบประมาณ พ.ศ. {getCurrentFiscalYear()}</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      setShowCarryoverModal(false);
+                      setCarryoverResults(null);
+                    }} 
+                    className="p-2.5 bg-white/20 hover:bg-white/30 rounded-xl transition-all hover:rotate-90 duration-300"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+              
+              <div className="p-6 space-y-4 overflow-y-auto max-h-[calc(90vh-180px)]">
+                {/* ข้อมูลปีงบประมาณ */}
+                <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/50 rounded-2xl p-4 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-amber-100 rounded-xl">
+                      <Sparkles className="w-5 h-5 text-amber-600" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-amber-800">ปีงบประมาณ พ.ศ. {getCurrentFiscalYear()}</p>
+                      <p className="text-sm text-amber-600">1 ต.ค. {getCurrentFiscalYear() - 1} - 30 ก.ย. {getCurrentFiscalYear()}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* กฎเกณฑ์วันลา */}
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/50 rounded-2xl p-4 shadow-sm">
+                  <h4 className="font-bold text-blue-800 mb-3 flex items-center gap-2">
+                    <Info className="w-5 h-5" />
+                    กฎเกณฑ์วันลาพักผ่อน
+                  </h4>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="text-center p-3 bg-white/80 rounded-xl border border-blue-100">
+                      <p className="text-2xl font-bold text-blue-600">10</p>
+                      <p className="text-xs text-slate-600">วัน/ปี</p>
+                    </div>
+                    <div className="text-center p-3 bg-white/80 rounded-xl border border-blue-100">
+                      <p className="text-2xl font-bold text-blue-600">20</p>
+                      <p className="text-xs text-slate-600">&lt;10ปี สะสม</p>
+                    </div>
+                    <div className="text-center p-3 bg-white/80 rounded-xl border border-blue-100">
+                      <p className="text-2xl font-bold text-blue-600">30</p>
+                      <p className="text-xs text-slate-600">≥10ปี สะสม</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* แสดงผลลัพธ์ */}
+                {carryoverResults && (
+                  <div className="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200/50 rounded-2xl p-4 shadow-sm animate-in slide-in-from-bottom duration-300">
+                    <h4 className="font-bold text-emerald-800 mb-3 flex items-center gap-2">
+                      <CheckCircle2 className="w-5 h-5" />
+                      ดำเนินการเรียบร้อย
+                    </h4>
+                    <div className="grid grid-cols-2 gap-3 mb-3">
+                      <div className="text-center p-4 bg-white rounded-xl border border-emerald-200 shadow-sm">
+                        <p className="text-3xl font-bold bg-gradient-to-r from-emerald-500 to-green-500 bg-clip-text text-transparent">{carryoverResults.processed}</p>
+                        <p className="text-sm text-slate-600 mt-1">สำเร็จ</p>
+                      </div>
+                      <div className="text-center p-4 bg-white rounded-xl border border-red-200 shadow-sm">
+                        <p className="text-3xl font-bold text-red-500">{carryoverResults.failed}</p>
+                        <p className="text-sm text-slate-600 mt-1">ล้มเหลว</p>
+                      </div>
+                    </div>
+                    {carryoverResults.results?.length > 0 && (
+                      <div className="max-h-28 overflow-y-auto space-y-1.5 scrollbar-thin">
+                        {carryoverResults.results.slice(0, 5).map((r, i) => (
+                          <div key={i} className="flex justify-between items-center bg-white p-2.5 rounded-lg border border-emerald-100 text-sm">
+                            <span className="text-slate-700">{r.name}</span>
+                            <span className="text-emerald-600 font-medium flex items-center gap-1">
+                              <span className="text-slate-400">{r.new_carryover}+10</span>
+                              <span>→</span>
+                              <span className="font-bold">{r.total_available} วัน</span>
+                            </span>
+                          </div>
+                        ))}
+                        {carryoverResults.results.length > 5 && (
+                          <p className="text-center text-slate-500 text-xs pt-1">
+                            และอีก {carryoverResults.results.length - 5} คน...
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* ปุ่มดำเนินการ */}
+                <div className="space-y-3 pt-2">
+                  <button
+                    onClick={() => handleProcessAllCarryover(false)}
+                    disabled={carryoverProcessing}
+                    className="group w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white rounded-xl transition-all font-semibold disabled:opacity-50 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40"
+                  >
+                    {carryoverProcessing ? (
+                      <RefreshCw className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <PlayCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                    )}
+                    <span>ยกยอดวันลาพักผ่อน</span>
+                    <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">เฉพาะคนที่ยังไม่ได้ยกยอด</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => handleProcessAllCarryover(true)}
+                    disabled={carryoverProcessing}
+                    className="group w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl transition-all font-semibold disabled:opacity-50 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40"
+                  >
+                    {carryoverProcessing ? (
+                      <RefreshCw className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <RotateCcw className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
+                    )}
+                    <span>บังคับยกยอดทุกคน</span>
+                    <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">Reset ใหม่</span>
+                  </button>
+
+                  <div className="border-t border-slate-200 pt-3">
+                    <button
+                      onClick={handleResetAnnualLeave}
+                      disabled={carryoverProcessing}
+                      className="group w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-xl transition-all font-semibold disabled:opacity-50 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40"
+                    >
+                      {carryoverProcessing ? (
+                        <RefreshCw className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <RefreshCw className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
+                      )}
+                      Reset ลาป่วย/ลากิจ ประจำปี
+                    </button>
+                    <p className="text-xs text-slate-400 mt-2 text-center">
+                      ลาป่วย = 60 วัน, ลากิจ = 15 วัน
+                    </p>
+                  </div>
+
+                  {/* ยกเลิกการยกยอด */}
+                  <div className="border-t border-slate-200 pt-3">
+                    <button
+                      onClick={handleResetVacationCarryover}
+                      disabled={carryoverProcessing}
+                      className="group w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white rounded-xl transition-all font-semibold disabled:opacity-50 shadow-lg shadow-red-500/25 hover:shadow-red-500/40"
+                    >
+                      {carryoverProcessing ? (
+                        <RefreshCw className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <XCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                      )}
+                      ยกเลิกการยกยอด (กลับเป็นเดิม)
+                    </button>
+                    <p className="text-xs text-slate-400 mt-2 text-center">
+                      Reset วันลาพักผ่อน = 10 วัน, ยกยอด = 0 วัน
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setShowCarryoverModal(false);
+                    setCarryoverResults(null);
+                  }}
+                  className="w-full px-4 py-3 border-2 border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all font-semibold"
+                >
+                  ปิด
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Archived User Detail Modal */}
+        {showArchivedDetailModal && selectedArchivedUser && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-slate-700 to-slate-800 px-6 py-4 flex items-center justify-between text-white">
+                <h3 className="text-xl font-bold flex items-center gap-2">
+                  <Archive className="w-6 h-6" />
+                  ข้อมูลบุคลากรที่เก็บถาวร
+                </h3>
+                <button 
+                  onClick={() => setShowArchivedDetailModal(false)} 
+                  className="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-6 overflow-y-auto max-h-[calc(90vh-160px)]">
+                {/* User Info */}
+                <div className="flex items-center gap-4 p-4 bg-slate-100 rounded-xl mb-6">
+                  <div className="w-16 h-16 rounded-full bg-slate-300 flex items-center justify-center text-slate-700 text-2xl font-bold">
+                    {selectedArchivedUser.first_name?.charAt(0) || 'U'}
+                  </div>
+                  <div>
+                    <p className="text-xl font-bold text-slate-900">{selectedArchivedUser.title}{selectedArchivedUser.first_name} {selectedArchivedUser.last_name}</p>
+                    <p className="text-slate-500">รหัส: {selectedArchivedUser.employee_code}</p>
+                    <p className="text-sm text-slate-400">{selectedArchivedUser.position || '-'} • {DEPARTMENT_CODES[selectedArchivedUser.department]?.full || selectedArchivedUser.department}</p>
+                  </div>
+                </div>
+
+                {/* Archive Info */}
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="bg-slate-50 rounded-xl p-4">
+                    <p className="text-sm text-slate-500">วันที่เก็บถาวร</p>
+                    <p className="font-semibold text-slate-800">
+                      {selectedArchivedUser.archived_at ? new Date(selectedArchivedUser.archived_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}
+                    </p>
+                  </div>
+                  <div className="bg-slate-50 rounded-xl p-4">
+                    <p className="text-sm text-slate-500">เหตุผล</p>
+                    <p className="font-semibold text-slate-800">{selectedArchivedUser.archive_reason || 'ไม่ระบุ'}</p>
+                  </div>
+                  <div className="bg-slate-50 rounded-xl p-4">
+                    <p className="text-sm text-slate-500">วันลาป่วยคงเหลือ (ตอนลบ)</p>
+                    <p className="font-semibold text-slate-800">{selectedArchivedUser.last_sick_leave_balance || 0} วัน</p>
+                  </div>
+                  <div className="bg-slate-50 rounded-xl p-4">
+                    <p className="text-sm text-slate-500">วันลากิจคงเหลือ (ตอนลบ)</p>
+                    <p className="font-semibold text-slate-800">{selectedArchivedUser.last_personal_leave_balance || 0} วัน</p>
+                  </div>
+                </div>
+
+                {/* Leave History */}
+                <div>
+                  <h4 className="text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-slate-600" />
+                    ประวัติการลา ({archivedUserLeaves.length} รายการ)
+                  </h4>
+                  {archivedUserLeaves.length === 0 ? (
+                    <div className="text-center py-8 text-slate-500 bg-slate-50 rounded-xl">
+                      <FileText className="w-12 h-12 mx-auto text-slate-300 mb-2" />
+                      <p>ไม่มีประวัติการลา</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 max-h-[300px] overflow-y-auto">
+                      {archivedUserLeaves.map((leave) => (
+                        <div key={leave.id} className="border rounded-xl p-4 hover:bg-slate-50 transition-colors">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="font-semibold text-slate-800">{leave.leave_types?.type_name || 'ไม่ระบุประเภท'}</p>
+                              <p className="text-sm text-slate-500">
+                                {new Date(leave.start_date).toLocaleDateString('th-TH')} - {new Date(leave.end_date).toLocaleDateString('th-TH')}
+                              </p>
+                              {leave.reason && (
+                                <p className="text-sm text-slate-600 mt-1">
+                                  {(() => {
+                                    try {
+                                      const parsed = JSON.parse(leave.reason);
+                                      return parsed.reason || leave.reason;
+                                    } catch {
+                                      return leave.reason;
+                                    }
+                                  })()}
+                                </p>
+                              )}
+                            </div>
+                            <div className="text-right">
+                              <span className={`px-2 py-1 rounded-lg text-xs font-medium ${
+                                leave.status === 'approved' ? 'bg-green-100 text-green-700' :
+                                leave.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                                leave.status === 'cancelled' ? 'bg-slate-100 text-slate-700' :
+                                'bg-amber-100 text-amber-700'
+                              }`}>
+                                {leave.status === 'approved' ? 'อนุมัติ' :
+                                 leave.status === 'rejected' ? 'ไม่อนุมัติ' :
+                                 leave.status === 'cancelled' ? 'ยกเลิก' : 'รอดำเนินการ'}
+                              </span>
+                              <p className="text-sm text-slate-500 mt-1">{leave.total_days} วัน</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="border-t px-6 py-4 bg-slate-50">
+                <button
+                  onClick={() => setShowArchivedDetailModal(false)}
+                  className="w-full px-4 py-2.5 bg-slate-700 hover:bg-slate-800 text-white rounded-xl transition-colors font-semibold"
+                >
+                  ปิด
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Custom Confirm Modal - Modern Design */}
+        {confirmModal.show && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[60] flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in duration-200">
+              {/* Icon Header */}
+              <div className="pt-8 pb-4 flex justify-center">
+                <div className={`p-4 rounded-full ${confirmModal.iconBg || 'bg-red-100'} animate-in zoom-in duration-300`}>
+                  <span className={confirmModal.iconColor || 'text-red-600'}>
+                    {confirmModal.icon}
+                  </span>
+                </div>
+              </div>
+              
+              {/* Content */}
+              <div className="px-6 pb-6 text-center">
+                <h3 className="text-xl font-bold text-slate-800 mb-2">{confirmModal.title}</h3>
+                <p className="text-slate-600 mb-4">{confirmModal.message}</p>
+                
+                {/* Details */}
+                {confirmModal.details && (
+                  <div className="bg-slate-50 rounded-xl p-4 mb-4 space-y-2">
+                    {confirmModal.details.map((detail, i) => (
+                      <div key={i} className="flex justify-between items-center">
+                        <span className="text-slate-600">{detail.label}</span>
+                        <span className="font-bold text-slate-800">{detail.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {/* Warning */}
+                {confirmModal.warning && (
+                  <div className="flex items-center gap-2 justify-center text-amber-600 bg-amber-50 rounded-lg px-4 py-2.5 mb-4">
+                    <AlertTriangle className="w-4 h-4" />
+                    <span className="text-sm">{confirmModal.warning}</span>
+                  </div>
+                )}
+                
+                {/* Buttons */}
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={() => setConfirmModal(prev => ({ ...prev, show: false }))}
+                    className="flex-1 px-4 py-3 border-2 border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all font-semibold"
+                  >
+                    ยกเลิก
+                  </button>
+                  <button
+                    onClick={confirmModal.onConfirm}
+                    className={`flex-1 px-4 py-3 text-white rounded-xl transition-all font-semibold shadow-lg ${confirmModal.confirmColor}`}
+                  >
+                    {confirmModal.confirmText}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}

@@ -1,5 +1,6 @@
 import app from './app.js';
 import { testConnection } from './config/supabase.js';
+import { startFiscalYearScheduler, checkAndProcessCarryoverIfNeeded } from './services/fiscalYearScheduler.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -37,6 +38,12 @@ const startServer = async () => {
       console.log('   GET  /api/leaves/:id        - Get leave details');
       console.log('   PUT  /api/leaves/:id/cancel - Cancel leave');
       console.log('========================================\n');
+      
+      // เริ่มต้น Fiscal Year Scheduler
+      startFiscalYearScheduler();
+      
+      // ตรวจสอบและยกยอดวันลาถ้าจำเป็น (กรณี server restart หลังวันที่ 1 ต.ค.)
+      checkAndProcessCarryoverIfNeeded();
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);
