@@ -307,11 +307,15 @@ export const getMyLeaves = async (req, res) => {
     // แยก reason และ selected_dates จาก JSON
     const processedLeaves = leaves.map(leave => {
       let actualReason = leave.reason;
-      let selectedDatesArray = [];
+      let selectedDatesArray = leave.selected_dates || [];
+      
+      // ถ้า column ว่าง ลองดึงจาก reason JSON
       try {
         const parsed = JSON.parse(leave.reason);
-        if (parsed.reason && parsed.selected_dates) {
+        if (parsed.reason) {
           actualReason = parsed.reason;
+        }
+        if (parsed.selected_dates && (!selectedDatesArray || selectedDatesArray.length === 0)) {
           selectedDatesArray = parsed.selected_dates;
         }
       } catch (e) {

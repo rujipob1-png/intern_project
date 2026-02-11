@@ -170,12 +170,22 @@ export default function CentralOfficeStaffDashboard() {
       {/* Header */}
       <div className="bg-gradient-to-r from-slate-600 to-slate-700 rounded-xl p-6 text-white shadow-lg">
         <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-xl font-bold flex items-center gap-3">
-              <ClipboardCheck className="w-7 h-7" />
-              ตรวจสอบเอกสารการลา
-            </h1>
-            <p className="text-slate-300 mt-1">สำนักงานกลาง - เจ้าหน้าที่ (Level 2)</p>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate('/')}
+              className="group flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 rounded-xl transition-all duration-200 hover:shadow-md"
+              title="กลับหน้าหลัก"
+            >
+              <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-200" />
+              <span className="text-sm font-medium">หน้าหลัก</span>
+            </button>
+            <div>
+              <h1 className="text-xl font-bold flex items-center gap-3">
+                <ClipboardCheck className="w-7 h-7" />
+                ตรวจสอบเอกสารการลา
+              </h1>
+              <p className="text-slate-300 mt-1">สำนักงานกลาง - เจ้าหน้าที่ (Level 2)</p>
+            </div>
           </div>
           <div className="bg-white/10 backdrop-blur rounded-lg px-6 py-3 text-center border border-slate-400">
             <div className="text-3xl font-bold">{pendingLeaves.length}</div>

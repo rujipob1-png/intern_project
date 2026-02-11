@@ -402,9 +402,18 @@ export const LeaveHistoryPage = () => {
                       <td className="px-8 py-5 whitespace-nowrap">
                         <div className="flex items-center gap-1.5 text-sm text-slate-700">
                           <Calendar className="w-4 h-4 text-slate-400" />
-                          <span className="font-medium">{formatDate(leave.startDate || leave.start_date)}</span>
-                          <span className="text-slate-400">→</span>
-                          <span className="font-medium">{formatDate(leave.endDate || leave.end_date)}</span>
+                          {leave.selectedDates && leave.selectedDates.length > 0 ? (
+                            <span className="font-medium">
+                              {leave.selectedDates.slice(0, 3).map(d => formatDate(d)).join(', ')}
+                              {leave.selectedDates.length > 3 && ` (+${leave.selectedDates.length - 3})`}
+                            </span>
+                          ) : (
+                            <>
+                              <span className="font-medium">{formatDate(leave.startDate || leave.start_date)}</span>
+                              <span className="text-slate-400">→</span>
+                              <span className="font-medium">{formatDate(leave.endDate || leave.end_date)}</span>
+                            </>
+                          )}
                         </div>
                       </td>
                       <td className="px-8 py-5 whitespace-nowrap text-center">

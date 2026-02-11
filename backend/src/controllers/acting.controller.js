@@ -357,6 +357,7 @@ export const getActingRequests = async (req, res) => {
         start_date,
         end_date,
         total_days,
+        selected_dates,
         reason,
         acting_approved,
         created_at,
@@ -376,9 +377,33 @@ export const getActingRequests = async (req, res) => {
 
     if (error) throw error;
 
+    // Parse selected_dates จาก reason JSON ถ้า column ว่าง
+    const processedRequests = requests.map(request => {
+      let selectedDates = request.selected_dates;
+      
+      // ถ้า selected_dates column ว่าง ลองดึงจาก reason JSON
+      if ((!selectedDates || selectedDates.length === 0) && request.reason) {
+        try {
+          if (typeof request.reason === 'string' && request.reason.trim().startsWith('{')) {
+            const parsed = JSON.parse(request.reason);
+            if (parsed.selected_dates && Array.isArray(parsed.selected_dates)) {
+              selectedDates = parsed.selected_dates;
+            }
+          }
+        } catch (e) {
+          // ignore parse error
+        }
+      }
+      
+      return {
+        ...request,
+        selected_dates: selectedDates
+      };
+    });
+
     res.json({
       success: true,
-      data: requests
+      data: processedRequests
     });
   } catch (error) {
     console.error('Error fetching acting requests:', error);

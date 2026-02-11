@@ -9,6 +9,7 @@ import { ArrowLeft, UserCheck, Calendar, FileText, Check } from 'lucide-react';
 import { getActingRequests, approveActingRequest } from '../../api/acting.api';
 import { Button } from '../../components/common/Button';
 import { Card } from '../../components/common/Card';
+import { getDepartmentThaiCode } from '../../utils/departmentMapping';
 import toast from 'react-hot-toast';
 
 export const ActingRequestsPage = () => {
@@ -70,6 +71,20 @@ export const ActingRequestsPage = () => {
     return start === end ? start : `${start} - ${end}`;
   };
 
+  // แสดงวันที่จาก selected_dates (วันที่เลือกจริงๆ)
+  const formatSelectedDates = (request) => {
+    // ถ้ามี selected_dates ให้แสดงวันที่เลือกจริงๆ
+    if (request.selected_dates && Array.isArray(request.selected_dates) && request.selected_dates.length > 0) {
+      const dates = request.selected_dates.map(d => {
+        const date = new Date(d);
+        return date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+      });
+      return dates.join(', ');
+    }
+    // ถ้าไม่มี selected_dates ใช้ start-end แบบเดิม
+    return formatDateRange(request.start_date, request.end_date);
+  };
+
   return (
     <div className="max-w-5xl mx-auto py-4 px-4">
       {/* Header */}
@@ -116,7 +131,7 @@ export const ActingRequestsPage = () => {
                         {request.users?.title}{request.users?.first_name} {request.users?.last_name}
                       </h3>
                       <p className="text-sm text-slate-600">
-                        {request.users?.position} • {request.users?.department}
+                        {request.users?.position} • {getDepartmentThaiCode(request.users?.department)}
                       </p>
                     </div>
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
@@ -127,18 +142,18 @@ export const ActingRequestsPage = () => {
                   {/* Leave Info */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div className="flex items-start gap-2">
-                      <Calendar className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <Calendar className="w-5 h-5 text-slate-600 mt-0.5 flex-shrink-0" />
                       <div>
-                        <p className="text-xs text-slate-500 font-medium">ระยะเวลา</p>
+                        <p className="text-xs text-slate-500 font-medium">วันที่ลา</p>
                         <p className="text-sm text-slate-900">
-                          {formatDateRange(request.start_date, request.end_date)}
+                          {formatSelectedDates(request)}
                         </p>
                         <p className="text-xs text-slate-600">({request.total_days} วัน)</p>
                       </div>
                     </div>
 
                     <div className="flex items-start gap-2">
-                      <FileText className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <FileText className="w-5 h-5 text-slate-600 mt-0.5 flex-shrink-0" />
                       <div>
                         <p className="text-xs text-slate-500 font-medium">ประเภทการลา</p>
                         <p className="text-sm text-slate-900">{request.leave_types?.type_name}</p>
@@ -194,16 +209,16 @@ export const ActingRequestsPage = () => {
       )}
 
       {/* Info Card */}
-      <Card className="mt-6 bg-blue-50 border-blue-200">
+      <Card className="mt-6 bg-slate-50 border-slate-200">
         <div className="flex gap-3">
           <div className="flex-shrink-0">
-            <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-slate-600 rounded-lg flex items-center justify-center">
               <span className="text-xl">ℹ️</span>
             </div>
           </div>
           <div className="flex-1">
-            <h4 className="font-semibold text-blue-900 mb-2">เกี่ยวกับการปฏิบัติหน้าที่แทน</h4>
-            <ul className="text-sm text-blue-800 space-y-1">
+            <h4 className="font-semibold text-slate-900 mb-2">เกี่ยวกับการปฏิบัติหน้าที่แทน</h4>
+            <ul className="text-sm text-slate-700 space-y-1">
               <li>• เมื่อยอมรับแล้ว คุณจะต้องปฏิบัติหน้าที่แทนเพื่อนร่วมงานระหว่างที่ท่านลา</li>
               <li>• ระบบจะแจ้งเตือนให้คุณทราบเมื่อมีคำขอใหม่</li>
               <li>• สามารถดูรายละเอียดการลาได้จากหน้าประวัติการลา</li>

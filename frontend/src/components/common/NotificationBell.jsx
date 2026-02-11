@@ -150,6 +150,9 @@ export const NotificationBell = () => {
       } else {
         navigate(`/leave-detail/${notification.reference_id}`);
       }
+    } else if (notificationType === 'acting_request') {
+      // คำขอปฏิบัติหน้าที่แทน - ไปหน้า acting requests
+      navigate('/acting-requests');
     } else if (notificationType === 'cancel_request' || notificationType === 'cancel_pending') {
       // คำขอยกเลิกการลา - ไปหน้าอนุมัติยกเลิกตาม role
       if (userRole === 'director') {
