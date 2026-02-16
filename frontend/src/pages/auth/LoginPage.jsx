@@ -119,17 +119,17 @@ export const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 flex items-center justify-center p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 sm:p-6 lg:p-8">
       <div className="w-full max-w-md mx-auto">
         {/* Logo & Title */}
         <div className="text-center mb-8 animate-fade-in">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-slate-700 to-slate-900 rounded-2xl shadow-lg mb-6 transform hover:scale-105 transition-transform duration-300">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gray-800 rounded-2xl shadow-lg mb-6 transform hover:scale-105 transition-transform duration-300">
             <Building2 className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-4xl font-bold text-slate-800 mb-3 tracking-tight">
+          <h1 className="text-4xl font-bold text-gray-800 mb-3 tracking-tight">
             ระบบการลาออนไลน์
           </h1>
-          <p className="text-slate-600 text-lg">
+          <p className="text-gray-500 text-lg">
             สำหรับข้าราชการและเจ้าหน้าที่
           </p>
         </div>
@@ -138,10 +138,10 @@ export const LoginPage = () => {
         <Card className="shadow-2xl border-0 backdrop-blur-sm bg-white/95">
           <form onSubmit={handleSubmit} className="space-y-6 p-6">
             <div className="space-y-2">
-              <h2 className="text-2xl font-semibold text-slate-800">
+              <h2 className="text-2xl font-semibold text-gray-800">
                 เข้าสู่ระบบ
               </h2>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-gray-500">
                 กรุณาใช้รหัสพนักงานและรหัสผ่านของคุณ
               </p>
             </div>
@@ -208,49 +208,49 @@ export const LoginPage = () => {
           </form>
 
           {/* Demo Accounts */}
-          <div className="mt-6 pt-6 border-t border-slate-200 px-6 pb-6">
+          <div className="mt-6 pt-6 border-t border-gray-200 px-6 pb-6">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-medium text-slate-700">บัญชีทดลอง (Demo):</p>
+              <p className="text-sm font-medium text-gray-700">บัญชีทดลอง (Demo):</p>
               <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-xs text-slate-500">Backend: http://localhost:3000</span>
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
+                <span className="text-xs text-gray-500">Backend: http://localhost:3000</span>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className="bg-white p-3 rounded-lg border-2 border-slate-300 hover:border-slate-400 hover:shadow-md transition-all">
-                <p className="font-semibold text-slate-900">พนักงาน (กทส.)</p>
-                <p className="text-slate-600 mt-1">51143 / 123456</p>
+              <div className="bg-white p-3 rounded-lg border-2 border-gray-200 hover:border-gray-400 hover:shadow-md transition-all">
+                <p className="font-semibold text-gray-900">พนักงาน (กทส.)</p>
+                <p className="text-gray-500 mt-1">51143 / 123456</p>
               </div>
-              <div className="bg-slate-50 p-3 rounded-lg border-2 border-slate-300 hover:border-slate-400 hover:shadow-md transition-all">
-                <p className="font-semibold text-slate-900">ผอ.กลุ่มงาน (กยส.)</p>
-                <p className="text-slate-600 mt-1">51497 / 123456</p>
+              <div className="bg-gray-50 p-3 rounded-lg border-2 border-gray-200 hover:border-gray-400 hover:shadow-md transition-all">
+                <p className="font-semibold text-gray-900">ผอ.กลุ่มงาน (กยส.)</p>
+                <p className="text-gray-500 mt-1">51497 / 123456</p>
               </div>
-              <div className="bg-white p-3 rounded-lg border-2 border-slate-300 hover:border-slate-400 hover:shadow-md transition-all">
-                <p className="font-semibold text-slate-900">หัวหน้าฝ่ายบริหารทั่วไป</p>
-                <p className="text-slate-600 mt-1">51417 / 123456</p>
+              <div className="bg-white p-3 rounded-lg border-2 border-gray-200 hover:border-gray-400 hover:shadow-md transition-all">
+                <p className="font-semibold text-gray-900">หัวหน้าฝ่ายบริหารทั่วไป</p>
+                <p className="text-gray-500 mt-1">51417 / 123456</p>
               </div>
-              <div className="bg-slate-50 p-3 rounded-lg border-2 border-slate-300 hover:border-slate-400 hover:shadow-md transition-all">
-                <p className="font-semibold text-slate-900">ผอ.กอก.</p>
-                <p className="text-slate-600 mt-1">51410 / 123456</p>
+              <div className="bg-gray-50 p-3 rounded-lg border-2 border-gray-200 hover:border-gray-400 hover:shadow-md transition-all">
+                <p className="font-semibold text-gray-900">ผอ.กอก.</p>
+                <p className="text-gray-500 mt-1">51410 / 123456</p>
               </div>
-              <div className="bg-blue-50 p-3 rounded-lg border-2 border-blue-300 hover:border-blue-400 hover:shadow-md transition-all col-span-2">
-                <p className="font-semibold text-blue-900">ผู้อำนวยการสำนัก (Admin)</p>
-                <p className="text-blue-700 mt-1">50001 / 123456</p>
+              <div className="bg-gray-50 p-3 rounded-lg border-2 border-gray-300 hover:border-gray-400 hover:shadow-md transition-all col-span-2">
+                <p className="font-semibold text-gray-900">ผู้อำนวยการสำนัก (Admin)</p>
+                <p className="text-gray-600 mt-1">50001 / 123456</p>
               </div>
             </div>
-            <div className="mt-3 text-xs text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-200">
+            <div className="mt-3 text-xs text-gray-600 bg-gray-50 p-2 rounded-lg border border-gray-200">
               <span className="font-semibold">ทุกบัญชีใช้รหัสผ่าน: 123456</span>
               <br />
-              <span className="text-slate-500">กลุ่มงาน: กยส., กทส., กอก., กตป., กสส., กคฐ.</span>
+              <span className="text-gray-500">กลุ่มงาน: กยส., กทส., กอก., กตป., กสส., กคฐ.</span>
             </div>
-            <p className="text-xs text-red-600 mt-3 bg-red-50 p-2 rounded-lg border border-red-200">
+            <p className="text-xs text-gray-600 mt-3 bg-gray-100 p-2 rounded-lg border border-gray-200">
               หาก Login ไม่ได้ กรุณาเปิด Backend server ที่ Terminal ก่อน: <code className="bg-white px-2 py-0.5 rounded font-mono">npm run dev</code>
             </p>
           </div>
         </Card>
 
         {/* Footer */}
-        <p className="text-center text-sm text-slate-600 mt-8 opacity-75">
+        <p className="text-center text-sm text-gray-500 mt-8 opacity-75">
           © 2026 ระบบการลาออนไลน์. All rights reserved.
         </p>
       </div>

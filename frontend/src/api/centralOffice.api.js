@@ -20,6 +20,12 @@ export const centralOfficeAPI = {
     return response.data;
   },
 
+  // Get staff approval history
+  getApprovalHistoryStaff: async () => {
+    const response = await axios.get('/central-office/staff/history');
+    return response.data;
+  },
+
   // ============= HEAD (Level 3) =============
   // Get leaves approved by staff (level 2)
   getApprovedLevel2Leaves: async () => {
@@ -36,6 +42,12 @@ export const centralOfficeAPI = {
   // Reject leave at level 3
   rejectLeaveLevel3: async (leaveId, remarks) => {
     const response = await axios.post(`/central-office/head/${leaveId}/reject`, { remarks });
+    return response.data;
+  },
+
+  // Get head approval history
+  getApprovalHistoryHead: async () => {
+    const response = await axios.get('/central-office/head/history');
     return response.data;
   },
 

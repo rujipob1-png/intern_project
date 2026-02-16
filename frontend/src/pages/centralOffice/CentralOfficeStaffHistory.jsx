@@ -5,10 +5,10 @@ import {
   FileText, Eye, Filter, X, Phone, Download, ClipboardCheck,
   MapPin, Hash, MessageSquare, AlertCircle, Briefcase, Building2, ArrowRight
 } from 'lucide-react';
-import { directorAPI } from '../../api/director.api';
+import { centralOfficeAPI } from '../../api/centralOffice.api';
 import { getDepartmentThaiCode } from '../../utils/departmentMapping';
 
-const ApprovalHistoryPage = () => {
+const CentralOfficeStaffHistory = () => {
   const navigate = useNavigate();
   const [leaves, setLeaves] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,18 +19,18 @@ const ApprovalHistoryPage = () => {
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    fetchApprovalHistory();
+    fetchHistory();
   }, []);
 
-  const fetchApprovalHistory = async () => {
+  const fetchHistory = async () => {
     try {
       setLoading(true);
-      const result = await directorAPI.getApprovalHistory();
+      const result = await centralOfficeAPI.getApprovalHistoryStaff();
       if (result.success) {
         setLeaves(result.data || []);
       }
     } catch (error) {
-      console.error('Error fetching approval history:', error);
+      console.error('Error fetching staff approval history:', error);
     } finally {
       setLoading(false);
     }
@@ -46,15 +46,13 @@ const ApprovalHistoryPage = () => {
       approved: { label: 'อนุมัติแล้ว', color: 'bg-green-100 text-green-800', icon: CheckCircle },
       rejected: { label: 'ไม่อนุมัติ', color: 'bg-red-100 text-red-800', icon: XCircle },
       cancelled: { label: 'ยกเลิกแล้ว', color: 'bg-gray-100 text-gray-800', icon: XCircle },
-      cancel_level1: { label: 'รอพิจารณายกเลิก', color: 'bg-orange-100 text-orange-800', icon: Clock },
-      cancel_level2: { label: 'รอพิจารณายกเลิก', color: 'bg-orange-100 text-orange-800', icon: Clock },
-      cancel_level3: { label: 'รอพิจารณายกเลิก', color: 'bg-orange-100 text-orange-800', icon: Clock },
-      pending_cancel: { label: 'รอพิจารณายกเลิก', color: 'bg-orange-100 text-orange-800', icon: Clock },
+      cancel_level1: { label: 'ยกเลิก-ระดับ 1', color: 'bg-orange-100 text-orange-800', icon: Clock },
+      cancel_level2: { label: 'ยกเลิก-ระดับ 2', color: 'bg-orange-100 text-orange-800', icon: Clock },
+      cancel_level3: { label: 'ยกเลิก-ระดับ 3', color: 'bg-orange-100 text-orange-800', icon: Clock },
+      pending_cancel: { label: 'รอยกเลิก', color: 'bg-orange-100 text-orange-800', icon: Clock },
     };
-    
     const config = statusConfig[status] || { label: status, color: 'bg-gray-100 text-gray-800', icon: Clock };
     const Icon = config.icon;
-    
     return (
       <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${config.color}`}>
         <Icon className="w-3 h-3" />
@@ -79,7 +77,7 @@ const ApprovalHistoryPage = () => {
       label = 'ปฏิเสธยกเลิก';
       color = 'bg-red-100 text-red-700';
     } else if (isApproved) {
-      label = 'อนุมัติแล้ว';
+      label = 'ตรวจสอบผ่าน';
       color = 'bg-green-100 text-green-700';
     } else if (isRejected) {
       label = 'ปฏิเสธ';
@@ -97,11 +95,7 @@ const ApprovalHistoryPage = () => {
   const formatDate = (dateString) => {
     if (!dateString) return '-';
     const date = new Date(dateString);
-    return date.toLocaleDateString('th-TH', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
+    return date.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
   };
 
   const filteredLeaves = leaves.filter(leave => {
@@ -136,9 +130,9 @@ const ApprovalHistoryPage = () => {
               <div>
                 <h1 className="text-2xl font-bold flex items-center gap-2">
                   <ClipboardCheck className="w-7 h-7" />
-                  ประวัติการอนุมัติ
+                  ประวัติการตรวจสอบ
                 </h1>
-                <p className="text-gray-400 mt-1">ผอ.กอง (Level 1)</p>
+                <p className="text-gray-400 mt-1">สำนักงานกลาง - เจ้าหน้าที่ (Level 2)</p>
               </div>
             </div>
             <div className="flex gap-4">
@@ -148,7 +142,7 @@ const ApprovalHistoryPage = () => {
               </div>
               <div className="bg-white/10 rounded-xl px-5 py-3 text-center">
                 <div className="text-2xl font-bold text-emerald-300">{approvedCount}</div>
-                <div className="text-xs text-gray-400">อนุมัติ</div>
+                <div className="text-xs text-gray-400">ผ่าน</div>
               </div>
               <div className="bg-white/10 rounded-xl px-5 py-3 text-center">
                 <div className="text-2xl font-bold text-rose-300">{rejectedCount}</div>
@@ -163,7 +157,6 @@ const ApprovalHistoryPage = () => {
         {/* Filters */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
           <div className="flex flex-col md:flex-row gap-4">
-            {/* Search */}
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
@@ -174,8 +167,6 @@ const ApprovalHistoryPage = () => {
                 className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-gray-400"
               />
             </div>
-            
-            {/* Action Filter */}
             <div className="relative">
               <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <select
@@ -184,12 +175,10 @@ const ApprovalHistoryPage = () => {
                 className="pl-10 pr-8 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-gray-400 appearance-none bg-white"
               >
                 <option value="all">การดำเนินการทั้งหมด</option>
-                <option value="approved">อนุมัติ</option>
+                <option value="approved">ตรวจสอบผ่าน</option>
                 <option value="rejected">ปฏิเสธ</option>
               </select>
             </div>
-
-            {/* Status Filter */}
             <div className="relative">
               <select
                 value={statusFilter}
@@ -197,7 +186,6 @@ const ApprovalHistoryPage = () => {
                 className="pl-4 pr-8 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-gray-400 appearance-none bg-white"
               >
                 <option value="all">สถานะทั้งหมด</option>
-                <option value="approved_level1">อนุมัติระดับ 1</option>
                 <option value="approved_level2">อนุมัติระดับ 2</option>
                 <option value="approved_level3">อนุมัติระดับ 3</option>
                 <option value="approved_final">อนุมัติแล้ว</option>
@@ -208,12 +196,12 @@ const ApprovalHistoryPage = () => {
           </div>
         </div>
 
-        {/* Results Count */}
+        {/* Count */}
         <div className="mb-4 text-gray-600">
           แสดง {filteredLeaves.length} รายการ จากทั้งหมด {leaves.length} รายการ
         </div>
 
-        {/* Loading */}
+        {/* List */}
         {loading ? (
           <div className="flex justify-center items-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-600"></div>
@@ -222,10 +210,9 @@ const ApprovalHistoryPage = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
             <ClipboardCheck className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">ไม่พบรายการ</h3>
-            <p className="text-gray-500">ยังไม่มีประวัติการอนุมัติ</p>
+            <p className="text-gray-500">ยังไม่มีประวัติการตรวจสอบเอกสาร</p>
           </div>
         ) : (
-          /* Leave List */
           <div className="space-y-4">
             {filteredLeaves.map((leave) => (
               <div 
@@ -234,7 +221,6 @@ const ApprovalHistoryPage = () => {
               >
                 <div className="p-5">
                   <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-                    {/* Left - Employee Info */}
                     <div className="flex items-start gap-4 lg:w-[280px] lg:flex-shrink-0">
                       <div className="w-12 h-12 bg-gray-400 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
                         {leave.employee?.name?.charAt(0) || 'U'}
@@ -250,7 +236,6 @@ const ApprovalHistoryPage = () => {
                       </div>
                     </div>
 
-                    {/* Center - Leave Info */}
                     <div className="flex-1 grid grid-cols-2 lg:grid-cols-4 gap-4">
                       <div className="min-w-0">
                         <p className="text-xs text-gray-500">เลขที่</p>
@@ -275,7 +260,6 @@ const ApprovalHistoryPage = () => {
                       </div>
                     </div>
 
-                    {/* Right - Status & Action */}
                     <div className="flex items-center gap-3 lg:flex-shrink-0">
                       <div className="flex flex-col gap-1.5">
                         {getStatusBadge(leave.status)}
@@ -292,7 +276,6 @@ const ApprovalHistoryPage = () => {
                   </div>
                 </div>
 
-                {/* Footer */}
                 <div className="bg-gray-50 px-5 py-3 flex items-center justify-between text-sm text-gray-500">
                   <span>ดำเนินการเมื่อ: {formatDate(leave.myActionDate)}</span>
                   <span>{leave.myComment && `หมายเหตุ: ${leave.myComment}`}</span>
@@ -527,4 +510,4 @@ const ApprovalHistoryPage = () => {
   );
 };
 
-export default ApprovalHistoryPage;
+export default CentralOfficeStaffHistory;

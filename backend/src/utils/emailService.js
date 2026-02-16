@@ -403,6 +403,125 @@ export const EmailService = {
   },
 
   /**
+   * ส่ง email แจ้งผู้อนุมัติว่ามีคำขอยกเลิกการลารอพิจารณา
+   * @param {string} leaveId - Leave request ID
+   * @param {string} level - Approval level ('director', 'central_office_staff', 'central_office_head', 'admin')
+   * @param {string} requesterDepartment - Department of the requester (for filtering directors)
+   */
+  async notifyCancelRequestToApprovers(leaveId, level, requesterDepartment = null) {
+    try {
+      const leave = await getLeaveWithRequester(leaveId);
+
+      if (!leave || !leave.requester) {
+        console.log('📧 Skip cancel approver notification: missing leave data');
+        return false;
+      }
+
+      const roleMap = {
+        'director': 'director',
+        'central_office_staff': 'central_office_staff',
+        'central_office_head': 'central_office_head',
+        'admin': 'admin'
+      };
+
+      const roleName = roleMap[level];
+      if (!roleName) {
+        console.log('📧 Skip cancel approver notification: unknown level', level);
+        return false;
+      }
+
+      const approvers = await getUsersByRole(roleName, level === 'director' ? requesterDepartment : null);
+
+      if (approvers.length === 0) {
+        console.log(`📧 No approvers found for role: ${roleName} (cancel)`);
+        return false;
+      }
+
+      console.log(`📧 Notifying ${approvers.length} ${roleName}(s) about cancel request ${leave.leave_number}`);
+
+      const levelInfo = {
+        'director': { levelName: 'ผอ.กลุ่มงาน', nextAction: 'พิจารณาคำขอยกเลิกการลา' },
+        'central_office_staff': { levelName: 'หน.ฝ่ายบริหารทั่วไป', nextAction: 'ตรวจสอบคำขอยกเลิกการลา' },
+        'central_office_head': { levelName: 'เลขานุการกรม/ผอ.สำนัก', nextAction: 'พิจารณาคำขอยกเลิกการลา' },
+        'admin': { levelName: 'ผู้บริหารระดับสูง', nextAction: 'อนุมัติการยกเลิกขั้นสุดท้าย' }
+      };
+
+      const info = levelInfo[level] || { levelName: level, nextAction: 'พิจารณา' };
+
+      const results = await Promise.all(
+        approvers.map(approver => {
+          const template = {
+            subject: `[ระบบลา] 🔄 คำขอยกเลิกการลารอพิจารณา - ${leave.requester.first_name} ${leave.requester.last_name}`,
+            html: `
+              <div style="font-family: 'Sarabun', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="background: #EF4444; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+                  <h1 style="margin: 0; font-size: 20px;">🔄 คำขอยกเลิกการลารอพิจารณา</h1>
+                </div>
+                <div style="background: #F9FAFB; padding: 20px; border: 1px solid #E5E7EB;">
+                  <p>เรียน คุณ${approver.first_name},</p>
+                  <p>มีคำขอ<strong>ยกเลิกการลา</strong>รอการ${info.nextAction}จากท่าน</p>
+                  
+                  <div style="background: #FEE2E2; border-left: 4px solid #EF4444; padding: 12px; margin: 15px 0;">
+                    <strong>👤 ผู้ขอยกเลิก:</strong> ${leave.requester.first_name} ${leave.requester.last_name}<br>
+                    <strong>🏢 สังกัด:</strong> ${getDepartmentThaiName(leave.requester.department)}
+                  </div>
+                  
+                  <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #E5E7EB; background: white; width: 30%;"><strong>เลขที่ใบลา</strong></td>
+                      <td style="padding: 8px; border: 1px solid #E5E7EB; background: white;">${leave.leave_number || '-'}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #E5E7EB; background: white;"><strong>ประเภทการลา</strong></td>
+                      <td style="padding: 8px; border: 1px solid #E5E7EB; background: white;">${leave.leave_type}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #E5E7EB; background: white;"><strong>วันที่ลา</strong></td>
+                      <td style="padding: 8px; border: 1px solid #E5E7EB; background: white;">${formatDate(leave.start_date)} - ${formatDate(leave.end_date)}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #E5E7EB; background: white;"><strong>จำนวนวัน</strong></td>
+                      <td style="padding: 8px; border: 1px solid #E5E7EB; background: white;">${leave.total_days} วัน</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #E5E7EB; background: white;"><strong>เหตุผลการยกเลิก</strong></td>
+                      <td style="padding: 8px; border: 1px solid #E5E7EB; background: #FEE2E2; color: #DC2626;">${leave.cancelled_reason || parseReason(leave.reason) || '-'}</td>
+                    </tr>
+                  </table>
+                  
+                  <div style="text-align: center; margin-top: 20px;">
+                    <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}" 
+                       style="display: inline-block; background: #EF4444; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
+                      เข้าสู่ระบบเพื่อพิจารณา
+                    </a>
+                  </div>
+                  
+                  <p style="color: #6B7280; font-size: 14px; margin-top: 15px;">
+                    📌 กรุณาเข้าสู่ระบบเพื่อ${info.nextAction}
+                  </p>
+                </div>
+                <div style="background: #6B7280; color: white; padding: 10px; text-align: center; border-radius: 0 0 8px 8px; font-size: 12px;">
+                  ระบบลาออนไลน์ - อีเมลนี้ส่งโดยอัตโนมัติ กรุณาอย่าตอบกลับ
+                </div>
+              </div>
+            `
+          };
+
+          return sendEmail(approver.email, template);
+        })
+      );
+
+      const successCount = results.filter(r => r).length;
+      console.log(`📧 Sent ${successCount}/${approvers.length} cancel notification emails to ${roleName}(s)`);
+
+      return successCount > 0;
+    } catch (error) {
+      console.error('Notify cancel approvers error:', error.message);
+      return false;
+    }
+  },
+
+  /**
    * ส่ง email แบบกำหนดเอง
    * @param {string} to - Recipient email
    * @param {string} subject - Email subject
@@ -490,6 +609,60 @@ export const EmailService = {
           color: '#6B7280',
           bgColor: '#F3F4F6',
           textColor: '#374151',
+          nextStep: null
+        },
+        'pending_cancel': {
+          statusText: 'รอพิจารณาการยกเลิก',
+          message: 'คำขอยกเลิกใบลาของคุณถูกส่งเรียบร้อยแล้ว และอยู่ระหว่างรอการพิจารณา',
+          icon: '🔄',
+          color: '#F59E0B',
+          bgColor: '#FEF3C7',
+          textColor: '#92400E',
+          nextStep: 'รอ ผอ.กลุ่มงาน พิจารณาการยกเลิก'
+        },
+        'cancel_level1': {
+          statusText: 'ยกเลิก - ผ่านระดับ 1 (ผอ.กลุ่มงาน)',
+          message: 'คำขอยกเลิกใบลาของคุณได้รับการอนุมัติจาก ผอ.กลุ่มงาน แล้ว',
+          icon: '🔄',
+          color: '#F59E0B',
+          bgColor: '#FEF3C7',
+          textColor: '#92400E',
+          nextStep: 'รอ หน.ฝ่ายบริหารทั่วไป ตรวจสอบการยกเลิก'
+        },
+        'cancel_level2': {
+          statusText: 'ยกเลิก - ผ่านระดับ 2 (หน.ฝ่ายบริหารทั่วไป)',
+          message: 'คำขอยกเลิกใบลาของคุณผ่านการตรวจสอบจาก หน.ฝ่ายบริหารทั่วไป แล้ว',
+          icon: '🔄',
+          color: '#F59E0B',
+          bgColor: '#FEF3C7',
+          textColor: '#92400E',
+          nextStep: 'รอ เลขานุการกรม/ผอ.สำนัก พิจารณาการยกเลิก'
+        },
+        'cancel_level3': {
+          statusText: 'ยกเลิก - ผ่านระดับ 3 (เลขานุการกรม/ผอ.สำนัก)',
+          message: 'คำขอยกเลิกใบลาของคุณผ่านการอนุมัติจาก เลขานุการกรม/ผอ.สำนัก แล้ว',
+          icon: '🔄',
+          color: '#F59E0B',
+          bgColor: '#FEF3C7',
+          textColor: '#92400E',
+          nextStep: 'รอ ผู้บริหารระดับสูง อนุมัติขั้นสุดท้าย'
+        },
+        'cancel_approved': {
+          statusText: 'ยกเลิกใบลาสำเร็จ ✅',
+          message: 'คำขอยกเลิกใบลาของคุณได้รับการอนุมัติครบทุกระดับเรียบร้อยแล้ว วันลาได้คืนกลับ',
+          icon: '✅',
+          color: '#10B981',
+          bgColor: '#D1FAE5',
+          textColor: '#065F46',
+          nextStep: null
+        },
+        'cancel_rejected': {
+          statusText: 'คำขอยกเลิกถูกปฏิเสธ ❌',
+          message: 'คำขอยกเลิกใบลาของคุณไม่ได้รับการอนุมัติ ใบลายังคงมีผลอยู่',
+          icon: '❌',
+          color: '#EF4444',
+          bgColor: '#FEE2E2',
+          textColor: '#DC2626',
           nextStep: null
         }
       };

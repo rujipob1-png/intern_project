@@ -19,6 +19,8 @@ import CentralOfficeStaffDashboard from './pages/centralOffice/CentralOfficeStaf
 import CentralOfficeStaffCancelRequests from './pages/centralOffice/CentralOfficeStaffCancelRequests';
 import CentralOfficeHeadDashboard from './pages/centralOffice/CentralOfficeHeadDashboard';
 import CentralOfficeHeadCancelRequests from './pages/centralOffice/CentralOfficeHeadCancelRequests';
+import CentralOfficeStaffHistory from './pages/centralOffice/CentralOfficeStaffHistory';
+import CentralOfficeHeadHistory from './pages/centralOffice/CentralOfficeHeadHistory';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminApprovalHistory from './pages/admin/AdminApprovalHistory';
 import AdminCancelRequests from './pages/admin/AdminCancelRequests';
@@ -133,6 +135,14 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          <Route 
+            path="/central-office/staff/history" 
+            element={
+              <ProtectedRoute>
+                <CentralOfficeStaffHistory />
+              </ProtectedRoute>
+            } 
+          />
           
           {/* Central Office Head Routes */}
           <Route 
@@ -148,6 +158,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <CentralOfficeHeadCancelRequests />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/central-office/head/history" 
+            element={
+              <ProtectedRoute>
+                <CentralOfficeHeadHistory />
               </ProtectedRoute>
             } 
           />

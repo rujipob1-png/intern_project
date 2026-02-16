@@ -213,7 +213,7 @@ export const LeaveHistoryPage = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-600"></div>
       </div>
     );
   }
@@ -221,27 +221,27 @@ export const LeaveHistoryPage = () => {
   return (
     <div className="max-w-7xl mx-auto space-y-6 py-4">
       {/* Header with Back Button */}
-      <div className="flex items-center justify-between mb-8 bg-white rounded-xl p-6 shadow-md border border-slate-200">
+      <div className="flex items-center justify-between mb-8 bg-white rounded-xl p-6 shadow-md border border-gray-200">
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate('/dashboard')}
-            className="p-2.5 hover:bg-slate-100 rounded-lg transition-colors group border border-slate-200"
+            className="p-2.5 hover:bg-gray-100 rounded-lg transition-colors group border border-gray-200"
           >
-            <ArrowLeft className="w-5 h-5 text-slate-600 group-hover:text-blue-600 transition-colors" />
+            <ArrowLeft className="w-5 h-5 text-gray-500 group-hover:text-gray-700 transition-colors" />
           </button>
           <div className="flex items-center gap-4">
-            <div className="p-4 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl shadow-md">
+            <div className="p-4 bg-gray-800 rounded-xl shadow-md">
               <History className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-800">ประวัติการลา</h1>
-              <p className="text-slate-600 text-sm mt-1">คำขอลาทั้งหมดของคุณ</p>
+              <h1 className="text-2xl font-bold text-gray-800">ประวัติการลา</h1>
+              <p className="text-gray-500 text-sm mt-1">คำขอลาทั้งหมดของคุณ</p>
             </div>
           </div>
         </div>
         <button
           onClick={() => navigate('/create-leave')}
-          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all font-semibold shadow-md hover:shadow-lg flex items-center gap-2"
+          className="px-6 py-3 bg-gray-900 hover:bg-gray-800 text-white rounded-lg transition-all font-semibold shadow-md hover:shadow-lg flex items-center gap-2"
         >
           <FileText className="w-4 h-4" />
           สร้างคำขอลา
@@ -250,71 +250,71 @@ export const LeaveHistoryPage = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white border-l-4 border-green-500 rounded-xl p-6 shadow-md hover:shadow-lg transition-all">
+        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-md hover:shadow-lg transition-all">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-slate-600 mb-2 font-semibold uppercase tracking-wide">อนุมัติแล้ว</p>
-              <p className="text-4xl font-bold text-slate-800">{stats.approved}</p>
+              <p className="text-xs text-gray-500 mb-2 font-semibold uppercase tracking-wide">อนุมัติแล้ว</p>
+              <p className="text-4xl font-bold text-gray-800">{stats.approved}</p>
             </div>
-            <div className="p-4 bg-green-50 border border-green-200 rounded-xl">
-              <CheckCircle className="w-7 h-7 text-green-600" />
+            <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl">
+              <CheckCircle className="w-7 h-7 text-gray-500" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white border-l-4 border-red-500 rounded-xl p-6 shadow-md hover:shadow-lg transition-all">
+        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-md hover:shadow-lg transition-all">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-slate-600 mb-2 font-semibold uppercase tracking-wide">ไม่อนุมัติ</p>
-              <p className="text-4xl font-bold text-slate-800">{stats.rejected}</p>
+              <p className="text-xs text-gray-500 mb-2 font-semibold uppercase tracking-wide">ไม่อนุมัติ</p>
+              <p className="text-4xl font-bold text-gray-800">{stats.rejected}</p>
             </div>
-            <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
-              <XCircle className="w-7 h-7 text-red-600" />
+            <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl">
+              <XCircle className="w-7 h-7 text-gray-500" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white border-l-4 border-yellow-500 rounded-xl p-6 shadow-md hover:shadow-lg transition-all">
+        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-md hover:shadow-lg transition-all">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-slate-600 mb-2 font-semibold uppercase tracking-wide">รออนุมัติ</p>
-              <p className="text-4xl font-bold text-slate-800">{stats.pending}</p>
+              <p className="text-xs text-gray-500 mb-2 font-semibold uppercase tracking-wide">รออนุมัติ</p>
+              <p className="text-4xl font-bold text-gray-800">{stats.pending}</p>
             </div>
-            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
-              <Clock className="w-7 h-7 text-yellow-600" />
+            <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl">
+              <Clock className="w-7 h-7 text-gray-500" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white border-l-4 border-slate-400 rounded-xl p-6 shadow-md hover:shadow-lg transition-all">
+        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-md hover:shadow-lg transition-all">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-slate-600 mb-2 font-semibold uppercase tracking-wide">ยกเลิกแล้ว</p>
-              <p className="text-4xl font-bold text-slate-800">{stats.cancelled}</p>
+              <p className="text-xs text-gray-500 mb-2 font-semibold uppercase tracking-wide">ยกเลิกแล้ว</p>
+              <p className="text-4xl font-bold text-gray-800">{stats.cancelled}</p>
             </div>
-            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
-              <Ban className="w-7 h-7 text-slate-600" />
+            <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl">
+              <Ban className="w-7 h-7 text-gray-500" />
             </div>
           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-md mb-6">
-        <h3 className="text-sm font-bold text-slate-700 mb-4 uppercase tracking-wide flex items-center gap-2">
+      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-md mb-6">
+        <h3 className="text-sm font-bold text-gray-700 mb-4 uppercase tracking-wide flex items-center gap-2">
           <Filter className="w-4 h-4" />
           ค้นหาและกรอง
         </h3>
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"
                 placeholder="ค้นหาด้วยเลขที่คำขอ..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-slate-800 placeholder:text-slate-400"
+                className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-gray-400 transition-all text-gray-800 placeholder:text-gray-400"
               />
             </div>
           </div>
@@ -324,7 +324,7 @@ export const LeaveHistoryPage = () => {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full pl-4 pr-10 py-3 border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white transition-all cursor-pointer text-slate-800 font-semibold"
+                className="w-full pl-4 pr-10 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-gray-400 appearance-none bg-white transition-all cursor-pointer text-gray-800 font-semibold"
               >
                 <option value="all">📋 ทั้งหมด</option>
                 <option value="approved">✅ อนุมัติแล้ว</option>
@@ -333,14 +333,14 @@ export const LeaveHistoryPage = () => {
                 <option value="pending_cancel">⏳ รอพิจารณายกเลิก</option>
                 <option value="cancelled">🚫 ยกเลิกแล้ว</option>
               </select>
-              <Filter className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 pointer-events-none" />
+              <Filter className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
             </div>
           </div>
         </div>
       </div>
 {/* Leave History List */}
-      <div className="bg-white border border-slate-200 rounded-xl overflow-visible shadow-lg">
-        <div className="bg-gradient-to-r from-slate-700 to-slate-800 px-6 py-4 border-b-2 border-slate-600">
+      <div className="bg-white border border-gray-200 rounded-xl overflow-visible shadow-lg">
+        <div className="bg-gray-800 px-6 py-4 border-b-2 border-gray-700">
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
             <FileText className="w-5 h-5" />
             รายการคำขอลา
@@ -348,11 +348,11 @@ export const LeaveHistoryPage = () => {
         </div>
         {filteredLeaves.length === 0 ? (
           <div className="text-center py-20 px-6">
-            <div className="p-5 bg-slate-100 rounded-full w-24 h-24 mx-auto mb-5 flex items-center justify-center">
-              <FileText className="w-12 h-12 text-slate-400" />
+            <div className="p-5 bg-gray-100 rounded-full w-24 h-24 mx-auto mb-5 flex items-center justify-center">
+              <FileText className="w-12 h-12 text-gray-400" />
             </div>
-            <p className="text-slate-800 text-xl font-bold mb-2">ไม่พบประวัติการลา</p>
-            <p className="text-slate-600 text-sm mb-6">
+            <p className="text-gray-800 text-xl font-bold mb-2">ไม่พบประวัติการลา</p>
+            <p className="text-gray-500 text-sm mb-6">
               {searchTerm 
                 ? 'ไม่พบคำขอที่ตรงกับคำค้นหา'
                 : statusFilter !== 'all' 
@@ -361,7 +361,7 @@ export const LeaveHistoryPage = () => {
             </p>
             <button
               onClick={() => navigate('/create-leave')}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all font-semibold shadow-md hover:shadow-lg"
+              className="px-6 py-3 bg-gray-900 hover:bg-gray-800 text-white rounded-lg transition-all font-semibold shadow-md hover:shadow-lg"
             >
               สร้างคำขอลาใหม่
             </button>
@@ -371,37 +371,37 @@ export const LeaveHistoryPage = () => {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-slate-100 border-b-2 border-slate-300">
-                    <th className="px-8 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">เลขที่</th>
-                    <th className="px-8 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">ประเภท</th>
-                    <th className="px-8 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">วันที่ลา</th>
-                    <th className="px-8 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider">จำนวนวัน</th>
-                    <th className="px-8 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider">สถานะ</th>
-                    <th className="px-8 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider">จัดการ</th>
+                  <tr className="bg-gray-100 border-b-2 border-gray-300">
+                    <th className="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">เลขที่</th>
+                    <th className="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">ประเภท</th>
+                    <th className="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">วันที่ลา</th>
+                    <th className="px-8 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">จำนวนวัน</th>
+                    <th className="px-8 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">สถานะ</th>
+                    <th className="px-8 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">จัดการ</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200">
+                <tbody className="divide-y divide-gray-200">
                   {filteredLeaves.map((leave) => (
-                    <tr key={leave.id} className="hover:bg-blue-50/50 transition-colors group">
+                    <tr key={leave.id} className="hover:bg-gray-50 transition-colors group">
                       <td className="px-8 py-5 whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                          <FileText className="w-4 h-4 text-slate-400 group-hover:text-blue-600 transition-colors" />
-                          <span className="text-sm font-semibold text-slate-800 group-hover:text-blue-700 transition-colors">
+                          <FileText className="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
+                          <span className="text-sm font-semibold text-gray-800 group-hover:text-gray-900 transition-colors">
                             {leave.LeaveNumber || leave.leaveNumber || leave.leave_number}
                           </span>
                         </div>
                       </td>
                       <td className="px-8 py-5">
                         <div className="flex items-center gap-2">
-                          <span className="inline-flex items-center justify-center w-9 h-9 bg-blue-100 text-blue-700 border border-blue-200 rounded-lg font-bold text-sm">
+                          <span className="inline-flex items-center justify-center w-9 h-9 bg-gray-100 text-gray-700 border border-gray-200 rounded-lg font-bold text-sm">
                             {getLeaveTypeCode(leave)}
                           </span>
-                          <span className="text-sm text-slate-700 font-medium">{getLeaveTypeName(leave)}</span>
+                          <span className="text-sm text-gray-700 font-medium">{getLeaveTypeName(leave)}</span>
                         </div>
                       </td>
                       <td className="px-8 py-5 whitespace-nowrap">
-                        <div className="flex items-center gap-1.5 text-sm text-slate-700">
-                          <Calendar className="w-4 h-4 text-slate-400" />
+                        <div className="flex items-center gap-1.5 text-sm text-gray-700">
+                          <Calendar className="w-4 h-4 text-gray-400" />
                           {leave.selectedDates && leave.selectedDates.length > 0 ? (
                             <span className="font-medium">
                               {leave.selectedDates.slice(0, 3).map(d => formatDate(d)).join(', ')}
@@ -410,16 +410,16 @@ export const LeaveHistoryPage = () => {
                           ) : (
                             <>
                               <span className="font-medium">{formatDate(leave.startDate || leave.start_date)}</span>
-                              <span className="text-slate-400">→</span>
+                              <span className="text-gray-400">→</span>
                               <span className="font-medium">{formatDate(leave.endDate || leave.end_date)}</span>
                             </>
                           )}
                         </div>
                       </td>
                       <td className="px-8 py-5 whitespace-nowrap text-center">
-                        <div className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-100 border border-slate-300 rounded-lg">
-                          <span className="text-xl font-bold text-slate-800">{leave.totalDays || leave.total_days}</span>
-                          <span className="text-sm text-slate-600 font-medium">วัน</span>
+                        <div className="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-100 border border-gray-200 rounded-lg">
+                          <span className="text-xl font-bold text-gray-800">{leave.totalDays || leave.total_days}</span>
+                          <span className="text-sm text-gray-500 font-medium">วัน</span>
                         </div>
                       </td>
                       <td className="px-8 py-5 whitespace-nowrap text-center">
@@ -428,7 +428,7 @@ export const LeaveHistoryPage = () => {
                       <td className="px-8 py-5 whitespace-nowrap text-center">
                         <button
                           onClick={() => viewDetail(leave.id)}
-                          className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-blue-700 hover:text-white hover:bg-blue-600 bg-blue-50 border-2 border-blue-300 rounded-lg transition-all hover:shadow-md"
+                          className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-gray-700 hover:text-white hover:bg-gray-800 bg-gray-50 border-2 border-gray-300 rounded-lg transition-all hover:shadow-md"
                         >
                           <Eye className="w-4 h-4" />
                           ดูรายละเอียด
@@ -441,12 +441,12 @@ export const LeaveHistoryPage = () => {
             </div>
 
             {/* Summary Footer */}
-            <div className="border-t-2 border-slate-200 bg-slate-50 px-6 py-4">
+            <div className="border-t-2 border-gray-200 bg-gray-50 px-6 py-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-slate-600">
-                    แสดง <span className="font-bold text-slate-800 text-lg">{filteredLeaves.length}</span> รายการ
-                    {statusFilter !== 'all' && <span className="text-slate-500"> (กรอง: {statusFilter})</span>}
+                  <p className="text-sm text-gray-600">
+                    แสดง <span className="font-bold text-gray-800 text-lg">{filteredLeaves.length}</span> รายการ
+                    {statusFilter !== 'all' && <span className="text-gray-500"> (กรอง: {statusFilter})</span>}
                   </p>
                 </div>
               </div>

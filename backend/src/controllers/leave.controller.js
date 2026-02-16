@@ -518,9 +518,9 @@ export const cancelLeave = async (req, res) => {
   try {
     const userId = req.user.id;
     const { id } = req.params;
-    const { reason } = req.body;
+    const { cancelReason } = req.body;
 
-    console.log('Cancel leave request - leaveId:', id, 'userId:', userId);
+    console.log('Cancel leave request - leaveId:', id, 'userId:', userId, 'reason:', cancelReason);
 
     // ตรวจสอบว่ามีคำขอลานี้หรือไม่
     const { data: leave, error: fetchError } = await supabaseAdmin
@@ -580,7 +580,7 @@ export const cancelLeave = async (req, res) => {
       .update({
         status: LEAVE_STATUS.PENDING_CANCEL,
         cancel_requested_at: new Date().toISOString(),
-        cancelled_reason: reason || 'ขอยกเลิกโดยผู้ยื่นคำขอ'
+        cancelled_reason: cancelReason || 'ขอยกเลิกโดยผู้ยื่นคำขอ'
       })
       .eq('id', id);
 
@@ -596,7 +596,7 @@ export const cancelLeave = async (req, res) => {
         leave_id: id,
         action: 'cancel_requested',
         action_by: userId,
-        remarks: reason || 'ขอยกเลิกโดยผู้ยื่นคำขอ'
+        remarks: cancelReason || 'ขอยกเลิกโดยผู้ยื่นคำขอ'
       });
 
     // ส่งแจ้งเตือนให้ Director ในกองเดียวกันว่ามีคำขอยกเลิก
@@ -640,6 +640,10 @@ export const cancelLeave = async (req, res) => {
           );
         }
       }
+      // ส่ง email แจ้ง Director ในกองเดียวกันว่ามีคำขอยกเลิกรอพิจารณา
+      emailService.notifyCancelRequestToApprovers(id, 'director', requestor?.department).catch(err => {
+        console.error('Email notification to director (cancel) error:', err.message);
+      });
     } catch (notifError) {
       console.log('Director cancel notification skipped:', notifError.message);
     }

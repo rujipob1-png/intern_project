@@ -45,19 +45,19 @@ const DEPARTMENT_NAMES = {
 
 const getStatusBadge = (status) => {
   const statusConfig = {
-    'pending': { label: 'รอพิจารณา', className: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
+    'pending': { label: 'รอพิจารณา', className: 'bg-gray-100 text-gray-600 border-gray-200' },
     'approved': { label: 'อนุมัติแล้ว', className: 'bg-green-100 text-green-700 border-green-200' },
     'approved_final': { label: 'อนุมัติแล้ว', className: 'bg-green-100 text-green-700 border-green-200' },
-    'approved_level1': { label: 'ผอ.อนุมัติแล้ว', className: 'bg-blue-100 text-blue-700 border-blue-200' },
-    'approved_level2': { label: 'ระดับ 2 ผ่าน', className: 'bg-indigo-100 text-indigo-700 border-indigo-200' },
-    'approved_level3': { label: 'ระดับ 3 ผ่าน', className: 'bg-purple-100 text-purple-700 border-purple-200' },
+    'approved_level1': { label: 'ผอ.อนุมัติแล้ว', className: 'bg-green-100 text-green-700 border-green-200' },
+    'approved_level2': { label: 'ระดับ 2 ผ่าน', className: 'bg-green-100 text-green-700 border-green-200' },
+    'approved_level3': { label: 'ระดับ 3 ผ่าน', className: 'bg-green-100 text-green-700 border-green-200' },
     'rejected': { label: 'ไม่อนุมัติ', className: 'bg-red-100 text-red-700 border-red-200' },
-    'cancelled': { label: 'ยกเลิกแล้ว', className: 'bg-gray-100 text-gray-700 border-gray-200' },
-    'partial_approved': { label: 'อนุมัติบางส่วน', className: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
-    'cancel_level1': { label: 'รอพิจารณายกเลิก', className: 'bg-orange-100 text-orange-700 border-orange-200' },
-    'cancel_level2': { label: 'รอพิจารณายกเลิก', className: 'bg-orange-100 text-orange-700 border-orange-200' },
-    'cancel_level3': { label: 'รอพิจารณายกเลิก', className: 'bg-orange-100 text-orange-700 border-orange-200' },
-    'pending_cancel': { label: 'รอพิจารณายกเลิก', className: 'bg-orange-100 text-orange-700 border-orange-200' },
+    'cancelled': { label: 'ยกเลิกแล้ว', className: 'bg-gray-100 text-gray-500 border-gray-200' },
+    'partial_approved': { label: 'อนุมัติบางส่วน', className: 'bg-gray-100 text-gray-600 border-gray-200' },
+    'cancel_level1': { label: 'รอพิจารณายกเลิก', className: 'bg-gray-100 text-gray-600 border-gray-200' },
+    'cancel_level2': { label: 'รอพิจารณายกเลิก', className: 'bg-gray-100 text-gray-600 border-gray-200' },
+    'cancel_level3': { label: 'รอพิจารณายกเลิก', className: 'bg-gray-100 text-gray-600 border-gray-200' },
+    'pending_cancel': { label: 'รอพิจารณายกเลิก', className: 'bg-gray-100 text-gray-600 border-gray-200' },
   };
 
   const config = statusConfig[status] || { label: status, className: 'bg-gray-100 text-gray-700' };
@@ -103,7 +103,8 @@ export default function AdminApprovalHistory() {
   // Filter leaves
   const filteredHistory = approvalHistory.filter(leave => {
     const matchDept = selectedDepartment === 'all' || leave.employee?.department === selectedDepartment;
-    const matchStatus = selectedStatus === 'all' || leave.status === selectedStatus;
+    const matchStatus = selectedStatus === 'all' || 
+      (selectedStatus === 'approved' ? leave.status?.startsWith('approved') : leave.status === selectedStatus);
     const matchSearch = !searchTerm || 
       leave.employee?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       leave.employee?.employeeCode?.includes(searchTerm) ||
@@ -114,7 +115,7 @@ export default function AdminApprovalHistory() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-500"></div>
       </div>
     );
   }
@@ -131,18 +132,18 @@ export default function AdminApprovalHistory() {
       </button>
 
       {/* Header */}
-      <div className="bg-gradient-to-r from-amber-500 to-amber-600 rounded-xl p-6 text-white shadow-lg">
+      <div className="bg-gray-800 rounded-xl p-6 text-white shadow-lg">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-xl font-bold flex items-center gap-3">
               <History className="w-7 h-7" />
               ประวัติการอนุมัติ
             </h1>
-            <p className="text-amber-100 mt-1">ผู้บริหารสูงสุด (Level 4) - ประวัติการดำเนินการ</p>
+            <p className="text-gray-400 mt-1">ผู้บริหารสูงสุด (Level 4) - ประวัติการดำเนินการ</p>
           </div>
-          <div className="bg-white/10 backdrop-blur rounded-lg px-6 py-3 text-center border border-amber-300">
+          <div className="bg-white/10 backdrop-blur rounded-lg px-6 py-3 text-center border border-gray-500">
             <div className="text-3xl font-bold">{approvalHistory.length}</div>
-            <div className="text-sm text-amber-100">รายการทั้งหมด</div>
+            <div className="text-sm text-gray-400">รายการทั้งหมด</div>
           </div>
         </div>
       </div>
@@ -157,7 +158,7 @@ export default function AdminApprovalHistory() {
             placeholder="ค้นหาชื่อ, รหัสพนักงาน, เลขที่ใบลา..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+            className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-gray-400"
           />
         </div>
 
@@ -168,14 +169,13 @@ export default function AdminApprovalHistory() {
             { value: 'all', label: 'ทั้งหมด' },
             { value: 'approved', label: 'อนุมัติ' },
             { value: 'rejected', label: 'ไม่อนุมัติ' },
-            { value: 'cancelled', label: 'ยกเลิก' },
           ].map(status => (
             <button
               key={status.value}
               onClick={() => setSelectedStatus(status.value)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 selectedStatus === status.value
-                  ? 'bg-amber-500 text-white'
+                  ? 'bg-gray-800 text-white'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
@@ -194,7 +194,7 @@ export default function AdminApprovalHistory() {
                 onClick={() => setSelectedDepartment('all')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   selectedDepartment === 'all'
-                    ? 'bg-amber-500 text-white shadow-md'
+                    ? 'bg-gray-800 text-white shadow-md'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
@@ -210,7 +210,7 @@ export default function AdminApprovalHistory() {
                   onClick={() => setSelectedDepartment(dept)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     selectedDepartment === dept
-                      ? 'bg-amber-500 text-white shadow-md'
+                      ? 'bg-gray-800 text-white shadow-md'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
@@ -244,8 +244,8 @@ export default function AdminApprovalHistory() {
                 <div className="flex flex-wrap gap-6">
                   {/* Employee Info */}
                   <div className="flex items-center gap-4 min-w-[250px]">
-                    <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
-                      <span className="text-amber-600 font-semibold text-lg">
+                    <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+                      <span className="text-gray-600 font-semibold text-lg">
                         {leave.employee?.name?.charAt(0) || 'U'}
                       </span>
                     </div>

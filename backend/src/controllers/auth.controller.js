@@ -55,6 +55,7 @@ export const login = async (req, res) => {
         profile_image_url,
         role_id,
         is_active,
+        hire_date,
         sick_leave_balance,
         personal_leave_balance,
         vacation_leave_balance,
@@ -128,6 +129,7 @@ export const login = async (req, res) => {
           email: user.email,
           emailNotifications: user.email_notifications ?? true,
           profileImageUrl: user.profile_image_url,
+          startDate: user.hire_date,
           role_name: user.roles.role_name, // เพิ่ม role_name ตรงๆ
           roleLevel: user.roles.role_level, // เพิ่ม roleLevel ตรงๆ
           role: {
@@ -175,6 +177,7 @@ export const getProfile = async (req, res) => {
         email,
         email_notifications,
         profile_image_url,
+        hire_date,
         sick_leave_balance,
         personal_leave_balance,
         vacation_leave_balance,
@@ -214,6 +217,7 @@ export const getProfile = async (req, res) => {
         email: user.email,
         emailNotifications: user.email_notifications ?? true,
         profileImageUrl: user.profile_image_url,
+        startDate: user.hire_date,
         role_name: user.roles.role_name, // เพิ่ม role_name สำหรับ Sidebar
         roleLevel: user.roles.role_level, // เพิ่ม roleLevel สำหรับ permission check
         role: {

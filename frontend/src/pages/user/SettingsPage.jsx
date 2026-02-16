@@ -150,16 +150,20 @@ export const SettingsPage = () => {
     }
   };
 
-  // Get role display name
-  const getRoleDisplayName = (roleName) => {
-    const roleMap = {
-      'user': 'พนักงาน',
-      'director': 'ผู้อำนวยการกอง',
-      'central_staff': 'เจ้าหน้าที่สำนักงานกลาง',
-      'central_head': 'หัวหน้าสำนักงานกลาง',
-      'admin': 'ผู้ดูแลระบบ'
-    };
-    return roleMap[roleName] || roleName;
+  // คำนวณอายุราชการ
+  const getServiceYears = (startDate) => {
+    if (!startDate) return 'ยังไม่ระบุ';
+    const start = new Date(startDate);
+    const now = new Date();
+    const years = now.getFullYear() - start.getFullYear();
+    const months = now.getMonth() - start.getMonth();
+    const totalMonths = years * 12 + months;
+    const y = Math.floor(totalMonths / 12);
+    const m = totalMonths % 12;
+    if (y === 0 && m === 0) return 'น้อยกว่า 1 เดือน';
+    if (y === 0) return `${m} เดือน`;
+    if (m === 0) return `${y} ปี`;
+    return `${y} ปี ${m} เดือน`;
   };
 
   return (
@@ -255,8 +259,8 @@ export const SettingsPage = () => {
                 <p className="text-sm font-medium text-slate-800">{user?.position}</p>
               </div>
               <div>
-                <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">ระดับสิทธิ์</p>
-                <p className="text-sm font-medium text-slate-800">{getRoleDisplayName(user?.role_name)}</p>
+                <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">อายุราชการ</p>
+                <p className="text-sm font-medium text-slate-800">{getServiceYears(user?.startDate)}</p>
               </div>
             </div>
           </div>

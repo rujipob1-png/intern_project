@@ -46,13 +46,13 @@ const DEPARTMENT_NAMES = {
 const getStatusBadge = (status) => {
   const statusConfig = {
     'cancelled': { label: 'ยกเลิกแล้ว', className: 'bg-gray-100 text-gray-700 border-gray-200' },
-    'approved_final': { label: 'อนุมัติแล้ว', className: 'bg-green-100 text-green-700 border-green-200' },
-    'approved': { label: 'อนุมัติแล้ว', className: 'bg-green-100 text-green-700 border-green-200' },
-    'rejected': { label: 'ไม่อนุมัติ', className: 'bg-red-100 text-red-700 border-red-200' },
-    'cancel_level1': { label: 'รอพิจารณายกเลิก', className: 'bg-orange-100 text-orange-700 border-orange-200' },
-    'cancel_level2': { label: 'รอพิจารณายกเลิก', className: 'bg-orange-100 text-orange-700 border-orange-200' },
-    'cancel_level3': { label: 'รอพิจารณายกเลิก', className: 'bg-orange-100 text-orange-700 border-orange-200' },
-    'pending_cancel': { label: 'รอพิจารณายกเลิก', className: 'bg-orange-100 text-orange-700 border-orange-200' },
+    'approved_final': { label: 'อนุมัติแล้ว', className: 'bg-gray-100 text-gray-700 border-gray-200' },
+    'approved': { label: 'อนุมัติแล้ว', className: 'bg-gray-100 text-gray-700 border-gray-200' },
+    'rejected': { label: 'ไม่อนุมัติ', className: 'bg-gray-100 text-gray-500 border-gray-200' },
+    'cancel_level1': { label: 'รอพิจารณายกเลิก', className: 'bg-gray-100 text-gray-600 border-gray-200' },
+    'cancel_level2': { label: 'รอพิจารณายกเลิก', className: 'bg-gray-100 text-gray-600 border-gray-200' },
+    'cancel_level3': { label: 'รอพิจารณายกเลิก', className: 'bg-gray-100 text-gray-600 border-gray-200' },
+    'pending_cancel': { label: 'รอพิจารณายกเลิก', className: 'bg-gray-100 text-gray-600 border-gray-200' },
   };
 
   const config = statusConfig[status] || { label: status, className: 'bg-gray-100 text-gray-700' };
@@ -109,7 +109,7 @@ export default function AdminCancelHistory() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-500"></div>
       </div>
     );
   }
@@ -126,18 +126,18 @@ export default function AdminCancelHistory() {
       </button>
 
       {/* Header */}
-      <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-xl p-6 text-white shadow-lg">
+      <div className="bg-gray-800 rounded-xl p-6 text-white shadow-lg">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-xl font-bold flex items-center gap-3">
               <History className="w-7 h-7" />
               ประวัติการยกเลิกการลา
             </h1>
-            <p className="text-red-100 mt-1">ผู้บริหารสูงสุด (Level 4) - ประวัติการดำเนินการยกเลิก</p>
+            <p className="text-gray-400 mt-1">ผู้บริหารสูงสุด (Level 4) - ประวัติการดำเนินการยกเลิก</p>
           </div>
-          <div className="bg-white/10 backdrop-blur rounded-lg px-6 py-3 text-center border border-red-300">
+          <div className="bg-white/10 backdrop-blur rounded-lg px-6 py-3 text-center border border-gray-500">
             <div className="text-3xl font-bold">{cancelHistory.length}</div>
-            <div className="text-sm text-red-100">รายการทั้งหมด</div>
+            <div className="text-sm text-gray-400">รายการทั้งหมด</div>
           </div>
         </div>
       </div>
@@ -152,7 +152,7 @@ export default function AdminCancelHistory() {
             placeholder="ค้นหาชื่อ, รหัสพนักงาน, เลขที่ใบลา..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+            className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-gray-400"
           />
         </div>
 
@@ -169,7 +169,7 @@ export default function AdminCancelHistory() {
               onClick={() => setSelectedStatus(status.value)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 selectedStatus === status.value
-                  ? 'bg-red-500 text-white'
+                  ? 'bg-gray-800 text-white'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
@@ -188,7 +188,7 @@ export default function AdminCancelHistory() {
                 onClick={() => setSelectedDepartment('all')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   selectedDepartment === 'all'
-                    ? 'bg-red-500 text-white shadow-md'
+                    ? 'bg-gray-800 text-white shadow-md'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
@@ -204,7 +204,7 @@ export default function AdminCancelHistory() {
                   onClick={() => setSelectedDepartment(dept)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     selectedDepartment === dept
-                      ? 'bg-red-500 text-white shadow-md'
+                      ? 'bg-gray-800 text-white shadow-md'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
@@ -238,8 +238,8 @@ export default function AdminCancelHistory() {
                 <div className="flex flex-wrap gap-6">
                   {/* Employee Info */}
                   <div className="flex items-center gap-4 min-w-[250px]">
-                    <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                      <span className="text-red-600 font-semibold text-lg">
+                    <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+                      <span className="text-gray-600 font-semibold text-lg">
                         {leave.employee?.name?.charAt(0) || 'U'}
                       </span>
                     </div>

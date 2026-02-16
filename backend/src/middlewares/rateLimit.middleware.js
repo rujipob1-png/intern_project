@@ -30,11 +30,11 @@ export const loginLimiter = rateLimit({
 
 /**
  * Rate limiter สำหรับ API ทั่วไป
- * จำกัด 100 ครั้ง/นาที
+ * จำกัด 500 ครั้ง/นาที (dev) หรือ 100 ครั้ง/นาที (production)
  */
 export const apiLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 นาที
-  max: 100, // จำกัด 100 ครั้ง/นาที
+  max: process.env.NODE_ENV === 'production' ? 100 : 500, // dev: 500, prod: 100
   message: {
     success: false,
     message: 'มีการใช้งาน API มากเกินไป กรุณารอสักครู่แล้วลองใหม่',

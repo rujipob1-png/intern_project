@@ -41,7 +41,7 @@
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%233b82f6' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
     background-position: right 0.75rem center;
     background-repeat: no-repeat;
     background-size: 1.25em 1.25em;
@@ -51,9 +51,9 @@
   }
 
   select.input-field:hover {
-    border-color: #3b82f6 !important;
+    border-color: #6b7280 !important;
     background-color: #f8fafc !important;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.1);
   }
 
   
@@ -61,8 +61,8 @@
   select.input-field:focus {
     background-color: #ffffff !important;
     color: #000000 !important;
-    border-color: #3b82f6 !important;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    border-color: #6b7280 !important;
+    box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.2);
   }
 
   /* ปล่อยให้ OS จัดการ option เอง - ตัวหนังสือจะชัดแน่นอน */

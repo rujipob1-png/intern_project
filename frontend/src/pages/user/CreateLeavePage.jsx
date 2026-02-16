@@ -529,28 +529,28 @@ export const CreateLeavePage = () => {
 
         {/* Leave Balance Summary */}
         {leaveBalance && (
-          <Card className="mb-6 bg-blue-50 border-blue-200">
+          <Card className="mb-6 bg-gray-50 border-gray-200">
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-3">
-                <AlertCircle className="w-5 h-5 text-blue-600" />
-                <h3 className="font-semibold text-blue-900">วันลาคงเหลือของคุณ</h3>
+                <AlertCircle className="w-5 h-5 text-gray-600" />
+                <h3 className="font-semibold text-gray-900">วันลาคงเหลือของคุณ</h3>
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div className="text-center">
-                  <p className="text-sm text-blue-700">ลาป่วย (ป)</p>
-                  <p className="text-base font-semibold text-blue-900">
+                  <p className="text-sm text-gray-600">ลาป่วย (ป)</p>
+                  <p className="text-base font-semibold text-gray-900">
                     ลามาแล้ว {leaveBalance.sick || 0} วัน
                   </p>
                 </div>
                 <div className="text-center">
-                  <p className="text-sm text-blue-700">ลาพักผ่อน (พ)</p>
-                  <p className="text-2xl font-bold text-blue-900">
+                  <p className="text-sm text-gray-600">ลาพักผ่อน (พ)</p>
+                  <p className="text-2xl font-bold text-gray-900">
                     {leaveBalance.vacation || 0} วัน
                   </p>
                 </div>
                 <div className="text-center">
-                  <p className="text-sm text-blue-700">ลากิจ (ก)</p>
-                  <p className="text-2xl font-bold text-blue-900">
+                  <p className="text-sm text-gray-600">ลากิจ (ก)</p>
+                  <p className="text-2xl font-bold text-gray-900">
                     {leaveBalance.personal || 0} วัน
                   </p>
                 </div>
@@ -597,12 +597,12 @@ export const CreateLeavePage = () => {
 
                 {/* 📋 กล่องแสดงระเบียบการลา */}
                 {currentLeaveRules && (
-                  <div className="mt-4 p-4 bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 rounded-xl">
+                  <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-xl">
                     <div className="flex items-center gap-2 mb-3">
-                      <Info className="w-5 h-5 text-slate-600" />
-                      <h4 className="font-semibold text-slate-800">{currentLeaveRules.title}</h4>
+                      <Info className="w-5 h-5 text-gray-600" />
+                      <h4 className="font-semibold text-gray-800">{currentLeaveRules.title}</h4>
                       {currentLeaveRules.maxDays && (
-                        <span className="ml-auto px-2 py-1 bg-slate-200 text-slate-700 text-xs font-semibold rounded-full">
+                        <span className="ml-auto px-2 py-1 bg-gray-200 text-gray-700 text-xs font-semibold rounded-full">
                           สิทธิ์: {currentLeaveRules.maxDays} วัน
                         </span>
                       )}
@@ -611,7 +611,7 @@ export const CreateLeavePage = () => {
                     {/* รายการกฎ */}
                     <ul className="space-y-1.5 mb-3">
                       {currentLeaveRules.rules.map((rule, idx) => (
-                        <li key={idx} className="flex items-start gap-2 text-sm text-slate-700">
+                        <li key={idx} className="flex items-start gap-2 text-sm text-gray-700">
                           <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
                           <span>{rule}</span>
                         </li>
@@ -620,8 +620,8 @@ export const CreateLeavePage = () => {
 
                     {/* การเสนอใบลา */}
                     {currentLeaveRules.submitRule && (
-                      <div className="p-2 bg-blue-50 border border-blue-200 rounded-lg">
-                        <p className="text-sm text-blue-800">
+                      <div className="p-2 bg-gray-100 border border-gray-200 rounded-lg">
+                        <p className="text-sm text-gray-800">
                           <span className="font-semibold">📝 การเสนอใบลา:</span> {currentLeaveRules.submitRule}
                         </p>
                       </div>
@@ -661,7 +661,7 @@ export const CreateLeavePage = () => {
                       <>
                         คลิกที่วันในปฏิทินเพื่อเลือกหรือยกเลิก (เลือกได้หลายวัน)
                         {selectedLeaveType?.type_code === 'SICK' && (
-                          <span className="text-blue-600">(ลาป่วยสามารถเลือกวันย้อนหลังได้ไม่เกิน 30 วัน)</span>
+                      <span className="text-gray-600">(ลาป่วยสามารถเลือกวันย้อนหลังได้ไม่เกิน 30 วัน)</span>
                         )}
                       </>
                     )}
@@ -842,13 +842,13 @@ export const CreateLeavePage = () => {
 
               {/* Acting Person - บังคับเฉพาะลาพักผ่อน */}
               {selectedLeaveType?.type_code === 'VACATION' ? (
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
                   <ActingPersonSelect
                     value={formData.actingPersonId}
                     onChange={(value) => setFormData(prev => ({ ...prev, actingPersonId: value }))}
                     required={true}
                   />
-                  <p className="mt-2 text-sm text-blue-700">
+                  <p className="mt-2 text-sm text-gray-700">
                     ⚠️ <span className="font-semibold">การลาพักผ่อนต้องระบุผู้ปฏิบัติหน้าที่แทน</span>
                   </p>
                 </div>

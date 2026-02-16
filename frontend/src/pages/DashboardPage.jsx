@@ -3,10 +3,6 @@ import { useRealtime } from '../contexts/RealtimeContext';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { MainLayout } from '../components/layout/MainLayout';
-import DashboardDirector from './director/DashboardDirector';
-import CentralOfficeStaffDashboard from './centralOffice/CentralOfficeStaffDashboard';
-import CentralOfficeHeadDashboard from './centralOffice/CentralOfficeHeadDashboard';
-import AdminDashboard from './admin/AdminDashboard';
 import { ROLES, LEAVE_TYPE_CODES } from '../utils/constants';
 import { getDepartmentThaiCode } from '../utils/departmentMapping';
 import { leaveAPI } from '../api/leave.api';
@@ -40,15 +36,11 @@ export const DashboardPage = () => {
   // Get role_name from user object
   const userRole = user?.role_name;
 
-  // Load recent leaves and balance for USER only
+  // Load recent leaves and balance for ALL roles
   // Also reload when realtime updates occur
   useEffect(() => {
-    if (userRole === ROLES.USER) {
-      loadRecentLeaves();
-      loadLeaveBalance();
-    } else {
-      setLoading(false);
-    }
+    loadRecentLeaves();
+    loadLeaveBalance();
   }, [userRole, leaveUpdate, approvalUpdate]);
 
   const loadRecentLeaves = async () => {
@@ -76,38 +68,8 @@ export const DashboardPage = () => {
     }
   };
 
-  // แยก Dashboard ตาม Role
-  if (userRole === ROLES.DIRECTOR) {
-    return (
-      <MainLayout>
-        <DashboardDirector />
-      </MainLayout>
-    );
-  }
-
-  if (userRole === ROLES.CENTRAL_OFFICE_STAFF) {
-    return (
-      <MainLayout>
-        <CentralOfficeStaffDashboard />
-      </MainLayout>
-    );
-  }
-
-  if (userRole === ROLES.CENTRAL_OFFICE_HEAD) {
-    return (
-      <MainLayout>
-        <CentralOfficeHeadDashboard />
-      </MainLayout>
-    );
-  }
-
-  if (userRole === ROLES.ADMIN) {
-    return (
-      <MainLayout>
-        <AdminDashboard />
-      </MainLayout>
-    );
-  }
+  // ทุก Role ใช้ User Dashboard เหมือนกัน
+  // Role-specific dashboards อยู่ที่ routes แยก (เช่น /central-office/staff, /director/dashboard)
 
   // Default: USER Dashboard
 

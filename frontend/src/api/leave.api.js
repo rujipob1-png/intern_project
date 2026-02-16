@@ -27,7 +27,7 @@ export const leaveAPI = {
 
   // Cancel leave (submit cancellation request)
   cancelLeave: async (id, reason) => {
-    const response = await axios.put(`/leaves/${id}/cancel`, { reason });
+    const response = await axios.put(`/leaves/${id}/cancel`, { cancelReason: reason });
     return response.data;
   },
 

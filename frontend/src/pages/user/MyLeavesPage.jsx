@@ -203,22 +203,22 @@ export const MyLeavesPage = () => {
     {
       label: 'ทั้งหมด',
       value: Array.isArray(leaves) ? leaves.length : 0,
-      color: 'text-blue-600',
+      color: 'text-gray-900',
     },
     {
       label: 'รอพิจารณา',
       value: Array.isArray(leaves) ? leaves.filter(l => l.status === 'pending').length : 0,
-      color: 'text-yellow-600',
+      color: 'text-gray-900',
     },
     {
       label: 'อนุมัติ',
       value: Array.isArray(leaves) ? leaves.filter(l => l.status === 'approved').length : 0,
-      color: 'text-green-600',
+      color: 'text-gray-900',
     },
     {
       label: 'ไม่อนุมัติ',
       value: Array.isArray(leaves) ? leaves.filter(l => l.status === 'rejected').length : 0,
-      color: 'text-red-600',
+      color: 'text-gray-900',
     },
   ];
 
@@ -382,7 +382,7 @@ export const MyLeavesPage = () => {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleCancel(leave)}
-                                className="text-red-600 hover:bg-red-50"
+                                className="text-gray-600 hover:bg-gray-50"
                               >
                                 ยกเลิกการลา
                               </Button>
@@ -404,7 +404,7 @@ export const MyLeavesPage = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             {/* Header */}
-            <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white p-6 rounded-t-lg relative">
+            <div className="bg-gray-800 text-white p-6 rounded-t-lg relative">
               <button
                 onClick={() => {
                   setShowCancelModal(false);
@@ -426,9 +426,9 @@ export const MyLeavesPage = () => {
 
             {/* Body */}
             <div className="p-6 space-y-6">
-              <Card className="bg-blue-50 border-blue-200">
+              <Card className="bg-gray-50 border-gray-200">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-blue-900">
+                  <CardTitle className="flex items-center gap-2 text-gray-900">
                     <FileText className="w-5 h-5" />
                     ข้อมูลคำขอเดิม
                   </CardTitle>
@@ -449,7 +449,7 @@ export const MyLeavesPage = () => {
                     <label className="text-sm text-gray-600">ช่วงวันที่ลา</label>
                     <p className="font-semibold text-gray-900">
                       {formatDate(selectedLeave.startDate || selectedLeave.start_date)} → {formatDate(selectedLeave.endDate || selectedLeave.end_date)}
-                      <span className="ml-2 text-blue-600">({selectedLeave.totalDays || selectedLeave.total_days} วัน)</span>
+                      <span className="ml-2 text-gray-600">({selectedLeave.totalDays || selectedLeave.total_days} วัน)</span>
                     </p>
                   </div>
 
@@ -469,7 +469,7 @@ export const MyLeavesPage = () => {
                   value={cancelReason}
                   onChange={(e) => setCancelReason(e.target.value)}
                   placeholder="กรุณาระบุเหตุผลการยกเลิกคำขอลา (ขั้นต่ำ 10 ตัวอักษร)"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-transparent"
                   rows="4"
                   required
                 />
@@ -493,7 +493,7 @@ export const MyLeavesPage = () => {
               </Button>
               <Button
                 onClick={confirmCancel}
-                className="bg-red-600 hover:bg-red-700 text-white"
+                className="bg-gray-900 hover:bg-gray-800 text-white"
                 disabled={!cancelReason.trim()}
               >
                 <XCircle className="w-4 h-4 mr-2" />

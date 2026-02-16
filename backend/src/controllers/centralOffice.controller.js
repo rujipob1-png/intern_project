@@ -825,6 +825,26 @@ export const approveCancelLevel2 = async (req, res) => {
       console.log('Head cancel notification skipped:', notifError.message);
     }
 
+    // แจ้งผู้ขอลาว่าคำขอยกเลิกถูกส่งต่อแล้ว
+    await createNotification(
+      leave.user_id,
+      'cancel_pending',
+      'คำขอยกเลิกผ่านระดับ 2',
+      `คำขอยกเลิก ${leave.leave_number} ผ่านการตรวจสอบแล้ว ส่งต่อไประดับ 3`,
+      id,
+      'leave'
+    );
+
+    // ส่ง email แจ้ง user ว่าคำขอยกเลิกผ่านระดับ 2
+    EmailService.notifyStatusUpdate(id, 'cancel_level2').catch(err => {
+      console.error('Email notification (cancel_level2) error:', err.message);
+    });
+
+    // ส่ง email แจ้ง central_office_head ว่ามีคำขอยกเลิกรออนุมัติ
+    EmailService.notifyCancelRequestToApprovers(id, 'central_office_head').catch(err => {
+      console.error('Email notification to central_office_head (cancel) error:', err.message);
+    });
+
     return successResponse(res, HTTP_STATUS.OK, 'Cancel request approved at level 2');
   } catch (error) {
     console.error('Approve cancel (level 2) error:', error);
@@ -880,6 +900,13 @@ export const rejectCancelLevel2 = async (req, res) => {
       id,
       'leave'
     );
+
+    // ส่ง email แจ้ง user ว่าคำขอยกเลิกถูกปฏิเสธ
+    EmailService.notifyStatusUpdate(id, 'cancel_rejected', {
+      comment: remarks
+    }).catch(err => {
+      console.error('Email notification (cancel_rejected L2) error:', err.message);
+    });
 
     return successResponse(res, HTTP_STATUS.OK, 'Cancel request rejected');
   } catch (error) {
@@ -989,6 +1016,26 @@ export const approveCancelLevel3 = async (req, res) => {
     } catch (notifError) {
       console.log('Admin cancel notification skipped:', notifError.message);
     }
+
+    // แจ้งผู้ขอลาว่าคำขอยกเลิกถูกส่งต่อแล้ว
+    await createNotification(
+      leave.user_id,
+      'cancel_pending',
+      'คำขอยกเลิกผ่านระดับ 3',
+      `คำขอยกเลิก ${leave.leave_number} ผ่านการอนุมัติระดับ 3 แล้ว รออนุมัติขั้นสุดท้าย`,
+      id,
+      'leave'
+    );
+
+    // ส่ง email แจ้ง user ว่าคำขอยกเลิกผ่านระดับ 3
+    EmailService.notifyStatusUpdate(id, 'cancel_level3').catch(err => {
+      console.error('Email notification (cancel_level3) error:', err.message);
+    });
+
+    // ส่ง email แจ้ง admin ว่ามีคำขอยกเลิกรออนุมัติขั้นสุดท้าย
+    EmailService.notifyCancelRequestToApprovers(id, 'admin').catch(err => {
+      console.error('Email notification to admin (cancel) error:', err.message);
+    });
 
     return successResponse(res, HTTP_STATUS.OK, 'Cancel request approved at level 3');
   } catch (error) {
@@ -1182,9 +1229,275 @@ export const rejectCancelLevel3 = async (req, res) => {
       'leave'
     );
 
+    // ส่ง email แจ้ง user ว่าคำขอยกเลิกถูกปฏิเสธ
+    EmailService.notifyStatusUpdate(id, 'cancel_rejected', {
+      comment: remarks
+    }).catch(err => {
+      console.error('Email notification (cancel_rejected L3) error:', err.message);
+    });
+
     return successResponse(res, HTTP_STATUS.OK, 'Cancel request rejected');
   } catch (error) {
     console.error('Reject cancel (level 3) error:', error);
     return errorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Failed to reject cancel');
+  }
+};
+
+/**
+ * ดูประวัติการตรวจสอบ/อนุมัติ (Staff - Level 2)
+ * แสดงรายการใบลาที่ Staff เคยดำเนินการแล้ว (ทั้งอนุมัติและปฏิเสธ)
+ */
+export const getApprovalHistoryStaff = async (req, res) => {
+  try {
+    const staffId = req.user.id;
+
+    // ดึงรายการที่ Staff คนนี้เคยอนุมัติ/ปฏิเสธ จาก approvals table
+    const { data: approvals, error: approvalsError } = await supabaseAdmin
+      .from('approvals')
+      .select('leave_id, action, comment, action_date')
+      .eq('approver_id', staffId)
+      .eq('approval_level', 2)
+      .order('action_date', { ascending: false });
+
+    if (approvalsError) throw approvalsError;
+
+    if (!approvals || approvals.length === 0) {
+      return successResponse(res, HTTP_STATUS.OK, 'No approval history found', []);
+    }
+
+    const leaveIds = [...new Set(approvals.map(a => a.leave_id))];
+
+    // ดึงข้อมูลใบลา
+    const { data: leaves, error: leavesError } = await supabaseAdmin
+      .from('leaves')
+      .select(`
+        *,
+        leave_types (type_name, type_code),
+        users!leaves_user_id_fkey (
+          id, employee_code, title, first_name, last_name, position, department, phone
+        )
+      `)
+      .in('id', leaveIds)
+      .order('updated_at', { ascending: false });
+
+    if (leavesError) throw leavesError;
+
+    // Map approval info to leaves
+    const approvalMap = {};
+    approvals.forEach(a => {
+      if (!approvalMap[a.leave_id]) approvalMap[a.leave_id] = a;
+    });
+
+    // ดึง approval timeline ทั้งหมดของแต่ละใบลา
+    const { data: allApprovals, error: allApprovalsError } = await supabaseAdmin
+      .from('approvals')
+      .select(`
+        leave_id, approval_level, action, comment, action_date,
+        users!approvals_approver_id_fkey ( title, first_name, last_name, position )
+      `)
+      .in('leave_id', leaveIds)
+      .order('approval_level', { ascending: true });
+
+    if (allApprovalsError) console.error('Error fetching all approvals:', allApprovalsError);
+
+    const approvalsTimelineMap = {};
+    (allApprovals || []).forEach(a => {
+      if (!approvalsTimelineMap[a.leave_id]) approvalsTimelineMap[a.leave_id] = [];
+      approvalsTimelineMap[a.leave_id].push({
+        level: a.approval_level,
+        action: a.action,
+        comment: a.comment,
+        actionDate: a.action_date,
+        approverName: a.users ? `${a.users.title || ''}${a.users.first_name || ''} ${a.users.last_name || ''}` : null,
+        approverPosition: a.users?.position || null
+      });
+    });
+
+    return successResponse(
+      res,
+      HTTP_STATUS.OK,
+      'Staff approval history retrieved successfully',
+      leaves.map(leave => {
+        let reason = leave.reason;
+        let selectedDates = leave.selected_dates;
+        if (reason && typeof reason === 'string' && reason.startsWith('{')) {
+          try {
+            const parsed = JSON.parse(reason);
+            reason = parsed.reason || reason;
+            if (!selectedDates || (Array.isArray(selectedDates) && selectedDates.length === 0)) {
+              selectedDates = parsed.selected_dates || selectedDates;
+            }
+          } catch (e) {}
+        }
+        if (selectedDates && typeof selectedDates === 'string') {
+          try { selectedDates = JSON.parse(selectedDates); } catch (e) { selectedDates = []; }
+        }
+
+        const myApproval = approvalMap[leave.id];
+
+        return {
+          id: leave.id,
+          leaveNumber: leave.leave_number,
+          leaveType: leave.leave_types?.type_name || 'N/A',
+          leaveTypeCode: leave.leave_types?.type_code || 'N/A',
+          startDate: leave.start_date,
+          endDate: leave.end_date,
+          totalDays: leave.total_days,
+          reason,
+          selectedDates: selectedDates || [],
+          documentUrl: leave.document_url,
+          status: leave.status,
+          currentApprovalLevel: leave.current_approval_level || 1,
+          contactPhone: leave.contact_phone || null,
+          contactAddress: leave.contact_address || null,
+          cancelledAt: leave.cancelled_at || null,
+          cancelledReason: leave.cancelled_reason || null,
+          createdAt: leave.created_at,
+          updatedAt: leave.updated_at,
+          myAction: myApproval?.action || null,
+          myComment: myApproval?.comment || null,
+          myActionDate: myApproval?.action_date || null,
+          approvalTimeline: approvalsTimelineMap[leave.id] || [],
+          employee: {
+            employeeCode: leave.users?.employee_code,
+            name: `${leave.users?.title || ''}${leave.users?.first_name || ''} ${leave.users?.last_name || ''}`,
+            position: leave.users?.position,
+            department: leave.users?.department || 'N/A',
+            phone: leave.users?.phone
+          }
+        };
+      })
+    );
+  } catch (error) {
+    console.error('Get staff approval history error:', error);
+    return errorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Failed to retrieve approval history');
+  }
+};
+
+/**
+ * ดูประวัติการอนุมัติ (Head - Level 3)
+ * แสดงรายการใบลาที่ Head เคยดำเนินการแล้ว
+ */
+export const getApprovalHistoryHead = async (req, res) => {
+  try {
+    const headId = req.user.id;
+
+    const { data: approvals, error: approvalsError } = await supabaseAdmin
+      .from('approvals')
+      .select('leave_id, action, comment, action_date')
+      .eq('approver_id', headId)
+      .eq('approval_level', 3)
+      .order('action_date', { ascending: false });
+
+    if (approvalsError) throw approvalsError;
+
+    if (!approvals || approvals.length === 0) {
+      return successResponse(res, HTTP_STATUS.OK, 'No approval history found', []);
+    }
+
+    const leaveIds = [...new Set(approvals.map(a => a.leave_id))];
+
+    const { data: leaves, error: leavesError } = await supabaseAdmin
+      .from('leaves')
+      .select(`
+        *,
+        leave_types (type_name, type_code),
+        users!leaves_user_id_fkey (
+          id, employee_code, title, first_name, last_name, position, department, phone
+        )
+      `)
+      .in('id', leaveIds)
+      .order('updated_at', { ascending: false });
+
+    if (leavesError) throw leavesError;
+
+    const approvalMap = {};
+    approvals.forEach(a => {
+      if (!approvalMap[a.leave_id]) approvalMap[a.leave_id] = a;
+    });
+
+    // ดึง approval timeline ทั้งหมดของแต่ละใบลา
+    const { data: allApprovals, error: allApprovalsError } = await supabaseAdmin
+      .from('approvals')
+      .select(`
+        leave_id, approval_level, action, comment, action_date,
+        users!approvals_approver_id_fkey ( title, first_name, last_name, position )
+      `)
+      .in('leave_id', leaveIds)
+      .order('approval_level', { ascending: true });
+
+    if (allApprovalsError) console.error('Error fetching all approvals:', allApprovalsError);
+
+    const approvalsTimelineMap = {};
+    (allApprovals || []).forEach(a => {
+      if (!approvalsTimelineMap[a.leave_id]) approvalsTimelineMap[a.leave_id] = [];
+      approvalsTimelineMap[a.leave_id].push({
+        level: a.approval_level,
+        action: a.action,
+        comment: a.comment,
+        actionDate: a.action_date,
+        approverName: a.users ? `${a.users.title || ''}${a.users.first_name || ''} ${a.users.last_name || ''}` : null,
+        approverPosition: a.users?.position || null
+      });
+    });
+
+    return successResponse(
+      res,
+      HTTP_STATUS.OK,
+      'Head approval history retrieved successfully',
+      leaves.map(leave => {
+        let reason = leave.reason;
+        let selectedDates = leave.selected_dates;
+        if (reason && typeof reason === 'string' && reason.startsWith('{')) {
+          try {
+            const parsed = JSON.parse(reason);
+            reason = parsed.reason || reason;
+            if (!selectedDates || (Array.isArray(selectedDates) && selectedDates.length === 0)) {
+              selectedDates = parsed.selected_dates || selectedDates;
+            }
+          } catch (e) {}
+        }
+        if (selectedDates && typeof selectedDates === 'string') {
+          try { selectedDates = JSON.parse(selectedDates); } catch (e) { selectedDates = []; }
+        }
+
+        const myApproval = approvalMap[leave.id];
+
+        return {
+          id: leave.id,
+          leaveNumber: leave.leave_number,
+          leaveType: leave.leave_types?.type_name || 'N/A',
+          leaveTypeCode: leave.leave_types?.type_code || 'N/A',
+          startDate: leave.start_date,
+          endDate: leave.end_date,
+          totalDays: leave.total_days,
+          reason,
+          selectedDates: selectedDates || [],
+          documentUrl: leave.document_url,
+          status: leave.status,
+          currentApprovalLevel: leave.current_approval_level || 1,
+          contactPhone: leave.contact_phone || null,
+          contactAddress: leave.contact_address || null,
+          cancelledAt: leave.cancelled_at || null,
+          cancelledReason: leave.cancelled_reason || null,
+          createdAt: leave.created_at,
+          updatedAt: leave.updated_at,
+          myAction: myApproval?.action || null,
+          myComment: myApproval?.comment || null,
+          myActionDate: myApproval?.action_date || null,
+          approvalTimeline: approvalsTimelineMap[leave.id] || [],
+          employee: {
+            employeeCode: leave.users?.employee_code,
+            name: `${leave.users?.title || ''}${leave.users?.first_name || ''} ${leave.users?.last_name || ''}`,
+            position: leave.users?.position,
+            department: leave.users?.department || 'N/A',
+            phone: leave.users?.phone
+          }
+        };
+      })
+    );
+  } catch (error) {
+    console.error('Get head approval history error:', error);
+    return errorResponse(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Failed to retrieve approval history');
   }
 };

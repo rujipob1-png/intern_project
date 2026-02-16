@@ -854,6 +854,11 @@ export const approveCancelFinal = async (req, res) => {
       'leave'
     );
 
+    // ส่ง email แจ้ง user ว่าคำขอยกเลิกได้รับอนุมัติขั้นสุดท้าย
+    EmailService.notifyStatusUpdate(id, 'cancel_approved').catch(err => {
+      console.error('Email notification (cancel_approved final) error:', err.message);
+    });
+
     return successResponse(res, HTTP_STATUS.OK, 'Leave cancelled successfully', {
       leaveId: id,
       status: 'cancelled',
@@ -918,6 +923,13 @@ export const rejectCancelFinal = async (req, res) => {
       id,
       'leave'
     );
+
+    // ส่ง email แจ้ง user ว่าคำขอยกเลิกถูกปฏิเสธ
+    EmailService.notifyStatusUpdate(id, 'cancel_rejected', {
+      comment: remarks
+    }).catch(err => {
+      console.error('Email notification (cancel_rejected final) error:', err.message);
+    });
 
     return successResponse(res, HTTP_STATUS.OK, 'Cancel request rejected', {
       leaveId: id,

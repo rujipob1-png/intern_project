@@ -167,7 +167,7 @@ export const CalendarPicker = ({
       {/* Calendar Container */}
       <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-visible w-80 relative">
         {/* Header */}
-        <div className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700 px-4 py-3 rounded-t-2xl">
+        <div className="bg-gray-800 px-4 py-3 rounded-t-2xl">
           <div className="flex items-center justify-center gap-2">
             <button
               type="button"
@@ -204,8 +204,8 @@ export const CalendarPicker = ({
                 onClick={() => selectMonth(idx)}
                 className={`px-2 py-2.5 text-sm rounded-lg font-medium transition-all ${
                   currentMonth.getMonth() === idx
-                    ? 'bg-indigo-600 text-white shadow-md'
-                    : 'hover:bg-indigo-50 text-gray-700 hover:text-indigo-600'
+                    ? 'bg-gray-800 text-white shadow-md'
+                    : 'hover:bg-gray-100 text-gray-700 hover:text-gray-900'
                 }`}
               >
                 {monthNamesShort[idx]}
@@ -224,8 +224,8 @@ export const CalendarPicker = ({
                 onClick={() => selectYear(year)}
                 className={`px-2 py-2.5 text-sm rounded-lg font-medium transition-all ${
                   currentMonth.getFullYear() === year
-                    ? 'bg-indigo-600 text-white shadow-md'
-                    : 'hover:bg-indigo-50 text-gray-700 hover:text-indigo-600'
+                    ? 'bg-gray-800 text-white shadow-md'
+                    : 'hover:bg-gray-100 text-gray-700 hover:text-gray-900'
                 }`}
               >
                 {year + 543}
@@ -240,7 +240,7 @@ export const CalendarPicker = ({
             <div
               key={idx}
               className={`py-2 text-center text-xs font-semibold ${
-                idx === 0 ? 'text-red-500' : idx === 6 ? 'text-blue-500' : 'text-gray-500'
+                idx === 0 || idx === 6 ? 'text-gray-400' : 'text-gray-500'
               }`}
             >
               {name}
@@ -272,21 +272,21 @@ export const CalendarPicker = ({
                   w-9 h-9 mx-auto flex items-center justify-center text-sm font-medium
                   rounded-xl transition-all duration-200 relative
                   ${selected
-                    ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg scale-105'
+                    ? 'bg-gray-800 text-white shadow-lg scale-105'
                     : isDisabled
                       ? 'text-gray-300 cursor-not-allowed'
                       : isSunday
-                        ? 'text-red-500 hover:bg-red-50'
+                        ? 'text-gray-400 hover:bg-gray-100'
                         : isSaturday
-                          ? 'text-blue-500 hover:bg-blue-50'
-                          : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-600'
+                          ? 'text-gray-400 hover:bg-gray-100'
+                          : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                   }
-                  ${todayDate && !selected ? 'ring-2 ring-amber-400 ring-offset-1' : ''}
+                  ${todayDate && !selected ? 'ring-2 ring-gray-400 ring-offset-1' : ''}
                 `}
               >
                 {date.getDate()}
                 {selected && (
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-gray-500 rounded-full flex items-center justify-center">
                     <Check className="w-2 h-2 text-white" />
                   </span>
                 )}
@@ -300,14 +300,14 @@ export const CalendarPicker = ({
           <button
             type="button"
             onClick={() => setCurrentMonth(new Date())}
-            className="text-sm text-indigo-600 hover:text-indigo-800 font-medium hover:underline"
+            className="text-sm text-gray-600 hover:text-gray-900 font-medium hover:underline"
           >
             วันนี้
           </button>
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-gray-700">
               {selectedDates.length > 0 ? (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-indigo-100 text-indigo-700 rounded-full">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 text-gray-700 rounded-full">
                   <Check className="w-3.5 h-3.5" />
                   เลือก {selectedDates.length} วัน
                 </span>
@@ -320,7 +320,7 @@ export const CalendarPicker = ({
             <button
               type="button"
               onClick={handleClearAll}
-              className="text-sm text-red-500 hover:text-red-700 font-medium hover:underline"
+              className="text-sm text-gray-500 hover:text-gray-700 font-medium hover:underline"
             >
               ล้างทั้งหมด
             </button>
@@ -330,7 +330,7 @@ export const CalendarPicker = ({
 
       {/* Selected Dates Chips */}
       {selectedDates.length > 0 && (
-        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 rounded-xl p-3 w-80">
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 w-80">
           <div className="flex flex-wrap gap-2 justify-center">
             {selectedDates.sort().map((dateStr) => {
               const date = new Date(dateStr + 'T00:00:00');
@@ -339,7 +339,7 @@ export const CalendarPicker = ({
               return (
                 <div
                   key={dateStr}
-                  className="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 bg-white border border-indigo-200 rounded-full text-sm font-medium text-indigo-700 shadow-sm hover:shadow transition-shadow"
+                  className="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 shadow-sm hover:shadow transition-shadow"
                 >
                   <span>
                     {dayName} {date.getDate()} {monthNamesShort[date.getMonth()]}
@@ -347,7 +347,7 @@ export const CalendarPicker = ({
                   <button
                     type="button"
                     onClick={() => handleRemoveDate(dateStr)}
-                    className="w-5 h-5 flex items-center justify-center rounded-full bg-red-100 text-red-500 hover:bg-red-500 hover:text-white transition-colors"
+                    className="w-5 h-5 flex items-center justify-center rounded-full bg-gray-200 text-gray-500 hover:bg-gray-500 hover:text-white transition-colors"
                     disabled={disabled}
                   >
                     <X className="w-3 h-3" />

@@ -139,7 +139,7 @@ export const Sidebar = () => {
           roles: [ROLES.CENTRAL_OFFICE_STAFF],
         },
         {
-          title: 'อนุมัติ (หัวหน้าสำนักงานกลาง)',
+          title: 'รออนุมัติ (หัวหน้าสำนักงานกลาง)',
           path: '/central-office/head',
           roles: [ROLES.CENTRAL_OFFICE_HEAD],
         },

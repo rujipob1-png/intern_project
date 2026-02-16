@@ -7,6 +7,8 @@ import {
   approveLeaveLevel3,
   rejectLeaveLevel3,
   partialApproveLeaveLevel3,
+  getApprovalHistoryStaff,
+  getApprovalHistoryHead,
   // Cancel request functions
   getPendingCancelRequestsStaff,
   approveCancelLevel2,
@@ -49,6 +51,13 @@ router.post('/staff/:id/approve', requireRole(['central_office_staff']), approve
 router.post('/staff/:id/reject', requireRole(['central_office_staff']), rejectLeaveLevel2);
 
 /**
+ * @route   GET /api/central-office/staff/history
+ * @desc    ดูประวัติการตรวจสอบของ Staff
+ * @access  Private (Central Office Staff)
+ */
+router.get('/staff/history', requireRole(['central_office_staff']), getApprovalHistoryStaff);
+
+/**
  * ==================== Central Office Head Routes (Level 3) ====================
  */
 
@@ -79,6 +88,13 @@ router.post('/head/:id/reject', requireRole(['central_office_head']), rejectLeav
  * @access  Private (Central Office Head)
  */
 router.post('/head/:id/partial-approve', requireRole(['central_office_head']), partialApproveLeaveLevel3);
+
+/**
+ * @route   GET /api/central-office/head/history
+ * @desc    ดูประวัติการอนุมัติของ Head
+ * @access  Private (Central Office Head)
+ */
+router.get('/head/history', requireRole(['central_office_head']), getApprovalHistoryHead);
 
 /**
  * ==================== Cancel Request Routes - Staff (Level 2) ====================

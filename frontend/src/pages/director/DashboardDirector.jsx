@@ -217,46 +217,32 @@ export default function DashboardDirector() {
   }
 
   return (
-    <div className="space-y-6 p-6 bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen">
+    <div className="space-y-6 p-6 bg-slate-50 min-h-screen">
       {/* Back Button */}
       <button
         onClick={() => navigate('/dashboard')}
-        className="flex items-center gap-2 text-slate-600 hover:text-blue-900 transition-colors group"
+        className="flex items-center gap-2 text-slate-600 hover:text-slate-800 transition-colors group"
       >
         <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
         <span className="font-medium">กลับหน้าหลัก</span>
       </button>
 
-      {/* Official Government Header */}
-      <div className="bg-gradient-to-r from-slate-700 via-slate-600 to-slate-700 rounded-xl shadow-lg overflow-hidden border border-slate-400">
-        {/* Top Stripe */}
-        <div className="h-1 bg-gradient-to-r from-blue-500 via-blue-400 to-blue-500"></div>
-        
-        <div className="p-6">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              {/* Official Seal */}
-              <div className="w-16 h-16 bg-gradient-to-br from-slate-100 to-slate-200 rounded-full flex items-center justify-center shadow-md border-2 border-slate-300">
-                <Stamp className="w-8 h-8 text-slate-600" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-white flex items-center gap-3">
-                  <Building2 className="w-6 h-6 text-blue-300" />
-                  ระบบอนุมัติการลา
-                </h1>
-                <p className="text-slate-300 mt-1">ผู้อำนวยการกลุ่ม • ลำดับที่ 1</p>
-                <p className="text-slate-400 text-sm mt-1">ตรวจสอบและอนุมัติใบลาของบุคลากรในสังกัด</p>
-              </div>
-            </div>
-            <div className="bg-white/10 backdrop-blur border border-slate-400 rounded-lg px-6 py-3 text-center">
-              <div className="text-3xl font-bold text-blue-300">{pendingLeaves.length}</div>
-              <div className="text-sm text-slate-300">รายการรออนุมัติ</div>
-            </div>
+      {/* Header */}
+      <div className="bg-gradient-to-r from-slate-600 to-slate-700 rounded-xl p-6 text-white shadow-lg">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-xl font-bold flex items-center gap-3">
+              <Building2 className="w-7 h-7" />
+              ระบบอนุมัติการลา
+            </h1>
+            <p className="text-slate-300 mt-1">ผู้อำนวยการกลุ่ม • ลำดับที่ 1</p>
+            <p className="text-slate-400 text-sm mt-1">ตรวจสอบและอนุมัติใบลาของบุคลากรในสังกัด</p>
+          </div>
+          <div className="bg-white/10 backdrop-blur rounded-lg px-6 py-3 text-center border border-slate-400">
+            <div className="text-3xl font-bold">{pendingLeaves.length}</div>
+            <div className="text-sm text-slate-300">รายการรออนุมัติ</div>
           </div>
         </div>
-
-        {/* Bottom Stripe */}
-        <div className="h-1 bg-gradient-to-r from-blue-500 via-blue-400 to-blue-500"></div>
       </div>
 
       {/* Notifications Section */}
@@ -405,45 +391,33 @@ export default function DashboardDirector() {
       )}
 
       {pendingLeaves.length === 0 ? (
-        <Card className="text-center py-16 border-2 border-blue-200 bg-white shadow-lg">
+        <Card className="text-center py-16">
           <div className="flex flex-col items-center gap-4">
-            <div className="w-24 h-24 bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center border-4 border-green-300 shadow-md">
-              <CheckCircle className="w-12 h-12 text-green-600" />
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+              <CheckCircle className="w-10 h-10 text-green-500" />
             </div>
-            <h3 className="text-2xl font-bold text-blue-900">ไม่มีรายการรออนุมัติ</h3>
-            <p className="text-gray-600">ใบลาทั้งหมดได้รับการดำเนินการเรียบร้อยแล้ว</p>
-            <div className="mt-4 px-6 py-2 bg-blue-50 rounded-full text-blue-700 text-sm font-medium border border-blue-200">
-              ระบบพร้อมใช้งาน
-            </div>
+            <h3 className="text-xl font-semibold text-gray-700">ไม่มีรายการรออนุมัติ</h3>
+            <p className="text-gray-500">ใบลาทั้งหมดได้รับการดำเนินการเรียบร้อยแล้ว</p>
           </div>
         </Card>
       ) : (
         <div className="grid gap-6">
           {filteredLeaves.map((leave) => (
-            <Card key={leave.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 border border-slate-200 bg-white">
-              {/* Official Document Header */}
-              <div className="bg-slate-600 px-6 py-3 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <FileText className="w-5 h-5 text-slate-200" />
-                  <span className="text-white font-semibold">เอกสารใบลาราชการ</span>
-                </div>
-                <span className="text-slate-300 font-mono text-sm">เลขที่: {leave.id?.slice(0, 8).toUpperCase()}</span>
-              </div>
-
+            <Card key={leave.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
               <div className="flex flex-col lg:flex-row">
                 {/* Left: Employee Info */}
-                <div className="lg:w-1/4 bg-slate-50 p-6 border-b lg:border-b-0 lg:border-r border-slate-200">
+                <div className="lg:w-1/4 bg-gradient-to-br from-slate-50 to-slate-100 p-6 border-b lg:border-b-0 lg:border-r border-slate-200">
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-slate-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md">
+                    <div className="w-14 h-14 bg-gradient-to-br from-slate-500 to-slate-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-md">
                       {leave.employee?.name?.charAt(0) || 'U'}
                     </div>
                     <div>
-                      <h3 className="font-bold text-slate-800 text-lg">
+                      <h3 className="font-bold text-slate-900 text-lg">
                         {leave.employee?.name || 'ไม่ระบุชื่อ'}
                       </h3>
-                      <p className="text-sm text-slate-500">รหัสบุคลากร: <span className="font-mono font-semibold">{leave.employee?.employeeCode}</span></p>
-                      <span className="inline-block mt-2 px-3 py-1 bg-slate-600 text-white text-xs font-medium rounded-full">
-                        {getDepartmentThaiCode(leave.employee?.department) || 'ไม่ระบุสังกัด'}
+                      <p className="text-sm text-slate-500">รหัส: {leave.employee?.employeeCode}</p>
+                      <span className="inline-block mt-1 px-3 py-1 bg-slate-200 text-slate-700 text-xs font-semibold rounded-full">
+                        {getDepartmentThaiCode(leave.employee?.department) || 'ไม่ระบุแผนก'}
                       </span>
                     </div>
                   </div>
@@ -451,34 +425,34 @@ export default function DashboardDirector() {
 
                 {/* Center: Leave Details */}
                 <div className="lg:w-1/2 p-6">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
-                      <div className="flex items-center gap-2 text-blue-600 mb-1">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                      <div className="flex items-center gap-2 text-slate-600 mb-1">
                         <FileText className="w-4 h-4" />
                         <span className="text-xs font-medium">ประเภทการลา</span>
                       </div>
-                      <p className="font-semibold text-slate-800">{leave.leaveType || 'N/A'}</p>
+                      <p className="font-bold text-slate-900">{leave.leaveType || 'N/A'}</p>
                     </div>
-                    <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-                      <div className="flex items-center gap-2 text-slate-500 mb-1">
+                    <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                      <div className="flex items-center gap-2 text-slate-600 mb-1">
                         <Clock className="w-4 h-4" />
                         <span className="text-xs font-medium">จำนวนวัน</span>
                       </div>
-                      <p className="font-semibold text-slate-800">{leave.totalDays} วัน</p>
+                      <p className="font-bold text-slate-900">{leave.totalDays} วัน</p>
                     </div>
-                    <div className="bg-green-50 rounded-lg p-4 border border-green-100">
-                      <div className="flex items-center gap-2 text-green-600 mb-1">
+                    <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                      <div className="flex items-center gap-2 text-slate-600 mb-1">
                         <Calendar className="w-4 h-4" />
                         <span className="text-xs font-medium">วันที่เริ่มต้น</span>
                       </div>
-                      <p className="font-semibold text-slate-800">{formatDate(leave.startDate)}</p>
+                      <p className="font-bold text-slate-900">{formatDate(leave.startDate)}</p>
                     </div>
-                    <div className="bg-rose-50 rounded-lg p-4 border border-rose-100">
-                      <div className="flex items-center gap-2 text-rose-500 mb-1">
+                    <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                      <div className="flex items-center gap-2 text-slate-600 mb-1">
                         <Calendar className="w-4 h-4" />
                         <span className="text-xs font-medium">วันที่สิ้นสุด</span>
                       </div>
-                      <p className="font-semibold text-slate-800">{formatDate(leave.endDate)}</p>
+                      <p className="font-bold text-slate-900">{formatDate(leave.endDate)}</p>
                     </div>
                   </div>
 
@@ -498,15 +472,15 @@ export default function DashboardDirector() {
 
                   {/* Reason */}
                   {leave.reason && (
-                    <div className="mt-4 bg-slate-50 rounded-lg p-4 border border-slate-200">
-                      <p className="text-sm font-medium text-slate-600 mb-1">เหตุผลการลา:</p>
-                      <p className="text-slate-700">{leave.reason}</p>
+                    <div className="mt-4 bg-slate-50 rounded-xl p-4 border border-slate-200">
+                      <p className="text-sm font-medium text-slate-600 mb-1">เหตุผล:</p>
+                      <p className="text-slate-800">{leave.reason}</p>
                     </div>
                   )}
                 </div>
 
                 {/* Right: Actions */}
-                <div className="lg:w-1/4 p-6 bg-slate-50 flex flex-col justify-center border-l border-slate-200">
+                <div className="lg:w-1/4 p-6 bg-slate-50 flex flex-col justify-center">
                   {selectedLeave === leave.id ? (
                     <div className="space-y-3">
                       <textarea

@@ -79,7 +79,7 @@ const UserManagementPage = () => {
     icon: null,
     iconBg: '',
     confirmText: 'ยืนยัน',
-    confirmColor: 'bg-red-500 hover:bg-red-600',
+    confirmColor: 'bg-gray-800 hover:bg-gray-900',
     onConfirm: null
   });
   
@@ -218,9 +218,20 @@ const UserManagementPage = () => {
     }));
   };
 
-  const handleViewDetail = (user) => {
-    setSelectedUser(user);
-    setShowDetailModal(true);
+  const handleViewDetail = async (user) => {
+    try {
+      // Fetch ข้อมูลล่าสุดจาก API ก่อนแสดง
+      const res = await adminAPI.getAllUsers();
+      const freshUsers = res.data || [];
+      setUsers(freshUsers);
+      const freshUser = freshUsers.find(u => u.id === user.id) || user;
+      setSelectedUser(freshUser);
+      setShowDetailModal(true);
+    } catch (error) {
+      // ถ้า fetch ไม่ได้ ใช้ข้อมูลเดิม
+      setSelectedUser(user);
+      setShowDetailModal(true);
+    }
   };
 
   const handleOpenCreateModal = () => {
@@ -243,18 +254,36 @@ const UserManagementPage = () => {
     setShowCreateModal(true);
   };
 
-  const handleOpenEditModal = (user) => {
-    setSelectedUser(user);
-    setFormData({
-      title: user.title || 'นาย',
-      first_name: user.first_name || '',
-      last_name: user.last_name || '',
-      position: user.position || '',
-      department: user.department_code || 'GOK',
-      phone: user.phone || '',
-      email: user.email || '',
-      role_id: roles.find(r => r.role_name === user.role_name)?.id || ''
-    });
+  const handleOpenEditModal = async (user) => {
+    try {
+      const res = await adminAPI.getAllUsers();
+      const freshUsers = res.data || [];
+      setUsers(freshUsers);
+      const freshUser = freshUsers.find(u => u.id === user.id) || user;
+      setSelectedUser(freshUser);
+      setFormData({
+        title: freshUser.title || 'นาย',
+        first_name: freshUser.first_name || '',
+        last_name: freshUser.last_name || '',
+        position: freshUser.position || '',
+        department: freshUser.department_code || 'GOK',
+        phone: freshUser.phone || '',
+        email: freshUser.email || '',
+        role_id: roles.find(r => r.role_name === freshUser.role_name)?.id || ''
+      });
+    } catch {
+      setSelectedUser(user);
+      setFormData({
+        title: user.title || 'นาย',
+        first_name: user.first_name || '',
+        last_name: user.last_name || '',
+        position: user.position || '',
+        department: user.department_code || 'GOK',
+        phone: user.phone || '',
+        email: user.email || '',
+        role_id: roles.find(r => r.role_name === user.role_name)?.id || ''
+      });
+    }
     setShowEditModal(true);
   };
 
@@ -446,10 +475,10 @@ const UserManagementPage = () => {
       ],
       warning: 'การดำเนินการนี้จะมีผลกับบุคลากรทุกคน',
       icon: <AlertTriangle className="w-8 h-8" />,
-      iconBg: 'bg-red-100',
-      iconColor: 'text-red-600',
+      iconBg: 'bg-gray-100',
+      iconColor: 'text-gray-600',
       confirmText: 'ยืนยันยกเลิกการยกยอด',
-      confirmColor: 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700',
+      confirmColor: 'bg-gray-800 hover:bg-gray-900',
       onConfirm: async () => {
         try {
           setCarryoverProcessing(true);
@@ -520,14 +549,14 @@ const UserManagementPage = () => {
                 <>
                   <button 
                     onClick={handleOpenCreateModal}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl transition-colors font-semibold shadow-lg"
+                    className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 hover:bg-gray-800 text-white rounded-xl transition-colors font-semibold shadow-lg"
                   >
                     <UserPlus className="w-5 h-5" />
                     <span>เพิ่มบุคลากร</span>
                   </button>
                   <button 
                     onClick={() => setShowCarryoverModal(true)}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl transition-colors font-semibold shadow-lg"
+                    className="flex items-center gap-2 px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition-colors font-semibold shadow-lg"
                     title="ยกยอดวันลาพักผ่อนประจำปี"
                   >
                     <RotateCcw className="w-5 h-5" />
@@ -665,25 +694,29 @@ const UserManagementPage = () => {
           </div>
         </div>
 
-        {/* Users Table */}
-        <Card className="shadow-lg border overflow-hidden">
-          <CardHeader className="bg-gradient-to-r from-slate-100 to-slate-50 border-b px-6 py-4">
-            <CardTitle className="text-lg font-semibold text-slate-800 flex items-center gap-2">
-              <Briefcase className="w-5 h-5 text-slate-600" />
-              รายชื่อบุคลากร 
-              <span className="text-blue-600 font-bold">({filteredUsers.length} ราย)</span>
-              {filteredUsers.length !== users.length && (
-                <span className="text-slate-400 text-sm font-normal ml-2">
-                  จากทั้งหมด {users.length} ราย
-                </span>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
+        {/* Users List */}
+        <div className="bg-white/50 rounded-2xl border border-gray-100">
+          {/* List Header */}
+          <div className="px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gray-100 rounded-xl">
+                <Briefcase className="w-5 h-5 text-gray-600" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-800">รายชื่อบุคลากร</h2>
+                <p className="text-sm text-gray-400">
+                  {filteredUsers.length} ราย
+                  {filteredUsers.length !== users.length && ` จากทั้งหมด ${users.length} ราย`}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="border-t border-gray-100"></div>
+          <div>
             {loading ? (
               <div className="flex items-center justify-center py-20">
                 <div className="text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mx-auto"></div>
+                  <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-500 border-t-transparent mx-auto"></div>
                   <p className="text-slate-500 mt-4">กำลังโหลดข้อมูล...</p>
                 </div>
               </div>
@@ -694,204 +727,165 @@ const UserManagementPage = () => {
                 <p className="text-sm mt-1">ลองเปลี่ยนเงื่อนไขการค้นหา</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gradient-to-r from-slate-600 to-slate-700 text-white">
-                    <tr>
-                      <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider w-12">
-                        ลำดับ
-                      </th>
-                      <th 
-                        className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider cursor-pointer hover:bg-slate-500 transition-colors"
-                        onClick={() => handleSort('employee_code')}
-                      >
-                        <div className="flex items-center justify-center gap-2">
-                          รหัสบุคลากร
-                          {sortConfig.key === 'employee_code' && (
-                            sortConfig.direction === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
-                          )}
-                        </div>
-                      </th>
-                      <th 
-                        className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider cursor-pointer hover:bg-slate-500 transition-colors"
-                        onClick={() => handleSort('first_name')}
-                      >
-                        <div className="flex items-center gap-2">
-                          ชื่อ-นามสกุล
-                          {sortConfig.key === 'first_name' && (
-                            sortConfig.direction === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
-                          )}
-                        </div>
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-                        ตำแหน่ง
-                      </th>
-                      <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">
-                        สังกัด
-                      </th>
-                      <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">
-                        บทบาท
-                      </th>
-                      <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">
-                        สถานะ
-                      </th>
-                      <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">
-                        วันลาคงเหลือ
-                      </th>
-                      <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider w-32">
-                        ดำเนินการ
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200">
-                    {filteredUsers.map((user, index) => {
-                      const roleStyle = getRoleStyle(user.role_name);
-                      const deptInfo = getDeptInfo(user.department_code);
-                      return (
-                        <tr 
-                          key={user.id} 
-                          className={`hover:bg-slate-100 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}`}
-                        >
-                          <td className="px-4 py-3 text-center text-slate-500 text-sm font-medium">
-                            {index + 1}
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            <span className="font-mono font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-lg text-sm border border-slate-300">
-                              {user.employee_code}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-3">
-                              {user.profile_image_url ? (
-                                <img 
-                                  src={user.profile_image_url} 
-                                  alt="Profile" 
-                                  className="w-10 h-10 rounded-full object-cover shadow-md border border-slate-200"
-                                />
-                              ) : (
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-500 to-slate-600 flex items-center justify-center text-white font-bold shadow-md text-sm">
-                                  {user.first_name?.charAt(0) || 'U'}
-                                </div>
-                              )}
-                              <div>
-                                <p className="font-semibold text-slate-900">
-                                  {user.title}{user.first_name} {user.last_name}
-                                </p>
-                                {user.phone && (
-                                  <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
-                                    <Phone className="w-3 h-3" /> {user.phone}
-                                  </p>
-                                )}
+              <div className="p-4 space-y-3">
+                {filteredUsers.map((user, index) => {
+                  const roleStyle = getRoleStyle(user.role_name);
+                  const deptInfo = getDeptInfo(user.department_code);
+                  return (
+                    <div
+                      key={user.id}
+                      className="bg-white rounded-2xl border border-gray-100 hover:border-gray-200 hover:shadow-lg transition-all duration-200 overflow-hidden"
+                    >
+                      {/* Card Content */}
+                      <div className="p-5">
+                        {/* Row 1: Avatar + Info + Leave Balances */}
+                        <div className="flex items-start gap-4">
+                          {/* Index */}
+                          <span className="text-indigo-400 text-xs font-bold mt-3 w-5 text-right shrink-0">{index + 1}</span>
+
+                          {/* Avatar */}
+                          <div className="relative shrink-0">
+                            {user.profile_image_url ? (
+                              <img
+                                src={user.profile_image_url}
+                                alt="Profile"
+                                className="w-14 h-14 rounded-2xl object-cover border-2 border-gray-100"
+                              />
+                            ) : (
+                              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-100 to-blue-200 flex items-center justify-center text-indigo-600 font-bold text-xl border-2 border-indigo-50">
+                                {user.first_name?.charAt(0) || 'U'}
                               </div>
+                            )}
+                            {/* Online Status Dot */}
+                            <span className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white ${user.is_active ? 'bg-emerald-400' : 'bg-gray-300'}`}></span>
+                          </div>
+
+                          {/* Name + Details */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2.5 flex-wrap">
+                              <h3 className="font-semibold text-gray-900 text-[15px] leading-tight">
+                                {user.title}{user.first_name} {user.last_name}
+                              </h3>
+                              <span className="font-mono text-[11px] text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-md font-semibold">
+                                {user.employee_code}
+                              </span>
                             </div>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className="text-slate-700 text-sm">{user.position || '-'}</span>
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold ${deptInfo.color}`} title={deptInfo.full}>
+                            <p className="text-sm text-gray-500 mt-1">
+                              {user.position || '-'}
+                            </p>
+                            {user.phone && (
+                              <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
+                                <Phone className="w-3 h-3" />
+                                {user.phone}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Leave Balances - Right Side */}
+                          <div className="shrink-0 hidden sm:flex items-center gap-2">
+                            <div className="text-center px-3 py-2 bg-gray-50 rounded-xl min-w-[56px]">
+                              <p className="text-[10px] text-gray-400 font-medium leading-tight">ลาป่วย</p>
+                              <p className="text-lg font-bold text-gray-700 leading-tight mt-0.5">{user.sick_leave_balance || 0}</p>
+                            </div>
+                            <div className="text-center px-3 py-2 bg-gray-50 rounded-xl min-w-[56px]">
+                              <p className="text-[10px] text-gray-400 font-medium leading-tight">ลากิจ</p>
+                              <p className="text-lg font-bold text-gray-700 leading-tight mt-0.5">{user.personal_leave_balance || 0}</p>
+                            </div>
+                            <div className={`text-center px-3 py-2 rounded-xl min-w-[56px] ${user.vacation_carryover > 0 ? 'bg-gray-100' : 'bg-gray-50'}`}>
+                              <p className="text-[10px] text-gray-400 font-medium leading-tight">พักผ่อน</p>
+                              <p className="text-lg font-bold text-gray-700 leading-tight mt-0.5" title={user.vacation_carryover > 0 ? `ปีนี้ ${user.vacation_leave_balance || 0} + ยกยอด ${user.vacation_carryover}` : ''}>
+                                {user.total_vacation_balance || (user.vacation_leave_balance || 0) + (user.vacation_carryover || 0)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Row 2: Tags + Actions */}
+                        <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-50">
+                          {/* Tags */}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${deptInfo.color}`} title={deptInfo.full}>
                               {deptInfo.short}
                             </span>
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold ${roleStyle.bg} ${roleStyle.text}`}>
+                            <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${roleStyle.bg} ${roleStyle.text}`}>
                               {roleStyle.label}
                             </span>
-                          </td>
-                          <td className="px-4 py-3 text-center">
                             {user.is_active ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-300">
-                                <Check className="w-3 h-3" />
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-50 text-emerald-600">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                                 ปฏิบัติงาน
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-red-100 text-red-700 border border-red-300">
-                                <X className="w-3 h-3" />
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-gray-50 text-gray-400">
+                                <span className="w-1.5 h-1.5 rounded-full bg-gray-300"></span>
                                 ไม่ใช้งาน
                               </span>
                             )}
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center justify-center gap-1.5">
-                              <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs font-semibold border border-slate-300" title="ลาป่วย">
-                                ป.{user.sick_leave_balance || 0}
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => handleViewDetail(user)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition-colors"
+                              title="ดูรายละเอียด"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                              <span className="hidden lg:inline">ดูข้อมูล</span>
+                            </button>
+                            <button
+                              onClick={() => handleOpenEditModal(user)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-600 hover:text-amber-800 hover:bg-amber-50 rounded-lg transition-colors"
+                              title="แก้ไข"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                              <span className="hidden lg:inline">แก้ไข</span>
+                            </button>
+                            <button
+                              onClick={() => handleOpenResetPasswordModal(user)}
+                              className="p-1.5 text-orange-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                              title="รีเซ็ตรหัสผ่าน"
+                            >
+                              <Key className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleOpenLeaveBalanceModal(user)}
+                              className="p-1.5 text-teal-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
+                              title="แก้ไขวันลา"
+                            >
+                              <Calendar className="w-3.5 h-3.5" />
+                            </button>
+                            {user.id === currentUser?.id ? (
+                              <span className="p-1.5 text-gray-200 cursor-not-allowed" title="บัญชีตัวเอง">
+                                <UserCircle className="w-3.5 h-3.5" />
                               </span>
-                              <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs font-semibold border border-slate-300" title="ลากิจ">
-                                ก.{user.personal_leave_balance || 0}
-                              </span>
-                              <span 
-                                className={`px-2 py-0.5 rounded text-xs font-semibold border ${user.vacation_carryover > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : 'bg-slate-100 text-slate-700 border-slate-300'}`} 
-                                title={user.vacation_carryover > 0 ? `ลาพักผ่อน (ปีนี้ ${user.vacation_leave_balance || 0} + ยกยอด ${user.vacation_carryover})` : 'ลาพักผ่อน'}
-                              >
-                                พ.{user.total_vacation_balance || (user.vacation_leave_balance || 0) + (user.vacation_carryover || 0)}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center justify-center gap-1">
+                            ) : user.is_active ? (
                               <button
-                                onClick={() => handleViewDetail(user)}
-                                className="p-1.5 hover:bg-slate-200 rounded-lg transition-colors text-slate-600"
-                                title="ดูรายละเอียด"
+                                onClick={() => handleOpenDeleteModal(user)}
+                                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                title="ปิดการใช้งาน"
                               >
-                                <Eye className="w-4 h-4" />
+                                <PowerOff className="w-3.5 h-3.5" />
                               </button>
+                            ) : (
                               <button
-                                onClick={() => handleOpenEditModal(user)}
-                                className="p-1.5 hover:bg-blue-100 rounded-lg transition-colors text-blue-600"
-                                title="แก้ไข"
+                                onClick={() => handleActivateUser(user)}
+                                className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                                title="เปิดการใช้งาน"
                               >
-                                <Edit2 className="w-4 h-4" />
+                                <Power className="w-3.5 h-3.5" />
                               </button>
-                              <button
-                                onClick={() => handleOpenResetPasswordModal(user)}
-                                className="p-1.5 hover:bg-amber-100 rounded-lg transition-colors text-amber-600"
-                                title="รีเซ็ตรหัสผ่าน"
-                              >
-                                <Key className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => handleOpenLeaveBalanceModal(user)}
-                                className="p-1.5 hover:bg-emerald-100 rounded-lg transition-colors text-emerald-600"
-                                title="แก้ไขวันลา"
-                              >
-                                <Calendar className="w-4 h-4" />
-                              </button>
-                              {user.id === currentUser?.id ? (
-                                <span 
-                                  className="p-1.5 text-slate-300 cursor-not-allowed"
-                                  title="บัญชีตัวเอง"
-                                >
-                                  <UserCircle className="w-4 h-4" />
-                                </span>
-                              ) : user.is_active ? (
-                                <button
-                                  onClick={() => handleOpenDeleteModal(user)}
-                                  className="p-1.5 hover:bg-red-100 rounded-lg transition-colors text-red-600"
-                                  title="ปิดการใช้งาน"
-                                >
-                                  <PowerOff className="w-4 h-4" />
-                                </button>
-                              ) : (
-                                <button
-                                  onClick={() => handleActivateUser(user)}
-                                  className="p-1.5 hover:bg-green-100 rounded-lg transition-colors text-green-600"
-                                  title="เปิดการใช้งาน"
-                                >
-                                  <Power className="w-4 h-4" />
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
           </>
         ) : (
           /* Archived Users Tab */
@@ -939,7 +933,7 @@ const UserManagementPage = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold">
                                 {user.first_name?.charAt(0) || 'U'}
                               </div>
                               <div>
@@ -955,7 +949,7 @@ const UserManagementPage = () => {
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="px-2 py-1 rounded-lg text-xs font-medium bg-blue-100 text-blue-700">
+                            <span className="px-2 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-700">
                               {ROLE_STYLES[user.role_name]?.label || user.role_name || '-'}
                             </span>
                           </td>
@@ -969,14 +963,14 @@ const UserManagementPage = () => {
                             <div className="flex items-center justify-center gap-1">
                               <button
                                 onClick={() => handleViewArchivedUser(user)}
-                                className="p-2 hover:bg-blue-100 rounded-lg transition-colors text-blue-600"
+                                className="p-2 hover:bg-gray-200 rounded-lg transition-colors text-gray-600"
                                 title="ดูประวัติการลา"
                               >
                                 <Eye className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={() => handleDeleteArchivedUser(user)}
-                                className="p-2 hover:bg-red-100 rounded-lg transition-colors text-red-600"
+                                className="p-2 hover:bg-gray-200 rounded-lg transition-colors text-gray-500"
                                 title="ลบถาวร"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -1039,9 +1033,9 @@ const UserManagementPage = () => {
                         {getDeptInfo(selectedUser.department_code).short}
                       </span>
                       {selectedUser.is_active ? (
-                        <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-300">✓ ปฏิบัติงาน</span>
+                        <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-300">✓ ปฏิบัติงาน</span>
                       ) : (
-                        <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-red-100 text-red-700 border border-red-300">✗ ไม่ใช้งาน</span>
+                        <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-gray-100 text-gray-500 border border-gray-300">✗ ไม่ใช้งาน</span>
                       )}
                     </div>
                   </div>
@@ -1108,7 +1102,7 @@ const UserManagementPage = () => {
                       <div className="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-2 border border-slate-300">
                         <FileText className="w-7 h-7 text-slate-600" />
                       </div>
-                      <p className="text-3xl font-bold text-emerald-600">{selectedUser.total_vacation_balance || (selectedUser.vacation_leave_balance || 0) + (selectedUser.vacation_carryover || 0)}</p>
+                      <p className="text-3xl font-bold text-slate-700">{selectedUser.total_vacation_balance || (selectedUser.vacation_leave_balance || 0) + (selectedUser.vacation_carryover || 0)}</p>
                       <p className="text-sm text-slate-600 mt-1 font-medium">วันลาพักผ่อน</p>
                       {(selectedUser.vacation_carryover > 0) && (
                         <p className="text-xs text-slate-500 mt-0.5">
@@ -1138,7 +1132,7 @@ const UserManagementPage = () => {
                       setShowDetailModal(false);
                       handleOpenEditModal(selectedUser);
                     }}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl transition-colors font-semibold"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-800 hover:bg-gray-900 text-white rounded-xl transition-colors font-semibold"
                   >
                     <Edit2 className="w-4 h-4" />
                     แก้ไขข้อมูล
@@ -1148,7 +1142,7 @@ const UserManagementPage = () => {
                       setShowDetailModal(false);
                       handleOpenResetPasswordModal(selectedUser);
                     }}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl transition-colors font-semibold"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-700 hover:bg-gray-800 text-white rounded-xl transition-colors font-semibold"
                   >
                     <Key className="w-4 h-4" />
                     รีเซ็ตรหัสผ่าน
@@ -1163,7 +1157,7 @@ const UserManagementPage = () => {
         {showCreateModal && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
-              <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 px-6 py-4 flex items-center justify-between text-white">
+              <div className="bg-gray-800 px-6 py-4 flex items-center justify-between text-white">
                 <h3 className="text-xl font-bold flex items-center gap-2">
                   <UserPlus className="w-6 h-6" />
                   เพิ่มบุคลากรใหม่
@@ -1181,7 +1175,7 @@ const UserManagementPage = () => {
                       type="text"
                       value={formData.employee_code}
                       onChange={(e) => setFormData({ ...formData, employee_code: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-400"
+                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-gray-400"
                       required
                     />
                   </div>
@@ -1191,7 +1185,7 @@ const UserManagementPage = () => {
                       type="password"
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-400"
+                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-gray-400"
                       required
                       minLength={6}
                     />
@@ -1204,7 +1198,7 @@ const UserManagementPage = () => {
                     <select
                       value={formData.title}
                       onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-400"
+                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-gray-400"
                     >
                       {TITLES.map(t => <option key={t} value={t}>{t}</option>)}
                     </select>
@@ -1215,7 +1209,7 @@ const UserManagementPage = () => {
                       type="text"
                       value={formData.first_name}
                       onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-400"
+                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-gray-400"
                       required
                     />
                   </div>
@@ -1225,7 +1219,7 @@ const UserManagementPage = () => {
                       type="text"
                       value={formData.last_name}
                       onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-400"
+                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-gray-400"
                       required
                     />
                   </div>
@@ -1238,7 +1232,7 @@ const UserManagementPage = () => {
                       type="text"
                       value={formData.position}
                       onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-400"
+                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-gray-400"
                     />
                   </div>
                   <div>
@@ -1246,7 +1240,7 @@ const UserManagementPage = () => {
                     <select
                       value={formData.department}
                       onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-400"
+                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-gray-400"
                     >
                       {Object.entries(DEPARTMENT_CODES).map(([code, info]) => (
                         <option key={code} value={code}>{info.short} - {info.full}</option>
@@ -1262,7 +1256,7 @@ const UserManagementPage = () => {
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-400"
+                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-gray-400"
                     />
                   </div>
                   <div>
@@ -1271,7 +1265,7 @@ const UserManagementPage = () => {
                       type="email"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-400"
+                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-gray-400"
                     />
                   </div>
                 </div>
@@ -1281,7 +1275,7 @@ const UserManagementPage = () => {
                   <select
                     value={formData.role_id}
                     onChange={(e) => setFormData({ ...formData, role_id: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-400"
+                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-gray-400"
                     required
                   >
                     <option value="">-- เลือกบทบาท --</option>
@@ -1303,7 +1297,7 @@ const UserManagementPage = () => {
                     type="date"
                     value={formData.hire_date}
                     onChange={(e) => setFormData({ ...formData, hire_date: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-400"
+                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-gray-400"
                   />
                   <p className="text-xs text-slate-500 mt-1">
                     อายุราชการ &lt; 10 ปี: สะสมวันลาพักผ่อนได้สูงสุด 20 วัน | ≥ 10 ปี: สะสมได้สูงสุด 30 วัน
@@ -1312,15 +1306,15 @@ const UserManagementPage = () => {
 
                 <div className="border-t pt-4">
                   <h4 className="font-semibold text-slate-700 mb-3 flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-emerald-600" />
+                    <Calendar className="w-5 h-5 text-gray-600" />
                     สิทธิ์การลาเริ่มต้น (ตามระเบียบสำนักนายกรัฐมนตรี พ.ศ. 2555)
                   </h4>
                   
                   {/* Info Box */}
-                  <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
                     <div className="flex items-start gap-2">
-                      <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                      <div className="text-sm text-blue-800">
+                      <AlertCircle className="w-5 h-5 text-gray-600 mt-0.5 flex-shrink-0" />
+                      <div className="text-sm text-gray-700">
                         <p className="font-semibold mb-1">หมายเหตุ:</p>
                         <ul className="list-disc list-inside space-y-0.5 text-xs">
                           <li>ลาป่วย: มาแล้วกี่วัน (เริ่มต้น 0 คือยังไม่เคยลา, สูงสุด 60 วัน/ปี)</li>
@@ -1340,7 +1334,7 @@ const UserManagementPage = () => {
                         type="number"
                         value={formData.sick_leave_balance}
                         onChange={(e) => setFormData({ ...formData, sick_leave_balance: parseInt(e.target.value) || 0 })}
-                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-400 text-center font-bold text-lg"
+                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-gray-400 text-center font-bold text-lg"
                         min="0"
                         max="60"
                       />
@@ -1354,7 +1348,7 @@ const UserManagementPage = () => {
                         type="number"
                         value={formData.personal_leave_balance}
                         onChange={(e) => setFormData({ ...formData, personal_leave_balance: parseInt(e.target.value) || 0 })}
-                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-400 text-center font-bold text-lg"
+                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-gray-400 text-center font-bold text-lg"
                         min="0"
                         max="45"
                       />
@@ -1368,7 +1362,7 @@ const UserManagementPage = () => {
                         type="number"
                         value={formData.vacation_leave_balance}
                         onChange={(e) => setFormData({ ...formData, vacation_leave_balance: parseInt(e.target.value) || 0 })}
-                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-400 text-center font-bold text-lg"
+                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-gray-400 text-center font-bold text-lg"
                         min="0"
                         max="30"
                       />
@@ -1377,9 +1371,9 @@ const UserManagementPage = () => {
                   </div>
 
                   {/* ประเภทลาอื่นๆ */}
-                  <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                    <p className="text-sm font-semibold text-amber-800 mb-2">ประเภทลาอื่นๆ (ตามสิทธิ์อัตโนมัติ):</p>
-                    <div className="grid grid-cols-2 gap-2 text-xs text-amber-700">
+                  <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                    <p className="text-sm font-semibold text-gray-700 mb-2">ประเภทลาอื่นๆ (ตามสิทธิ์อัตโนมัติ):</p>
+                    <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
                       <div className="flex items-center gap-1">
                         <Check className="w-3 h-3" />
                         <span>ลาคลอดบุตร: 90 วัน/ครรภ์</span>
@@ -1411,7 +1405,7 @@ const UserManagementPage = () => {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl transition-colors font-semibold disabled:opacity-50"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-900 hover:bg-gray-800 text-white rounded-xl transition-colors font-semibold disabled:opacity-50"
                   >
                     {submitting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     {submitting ? 'กำลังบันทึก...' : 'บันทึก'}
@@ -1448,7 +1442,7 @@ const UserManagementPage = () => {
                     <select
                       value={formData.title}
                       onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-400"
+                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-gray-400"
                     >
                       {TITLES.map(t => <option key={t} value={t}>{t}</option>)}
                     </select>
@@ -1459,7 +1453,7 @@ const UserManagementPage = () => {
                       type="text"
                       value={formData.first_name}
                       onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-400"
+                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-gray-400"
                       required
                     />
                   </div>
@@ -1469,7 +1463,7 @@ const UserManagementPage = () => {
                       type="text"
                       value={formData.last_name}
                       onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-400"
+                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-gray-400"
                       required
                     />
                   </div>
@@ -1482,7 +1476,7 @@ const UserManagementPage = () => {
                       type="text"
                       value={formData.position}
                       onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-400"
+                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-gray-400"
                     />
                   </div>
                   <div>
@@ -1490,7 +1484,7 @@ const UserManagementPage = () => {
                     <select
                       value={formData.department}
                       onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-400"
+                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-gray-400"
                     >
                       {Object.entries(DEPARTMENT_CODES).map(([code, info]) => (
                         <option key={code} value={code}>{info.short} - {info.full}</option>
@@ -1506,7 +1500,7 @@ const UserManagementPage = () => {
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-400"
+                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-gray-400"
                     />
                   </div>
                   <div>
@@ -1515,7 +1509,7 @@ const UserManagementPage = () => {
                       type="email"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-400"
+                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-gray-400"
                     />
                   </div>
                 </div>
@@ -1525,7 +1519,7 @@ const UserManagementPage = () => {
                   <select
                     value={formData.role_id}
                     onChange={(e) => setFormData({ ...formData, role_id: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-400"
+                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-gray-400"
                     required
                   >
                     <option value="">-- เลือกบทบาท --</option>
@@ -1548,7 +1542,7 @@ const UserManagementPage = () => {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl transition-colors font-semibold disabled:opacity-50"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-800 hover:bg-gray-900 text-white rounded-xl transition-colors font-semibold disabled:opacity-50"
                   >
                     {submitting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     {submitting ? 'กำลังบันทึก...' : 'บันทึก'}
@@ -1563,7 +1557,7 @@ const UserManagementPage = () => {
         {showDeleteModal && selectedUser && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full">
-              <div className="bg-gradient-to-r from-red-600 to-red-700 px-6 py-4 flex items-center justify-between text-white">
+              <div className="bg-gray-800 px-6 py-4 flex items-center justify-between text-white">
                 <h3 className="text-xl font-bold flex items-center gap-2">
                   <AlertCircle className="w-6 h-6" />
                   ลบ / จัดการบุคลากร
@@ -1594,7 +1588,7 @@ const UserManagementPage = () => {
                   <p className="font-semibold text-slate-700">เลือกวิธีการดำเนินการ:</p>
                   
                   {/* Option 1: Deactivate */}
-                  <label className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${deleteMode === 'deactivate' ? 'border-amber-500 bg-amber-50' : 'border-slate-200 hover:border-slate-300'}`}>
+                  <label className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${deleteMode === 'deactivate' ? 'border-gray-500 bg-gray-50' : 'border-slate-200 hover:border-slate-300'}`}>
                     <input
                       type="radio"
                       name="deleteMode"
@@ -1605,8 +1599,8 @@ const UserManagementPage = () => {
                     />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <PowerOff className="w-5 h-5 text-amber-600" />
-                        <span className="font-semibold text-amber-700">ปิดการใช้งาน</span>
+                        <PowerOff className="w-5 h-5 text-gray-600" />
+                        <span className="font-semibold text-gray-700">ปิดการใช้งาน</span>
                       </div>
                       <p className="text-sm text-slate-500 mt-1">
                         บุคลากรจะไม่สามารถเข้าสู่ระบบได้ แต่ข้อมูลยังคงอยู่และ<strong>สามารถเปิดใช้งานได้อีกครั้ง</strong>
@@ -1615,7 +1609,7 @@ const UserManagementPage = () => {
                   </label>
 
                   {/* Option 2: Archive */}
-                  <label className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${deleteMode === 'archive' ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300'}`}>
+                  <label className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${deleteMode === 'archive' ? 'border-gray-500 bg-gray-50' : 'border-slate-200 hover:border-slate-300'}`}>
                     <input
                       type="radio"
                       name="deleteMode"
@@ -1626,8 +1620,8 @@ const UserManagementPage = () => {
                     />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <Archive className="w-5 h-5 text-blue-600" />
-                        <span className="font-semibold text-blue-700">ลบและเก็บข้อมูล</span>
+                        <Archive className="w-5 h-5 text-gray-600" />
+                        <span className="font-semibold text-gray-700">ลบและเก็บข้อมูล</span>
                       </div>
                       <p className="text-sm text-slate-500 mt-1">
                         ลบบุคลากรออกจากระบบ แต่<strong>เก็บข้อมูลและประวัติการลาไว้</strong>สำหรับอ้างอิงในอนาคต
@@ -1636,7 +1630,7 @@ const UserManagementPage = () => {
                   </label>
 
                   {/* Option 3: Permanent Delete */}
-                  <label className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${deleteMode === 'permanent' ? 'border-red-500 bg-red-50' : 'border-slate-200 hover:border-slate-300'}`}>
+                  <label className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${deleteMode === 'permanent' ? 'border-gray-500 bg-gray-50' : 'border-slate-200 hover:border-slate-300'}`}>
                     <input
                       type="radio"
                       name="deleteMode"
@@ -1647,11 +1641,11 @@ const UserManagementPage = () => {
                     />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <Trash2 className="w-5 h-5 text-red-600" />
-                        <span className="font-semibold text-red-700">ลบถาวรทั้งหมด</span>
+                        <Trash2 className="w-5 h-5 text-gray-600" />
+                        <span className="font-semibold text-gray-700">ลบถาวรทั้งหมด</span>
                       </div>
                       <p className="text-sm text-slate-500 mt-1">
-                        ลบบุคลากรและประวัติการลาทั้งหมดออกจากระบบ <strong className="text-red-600">ไม่สามารถกู้คืนได้</strong>
+                        ลบบุคลากรและประวัติการลาทั้งหมดออกจากระบบ <strong className="text-gray-700">ไม่สามารถกู้คืนได้</strong>
                       </p>
                     </div>
                   </label>
@@ -1668,16 +1662,16 @@ const UserManagementPage = () => {
                       value={deleteReason}
                       onChange={(e) => setDeleteReason(e.target.value)}
                       placeholder="เช่น ลาออก, เกษียณ, โอนย้าย..."
-                      className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-gray-400 focus:border-gray-400"
                     />
                   </div>
                 )}
 
                 {/* Warning for permanent delete */}
                 {deleteMode === 'permanent' && (
-                  <div className="flex items-start gap-3 p-3 bg-red-100 border border-red-300 rounded-xl">
-                    <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-red-700">
+                  <div className="flex items-start gap-3 p-3 bg-gray-100 border border-gray-300 rounded-xl">
+                    <AlertTriangle className="w-5 h-5 text-gray-600 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-gray-700">
                       <strong>คำเตือน:</strong> การดำเนินการนี้จะลบข้อมูลทั้งหมดของบุคลากรออกจากระบบอย่างถาวร รวมถึงประวัติการลาทั้งหมด ไม่สามารถกู้คืนได้
                     </p>
                   </div>
@@ -1698,10 +1692,10 @@ const UserManagementPage = () => {
                     disabled={submitting}
                     className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-white rounded-xl transition-colors font-semibold disabled:opacity-50 ${
                       deleteMode === 'permanent' 
-                        ? 'bg-red-600 hover:bg-red-700' 
+                        ? 'bg-gray-900 hover:bg-gray-800' 
                         : deleteMode === 'archive'
-                          ? 'bg-blue-600 hover:bg-blue-700'
-                          : 'bg-amber-500 hover:bg-amber-600'
+                          ? 'bg-gray-800 hover:bg-gray-700'
+                          : 'bg-gray-700 hover:bg-gray-600'
                     }`}
                   >
                     {submitting ? (
@@ -1725,7 +1719,7 @@ const UserManagementPage = () => {
         {showResetPasswordModal && selectedUser && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
-              <div className="bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-4 flex items-center justify-between text-white">
+              <div className="bg-gray-800 px-6 py-4 flex items-center justify-between text-white">
                 <h3 className="text-xl font-bold flex items-center gap-2">
                   <Key className="w-6 h-6" />
                   รีเซ็ตรหัสผ่าน
@@ -1756,7 +1750,7 @@ const UserManagementPage = () => {
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-400"
+                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-gray-400"
                     placeholder="อย่างน้อย 6 ตัวอักษร"
                     required
                     minLength={6}
@@ -1774,7 +1768,7 @@ const UserManagementPage = () => {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl transition-colors font-semibold disabled:opacity-50"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-800 hover:bg-gray-900 text-white rounded-xl transition-colors font-semibold disabled:opacity-50"
                   >
                     {submitting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Key className="w-4 h-4" />}
                     {submitting ? 'กำลังรีเซ็ต...' : 'รีเซ็ตรหัสผ่าน'}
@@ -1789,7 +1783,7 @@ const UserManagementPage = () => {
         {showLeaveBalanceModal && selectedUser && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
-              <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 px-6 py-4 flex items-center justify-between text-white">
+              <div className="bg-gray-800 px-6 py-4 flex items-center justify-between text-white">
                 <h3 className="text-xl font-bold flex items-center gap-2">
                   <Calendar className="w-6 h-6" />
                   แก้ไขวันลาคงเหลือ
@@ -1821,7 +1815,7 @@ const UserManagementPage = () => {
                       type="number"
                       value={leaveBalanceData.sick}
                       onChange={(e) => setLeaveBalanceData({ ...leaveBalanceData, sick: parseInt(e.target.value) || 0 })}
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-400 text-center"
+                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-gray-400 text-center"
                       min="0"
                     />
                   </div>
@@ -1831,7 +1825,7 @@ const UserManagementPage = () => {
                       type="number"
                       value={leaveBalanceData.personal}
                       onChange={(e) => setLeaveBalanceData({ ...leaveBalanceData, personal: parseInt(e.target.value) || 0 })}
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-400 text-center"
+                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-gray-400 text-center"
                       min="0"
                     />
                   </div>
@@ -1841,7 +1835,7 @@ const UserManagementPage = () => {
                       type="number"
                       value={leaveBalanceData.vacation}
                       onChange={(e) => setLeaveBalanceData({ ...leaveBalanceData, vacation: parseInt(e.target.value) || 0 })}
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-400 text-center"
+                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-gray-400 text-center"
                       min="0"
                     />
                   </div>
@@ -1858,7 +1852,7 @@ const UserManagementPage = () => {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl transition-colors font-semibold disabled:opacity-50"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-900 hover:bg-gray-800 text-white rounded-xl transition-colors font-semibold disabled:opacity-50"
                   >
                     {submitting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     {submitting ? 'กำลังบันทึก...' : 'บันทึก'}
@@ -1874,8 +1868,8 @@ const UserManagementPage = () => {
           <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden animate-in fade-in zoom-in duration-200">
               {/* Header with gradient and pattern */}
-              <div className="relative bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 px-6 py-5 text-white overflow-hidden">
-                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzRjMC0yLjIwOS0xLjc5MS00LTQtNHMtNCAxLjc5MS00IDQgMS43OTEgNCA0IDQgNC0xLjc5MSA0LTR6bTAtMThjMC0yLjIwOS0xLjc5MS00LTQtNHMtNCAxLjc5MS00IDQgMS43OTEgNCA0IDQgNC0xLjc5MSA0LTR6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-30"></div>
+              <div className="relative bg-gray-800 px-6 py-5 text-white overflow-hidden">
+                <div className="absolute inset-0 opacity-10"></div>
                 <div className="relative flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="p-2.5 bg-white/20 rounded-2xl backdrop-blur-sm">
@@ -1883,7 +1877,7 @@ const UserManagementPage = () => {
                     </div>
                     <div>
                       <h3 className="text-xl font-bold">จัดการวันลาประจำปี</h3>
-                      <p className="text-amber-100 text-sm">ปีงบประมาณ พ.ศ. {getCurrentFiscalYear()}</p>
+                      <p className="text-gray-300 text-sm">ปีงบประมาณ พ.ศ. {getCurrentFiscalYear()}</p>
                     </div>
                   </div>
                   <button 
@@ -1900,35 +1894,35 @@ const UserManagementPage = () => {
               
               <div className="p-6 space-y-4 overflow-y-auto max-h-[calc(90vh-180px)]">
                 {/* ข้อมูลปีงบประมาณ */}
-                <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/50 rounded-2xl p-4 shadow-sm">
+                <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 shadow-sm">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-amber-100 rounded-xl">
-                      <Sparkles className="w-5 h-5 text-amber-600" />
+                    <div className="p-2 bg-gray-100 rounded-xl">
+                      <Sparkles className="w-5 h-5 text-gray-600" />
                     </div>
                     <div>
-                      <p className="font-bold text-amber-800">ปีงบประมาณ พ.ศ. {getCurrentFiscalYear()}</p>
-                      <p className="text-sm text-amber-600">1 ต.ค. {getCurrentFiscalYear() - 1} - 30 ก.ย. {getCurrentFiscalYear()}</p>
+                      <p className="font-bold text-gray-800">ปีงบประมาณ พ.ศ. {getCurrentFiscalYear()}</p>
+                      <p className="text-sm text-gray-600">1 ต.ค. {getCurrentFiscalYear() - 1} - 30 ก.ย. {getCurrentFiscalYear()}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* กฎเกณฑ์วันลา */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/50 rounded-2xl p-4 shadow-sm">
-                  <h4 className="font-bold text-blue-800 mb-3 flex items-center gap-2">
+                <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 shadow-sm">
+                  <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
                     <Info className="w-5 h-5" />
                     กฎเกณฑ์วันลาพักผ่อน
                   </h4>
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-center p-3 bg-white/80 rounded-xl border border-blue-100">
-                      <p className="text-2xl font-bold text-blue-600">10</p>
+                    <div className="text-center p-3 bg-white rounded-xl border border-gray-200">
+                      <p className="text-2xl font-bold text-gray-700">10</p>
                       <p className="text-xs text-slate-600">วัน/ปี</p>
                     </div>
-                    <div className="text-center p-3 bg-white/80 rounded-xl border border-blue-100">
-                      <p className="text-2xl font-bold text-blue-600">20</p>
+                    <div className="text-center p-3 bg-white rounded-xl border border-gray-200">
+                      <p className="text-2xl font-bold text-gray-700">20</p>
                       <p className="text-xs text-slate-600">&lt;10ปี สะสม</p>
                     </div>
-                    <div className="text-center p-3 bg-white/80 rounded-xl border border-blue-100">
-                      <p className="text-2xl font-bold text-blue-600">30</p>
+                    <div className="text-center p-3 bg-white rounded-xl border border-gray-200">
+                      <p className="text-2xl font-bold text-gray-700">30</p>
                       <p className="text-xs text-slate-600">≥10ปี สะสม</p>
                     </div>
                   </div>
@@ -1936,27 +1930,27 @@ const UserManagementPage = () => {
 
                 {/* แสดงผลลัพธ์ */}
                 {carryoverResults && (
-                  <div className="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200/50 rounded-2xl p-4 shadow-sm animate-in slide-in-from-bottom duration-300">
-                    <h4 className="font-bold text-emerald-800 mb-3 flex items-center gap-2">
+                  <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 shadow-sm animate-in slide-in-from-bottom duration-300">
+                    <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
                       <CheckCircle2 className="w-5 h-5" />
                       ดำเนินการเรียบร้อย
                     </h4>
                     <div className="grid grid-cols-2 gap-3 mb-3">
-                      <div className="text-center p-4 bg-white rounded-xl border border-emerald-200 shadow-sm">
-                        <p className="text-3xl font-bold bg-gradient-to-r from-emerald-500 to-green-500 bg-clip-text text-transparent">{carryoverResults.processed}</p>
+                      <div className="text-center p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
+                        <p className="text-3xl font-bold text-gray-800">{carryoverResults.processed}</p>
                         <p className="text-sm text-slate-600 mt-1">สำเร็จ</p>
                       </div>
-                      <div className="text-center p-4 bg-white rounded-xl border border-red-200 shadow-sm">
-                        <p className="text-3xl font-bold text-red-500">{carryoverResults.failed}</p>
+                      <div className="text-center p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
+                        <p className="text-3xl font-bold text-gray-500">{carryoverResults.failed}</p>
                         <p className="text-sm text-slate-600 mt-1">ล้มเหลว</p>
                       </div>
                     </div>
                     {carryoverResults.results?.length > 0 && (
                       <div className="max-h-28 overflow-y-auto space-y-1.5 scrollbar-thin">
                         {carryoverResults.results.slice(0, 5).map((r, i) => (
-                          <div key={i} className="flex justify-between items-center bg-white p-2.5 rounded-lg border border-emerald-100 text-sm">
+                          <div key={i} className="flex justify-between items-center bg-white p-2.5 rounded-lg border border-gray-100 text-sm">
                             <span className="text-slate-700">{r.name}</span>
-                            <span className="text-emerald-600 font-medium flex items-center gap-1">
+                            <span className="text-gray-600 font-medium flex items-center gap-1">
                               <span className="text-slate-400">{r.new_carryover}+10</span>
                               <span>→</span>
                               <span className="font-bold">{r.total_available} วัน</span>
@@ -1978,7 +1972,7 @@ const UserManagementPage = () => {
                   <button
                     onClick={() => handleProcessAllCarryover(false)}
                     disabled={carryoverProcessing}
-                    className="group w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white rounded-xl transition-all font-semibold disabled:opacity-50 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40"
+                    className="group w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-gray-800 hover:bg-gray-900 text-white rounded-xl transition-all font-semibold disabled:opacity-50 shadow-lg shadow-gray-500/25 hover:shadow-gray-500/40"
                   >
                     {carryoverProcessing ? (
                       <RefreshCw className="w-5 h-5 animate-spin" />
@@ -1992,7 +1986,7 @@ const UserManagementPage = () => {
                   <button
                     onClick={() => handleProcessAllCarryover(true)}
                     disabled={carryoverProcessing}
-                    className="group w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl transition-all font-semibold disabled:opacity-50 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40"
+                    className="group w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-gray-700 hover:bg-gray-800 text-white rounded-xl transition-all font-semibold disabled:opacity-50 shadow-lg shadow-gray-500/25 hover:shadow-gray-500/40"
                   >
                     {carryoverProcessing ? (
                       <RefreshCw className="w-5 h-5 animate-spin" />
@@ -2007,7 +2001,7 @@ const UserManagementPage = () => {
                     <button
                       onClick={handleResetAnnualLeave}
                       disabled={carryoverProcessing}
-                      className="group w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-xl transition-all font-semibold disabled:opacity-50 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40"
+                      className="group w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-gray-600 hover:bg-gray-700 text-white rounded-xl transition-all font-semibold disabled:opacity-50 shadow-lg shadow-gray-500/25 hover:shadow-gray-500/40"
                     >
                       {carryoverProcessing ? (
                         <RefreshCw className="w-5 h-5 animate-spin" />
@@ -2026,7 +2020,7 @@ const UserManagementPage = () => {
                     <button
                       onClick={handleResetVacationCarryover}
                       disabled={carryoverProcessing}
-                      className="group w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white rounded-xl transition-all font-semibold disabled:opacity-50 shadow-lg shadow-red-500/25 hover:shadow-red-500/40"
+                      className="group w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-gray-500 hover:bg-gray-600 text-white rounded-xl transition-all font-semibold disabled:opacity-50 shadow-lg shadow-gray-500/25 hover:shadow-gray-500/40"
                     >
                       {carryoverProcessing ? (
                         <RefreshCw className="w-5 h-5 animate-spin" />
@@ -2144,10 +2138,10 @@ const UserManagementPage = () => {
                             </div>
                             <div className="text-right">
                               <span className={`px-2 py-1 rounded-lg text-xs font-medium ${
-                                leave.status === 'approved' ? 'bg-green-100 text-green-700' :
-                                leave.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                                leave.status === 'approved' ? 'bg-gray-100 text-gray-700' :
+                                leave.status === 'rejected' ? 'bg-gray-100 text-gray-500' :
                                 leave.status === 'cancelled' ? 'bg-slate-100 text-slate-700' :
-                                'bg-amber-100 text-amber-700'
+                                'bg-gray-100 text-gray-600'
                               }`}>
                                 {leave.status === 'approved' ? 'อนุมัติ' :
                                  leave.status === 'rejected' ? 'ไม่อนุมัติ' :
@@ -2182,8 +2176,8 @@ const UserManagementPage = () => {
             <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in duration-200">
               {/* Icon Header */}
               <div className="pt-8 pb-4 flex justify-center">
-                <div className={`p-4 rounded-full ${confirmModal.iconBg || 'bg-red-100'} animate-in zoom-in duration-300`}>
-                  <span className={confirmModal.iconColor || 'text-red-600'}>
+                <div className={`p-4 rounded-full ${confirmModal.iconBg || 'bg-gray-100'} animate-in zoom-in duration-300`}>
+                  <span className={confirmModal.iconColor || 'text-gray-600'}>
                     {confirmModal.icon}
                   </span>
                 </div>
@@ -2208,7 +2202,7 @@ const UserManagementPage = () => {
                 
                 {/* Warning */}
                 {confirmModal.warning && (
-                  <div className="flex items-center gap-2 justify-center text-amber-600 bg-amber-50 rounded-lg px-4 py-2.5 mb-4">
+                  <div className="flex items-center gap-2 justify-center text-gray-600 bg-gray-50 rounded-lg px-4 py-2.5 mb-4">
                     <AlertTriangle className="w-4 h-4" />
                     <span className="text-sm">{confirmModal.warning}</span>
                   </div>
