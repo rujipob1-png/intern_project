@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/common/Button';
@@ -14,8 +14,15 @@ export const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [loginError, setLoginError] = useState('');
-  const { login } = useAuth();
+  const { login, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+
+  // ถ้า login อยู่แล้ว redirect ไป dashboard
+  useEffect(() => {
+    if (!authLoading && isAuthenticated()) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [authLoading, isAuthenticated, navigate]);
 
   // Clear specific error when user starts typing
   const handleEmployeeCodeChange = (e) => {

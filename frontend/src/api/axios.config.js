@@ -13,7 +13,7 @@ const axiosInstance = axios.create({
 // Request interceptor - Add token to every request
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+    const token = sessionStorage.getItem(STORAGE_KEYS.TOKEN);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -40,8 +40,8 @@ axiosInstance.interceptors.response.use(
         
         if (!isLoginRequest) {
           // Unauthorized - Clear token and redirect to login (only for non-login requests)
-          localStorage.removeItem(STORAGE_KEYS.TOKEN);
-          localStorage.removeItem(STORAGE_KEYS.USER);
+          sessionStorage.removeItem(STORAGE_KEYS.TOKEN);
+          sessionStorage.removeItem(STORAGE_KEYS.USER);
           window.location.href = '/login';
         }
       } else if (status === 403) {

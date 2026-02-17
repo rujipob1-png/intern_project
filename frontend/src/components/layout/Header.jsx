@@ -31,7 +31,7 @@ export const Header = () => {
                 className="w-8 h-8 rounded-lg object-cover shadow-sm"
               />
             ) : (
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-sm">
+              <div className="w-8 h-8 bg-[#2c2c2e] rounded-xl flex items-center justify-center">
                 <User className="w-4 h-4 text-white" />
               </div>
             )}

@@ -260,7 +260,7 @@ export const Sidebar = () => {
                   className="w-10 h-10 rounded-lg object-cover flex-shrink-0 shadow-md"
                 />
               ) : (
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-md">
+                <div className="w-10 h-10 bg-[#2c2c2e] rounded-xl flex items-center justify-center flex-shrink-0">
                   <span className="text-white font-bold text-lg">
                     {user?.firstName?.charAt(0) || 'U'}
                   </span>

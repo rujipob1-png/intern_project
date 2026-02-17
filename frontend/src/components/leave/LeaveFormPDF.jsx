@@ -5,7 +5,7 @@ import jsPDF from 'jspdf';
 const LeaveFormPDF = forwardRef(({ leave, user }, ref) => {
   const formRef = useRef(null);
 
-  // แปลงวันที่เป็นภาษาไทย
+  // แปลงวันที่เป็นภาษาไทย (แบบแยก วัน/เดือน/ปี)
   const formatThaiDate = (dateStr) => {
     if (!dateStr) return { day: '', month: '', year: '' };
     const date = new Date(dateStr);
@@ -38,9 +38,12 @@ const LeaveFormPDF = forwardRef(({ leave, user }, ref) => {
   const contactPhone = leave?.contactPhone || leave?.contact_phone || '';
   
   const fullName = user?.fullName || (user?.firstName ? `${user?.title || ''}${user?.firstName} ${user?.lastName || ''}`.trim() : '') ||
-    (leave?.users?.first_name ? `${leave.users.first_name} ${leave.users.last_name}` : '');
+    (leave?.users?.first_name ? `${leave.users.title || ''}${leave.users.first_name} ${leave.users.last_name}` : '');
   const position = user?.position || leave?.users?.position || '';
   const department = user?.department || leave?.users?.department || '';
+
+  // Checkbox helper
+  const chk = (condition) => condition ? '✓' : '';
 
   const downloadPDF = async () => {
     if (!formRef.current) return;
@@ -68,191 +71,100 @@ const LeaveFormPDF = forwardRef(({ leave, user }, ref) => {
     downloadPDF,
   }));
 
-  // ใช้เส้น solid แทน dotted เพราะ html2canvas รองรับดีกว่า
-  const line = "border-bottom: 1px solid #000";
-  
+  // Underline style — simple bottom border only, no vertical-align tricks
+  const U = "display:inline-block; border-bottom:1px solid #000";
+  // Table cell style
+  const tc = "border:1px solid #000; padding:3px 5px";
+
   const formHTML = `
-    <div style="font-family: 'TH Sarabun New', 'Sarabun', sans-serif; font-size: 14px; line-height: 1.5; padding: 20px 30px; background: white;">
-      <!-- Header -->
-      <div style="text-align: center; margin-bottom: 15px;">
-        <div style="font-size: 18px; font-weight: bold;">แบบใบลาป่วย ลาคลอดบุตร ลากิจส่วนตัว</div>
+    <div style="font-family:'TH Sarabun New','Sarabun',serif; font-size:16px; line-height:2; padding:35px 45px; background:white; color:#000;">
+
+      <!-- HEADER -->
+      <div style="text-align:center; margin-bottom:6px;">
+        <div style="font-size:22px; font-weight:bold;">แบบใบลาป่วย  ลาคลอดบุตร  ลากิจส่วนตัว</div>
       </div>
 
-      <!-- เขียนที่ -->
-      <div style="text-align: right; margin-bottom: 5px;">
-        เขียนที่ <span style="display: inline-block; width: 200px; ${line};"></span>
-      </div>
-      
-      <!-- วันที่ เดือน พ.ศ. -->
-      <div style="text-align: right; margin-bottom: 10px;">
-        วันที่ <span style="display: inline-block; width: 30px; ${line}; text-align: center;">${today.day}</span>
-        เดือน <span style="display: inline-block; width: 80px; ${line}; text-align: center;">${today.month}</span>
-        พ.ศ. <span style="display: inline-block; width: 50px; ${line}; text-align: center;">${today.year}</span>
-      </div>
+      <div style="text-align:right;">เขียนที่<span style="${U}; width:200px;">&nbsp;</span></div>
+      <div style="text-align:right;">วันที่<span style="${U}; width:35px; text-align:center;">${today.day}</span>เดือน<span style="${U}; width:110px; text-align:center;">${today.month}</span>พ.ศ.<span style="${U}; width:55px; text-align:center;">${today.year}</span></div>
 
-      <!-- เรื่อง -->
-      <div style="margin-bottom: 5px;">
-        เรื่อง <span style="display: inline-block; width: 500px; ${line};"></span>
-      </div>
+      <!-- BODY -->
+      <div>เรื่อง<span style="${U}; width:560px;">&nbsp;</span></div>
+      <div>เรียน<span style="${U}; width:560px;">&nbsp;</span></div>
+      <div><span style="margin-left:45px;">ข้าพเจ้า</span><span style="${U}; width:210px; text-align:center;">${fullName}</span>ตำแหน่ง<span style="${U}; width:210px; text-align:center;">${position}</span></div>
+      <div>สังกัด<span style="${U}; width:160px; text-align:center;">${department}</span>ขอลา ( ${chk(leaveTypeId === 1)} ) ป่วย ( ${chk(leaveTypeId === 3)} ) กิจส่วนตัว ( ${chk(leaveTypeId === 2)} ) คลอดบุตร</div>
+      <div>เนื่องจาก<span style="${U}; width:155px; text-align:center;">${reason}</span>ตั้งแต่วันที่<span style="${U}; width:130px; text-align:center;">${startDate.day ? startDate.day+' '+startDate.month+' '+startDate.year : ''}</span>ถึงวันที่<span style="${U}; width:130px; text-align:center;">${endDate.day ? endDate.day+' '+endDate.month+' '+endDate.year : ''}</span></div>
+      <div>มีกำหนดการ<span style="${U}; width:35px; text-align:center;">${totalDays}</span>วัน ข้าพเจ้าได้ลา ( ) ป่วย ( ) กิจส่วนตัว ( ) คลอดบุตร ครั้งสุดท้ายตั้งแต่</div>
+      <div>วันที่<span style="${U}; width:35px;">&nbsp;</span>เดือน<span style="${U}; width:90px;">&nbsp;</span>พ.ศ.<span style="${U}; width:50px;">&nbsp;</span>ถึงวันที่<span style="${U}; width:35px;">&nbsp;</span>เดือน<span style="${U}; width:90px;">&nbsp;</span>พ.ศ.<span style="${U}; width:50px;">&nbsp;</span></div>
+      <div style="text-align:right;">มีกำหนด<span style="${U}; width:35px;">&nbsp;</span>วัน ในระหว่างลา</div>
+      <div style="margin-bottom:12px;">จะติดต่อข้าพเจ้าได้ที่<span style="${U}; width:440px;">${contactAddress} ${contactPhone}</span></div>
 
-      <!-- เรียน -->
-      <div style="margin-bottom: 5px;">
-        เรียน <span style="display: inline-block; width: 500px; ${line};"></span>
-      </div>
+      <!-- ===== TWO COLUMNS ===== -->
+      <div style="display:flex; gap:18px;">
 
-      <!-- ข้าพเจ้า -->
-      <div style="margin-bottom: 5px;">
-        <span style="margin-left: 40px;">ข้าพเจ้า</span>
-        <span style="display: inline-block; width: 200px; ${line}; text-align: center;">${fullName}</span>
-        ตำแหน่ง <span style="display: inline-block; width: 200px; ${line}; text-align: center;">${position}</span>
-      </div>
+        <!-- LEFT COLUMN -->
+        <div style="width:48%;">
 
-      <!-- สังกัด -->
-      <div style="margin-bottom: 5px;">
-        สังกัด <span style="display: inline-block; width: 250px; ${line}; text-align: center;">${department}</span>
-        ขอลา ( ${leaveTypeId === 1 ? '/' : ' '} ) ป่วย ( ${leaveTypeId === 3 ? '/' : ' '} ) กิจส่วนตัว ( ${leaveTypeId === 2 ? '/' : ' '} ) คลอดบุตร
-      </div>
-
-      <!-- เนื่องจาก -->
-      <div style="margin-bottom: 5px;">
-        เนื่องจาก <span style="display: inline-block; width: 280px; ${line};">${reason}</span>
-        ตั้งแต่วันที่ <span style="display: inline-block; width: 30px; ${line}; text-align: center;">${startDate.day}</span>
-        เดือน <span style="display: inline-block; width: 80px; ${line}; text-align: center;">${startDate.month}</span>
-        พ.ศ. <span style="display: inline-block; width: 50px; ${line}; text-align: center;">${startDate.year}</span>
-      </div>
-
-      <!-- ถึงวันที่ -->
-      <div style="margin-bottom: 5px;">
-        ถึงวันที่ <span style="display: inline-block; width: 30px; ${line}; text-align: center;">${endDate.day}</span>
-        เดือน <span style="display: inline-block; width: 80px; ${line}; text-align: center;">${endDate.month}</span>
-        พ.ศ. <span style="display: inline-block; width: 50px; ${line}; text-align: center;">${endDate.year}</span>
-      </div>
-
-      <!-- มีกำหนดการ -->
-      <div style="margin-bottom: 5px;">
-        มีกำหนดการ <span style="display: inline-block; width: 40px; ${line}; text-align: center;">${totalDays}</span> วัน
-        ข้าพเจ้าได้ลา ( ) ป่วย ( ) กิจส่วนตัว ( ) คลอดบุตร ครั้งสุดท้ายตั้งแต่
-      </div>
-
-      <!-- วันที่ลาครั้งก่อน -->
-      <div style="margin-bottom: 5px;">
-        วันที่ <span style="display: inline-block; width: 30px; ${line};"></span>
-        เดือน <span style="display: inline-block; width: 80px; ${line};"></span>
-        พ.ศ. <span style="display: inline-block; width: 50px; ${line};"></span>
-        ถึงวันที่ <span style="display: inline-block; width: 30px; ${line};"></span>
-        เดือน <span style="display: inline-block; width: 80px; ${line};"></span>
-        พ.ศ. <span style="display: inline-block; width: 50px; ${line};"></span>
-      </div>
-
-      <!-- มีกำหนด วัน ใน -->
-      <div style="margin-bottom: 5px;">
-        <span style="margin-left: 250px;"></span>
-        มีกำหนด <span style="display: inline-block; width: 40px; ${line};"></span> วัน ในระหว่างลา
-      </div>
-
-      <!-- จะติดต่อ -->
-      <div style="margin-bottom: 15px;">
-        จะติดต่อข้าพเจ้าได้ที่ <span style="display: inline-block; width: 450px; ${line};">${contactAddress} ${contactPhone}</span>
-      </div>
-
-      <!-- Two Column Section -->
-      <div style="display: flex; gap: 20px;">
-        <!-- Left Column -->
-        <div style="width: 48%;">
-          <!-- Statistics Table -->
-          <div style="font-weight: bold; margin-bottom: 5px; text-decoration: underline;">สถิติการลาในปีงบประมาณนี้</div>
-          <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 10px;">
+          <div style="font-weight:bold; text-decoration:underline; font-size:15px; margin-bottom:3px;">สถิติการลาในปีงบประมาณนี้</div>
+          <table style="width:100%; border-collapse:collapse; font-size:13px; margin-bottom:8px;">
             <tr>
-              <th style="border: 1px solid #000; padding: 4px; text-align: center;">ประเภทลา</th>
-              <th style="border: 1px solid #000; padding: 4px; text-align: center;">ลามาแล้ว<br/>(วันทำการ)</th>
-              <th style="border: 1px solid #000; padding: 4px; text-align: center;">ลาครั้งนี้<br/>(วันทำการ)</th>
-              <th style="border: 1px solid #000; padding: 4px; text-align: center;">รวมเป็น</th>
+              <th style="${tc}; text-align:center; font-weight:bold;" rowspan="2">ประเภทลา</th>
+              <th style="${tc}; text-align:center; font-weight:bold;">ลามาแล้ว</th>
+              <th style="${tc}; text-align:center; font-weight:bold;">ลาครั้งนี้</th>
+              <th style="${tc}; text-align:center; font-weight:bold;" rowspan="2">รวมเป็น</th>
             </tr>
             <tr>
-              <td style="border: 1px solid #000; padding: 4px;">ป่วย</td>
-              <td style="border: 1px solid #000; padding: 4px; text-align: center;"></td>
-              <td style="border: 1px solid #000; padding: 4px; text-align: center;"></td>
-              <td style="border: 1px solid #000; padding: 4px; text-align: center;"></td>
+              <th style="${tc}; text-align:center; font-size:11px;">(วันทำการ)</th>
+              <th style="${tc}; text-align:center; font-size:11px;">(วันทำการ)</th>
             </tr>
-            <tr>
-              <td style="border: 1px solid #000; padding: 4px;">กิจส่วนตัว</td>
-              <td style="border: 1px solid #000; padding: 4px; text-align: center;"></td>
-              <td style="border: 1px solid #000; padding: 4px; text-align: center;"></td>
-              <td style="border: 1px solid #000; padding: 4px; text-align: center;"></td>
-            </tr>
-            <tr>
-              <td style="border: 1px solid #000; padding: 4px;">คลอดบุตร</td>
-              <td style="border: 1px solid #000; padding: 4px; text-align: center;"></td>
-              <td style="border: 1px solid #000; padding: 4px; text-align: center;"></td>
-              <td style="border: 1px solid #000; padding: 4px; text-align: center;"></td>
-            </tr>
+            <tr><td style="${tc};">ป่วย</td><td style="${tc};">&nbsp;</td><td style="${tc};">&nbsp;</td><td style="${tc};">&nbsp;</td></tr>
+            <tr><td style="${tc};">กิจส่วนตัว</td><td style="${tc};">&nbsp;</td><td style="${tc};">&nbsp;</td><td style="${tc};">&nbsp;</td></tr>
+            <tr><td style="${tc};">คลอดบุตร</td><td style="${tc};">&nbsp;</td><td style="${tc};">&nbsp;</td><td style="${tc};">&nbsp;</td></tr>
           </table>
 
-          <!-- ผู้ตรวจสอบ -->
-          <div style="margin-bottom: 15px;">
-            <div>(ลงชื่อ) <span style="display: inline-block; width: 130px; ${line};"></span> ผู้ตรวจสอบ</div>
-            <div style="margin-left: 30px;">ตำแหน่ง <span style="display: inline-block; width: 130px; ${line};"></span></div>
-            <div style="margin-left: 30px;">วันที่ <span style="display: inline-block; width: 140px; ${line};"></span></div>
-          </div>
+          <div>(ลงชื่อ)<span style="${U}; width:130px;">&nbsp;</span>ผู้ตรวจสอบ</div>
+          <div style="margin-left:14px;">ตำแหน่ง<span style="${U}; width:140px;">&nbsp;</span></div>
+          <div style="margin-left:14px; margin-bottom:6px;">วันที่<span style="${U}; width:28px;">&nbsp;</span>/<span style="${U}; width:28px;">&nbsp;</span>/<span style="${U}; width:38px;">&nbsp;</span></div>
 
-          <!-- บันทึกกลุ่มงานอำนวยการ -->
-          <div style="font-weight: bold; margin-bottom: 5px; text-decoration: underline;">บันทึกกลุ่มงานอำนวยการ</div>
-          <div style="margin-bottom: 3px; font-size: 13px;">
-            ตั้งแต่ปีงบประมาณ <span style="display: inline-block; width: 60px; ${line};"></span> ผู้ลาได้ลาป่วยมาแล้ว
-          </div>
-          <div style="margin-bottom: 3px; font-size: 13px;">
-            <span style="display: inline-block; width: 40px; ${line};"></span> ครั้ง รวม <span style="display: inline-block; width: 40px; ${line};"></span> วัน รวมครั้งนี้เป็นเวลา <span style="display: inline-block; width: 40px; ${line};"></span> วัน
-          </div>
-          <div style="margin-bottom: 3px; font-size: 13px;">
-            ลากิจมาแล้ว <span style="display: inline-block; width: 40px; ${line};"></span> ครั้ง รวม <span style="display: inline-block; width: 40px; ${line};"></span> วัน รวมครั้งนี้เป็น
-          </div>
-          <div style="margin-bottom: 3px; font-size: 13px;">
-            วันลา <span style="display: inline-block; width: 40px; ${line};"></span> วัน ลาคลอดบุตร <span style="display: inline-block; width: 40px; ${line};"></span> วัน
-          </div>
-          <div style="margin-bottom: 10px;"></div>
-          <div style="margin-bottom: 3px;">(ลงชื่อ) <span style="display: inline-block; width: 130px; ${line};"></span> หัวหน้าฝ่ายบริหารทั่วไป</div>
+          <div style="font-weight:bold; text-decoration:underline; font-size:15px; margin-bottom:2px;">บันทึกกลุ่มงานอำนวยการ</div>
+          <div style="font-size:14px; margin-left:18px;">ตั้งแต่ปีงบประมาณ<span style="${U}; width:50px;">&nbsp;</span>ผู้ลาได้ลาป่วยมาแล้ว</div>
+          <div style="font-size:14px;"><span style="${U}; width:30px;">&nbsp;</span>ครั้ง รวม<span style="${U}; width:30px;">&nbsp;</span>วัน รวมครั้งนี้เป็นเวลา<span style="${U}; width:30px;">&nbsp;</span>วัน</div>
+          <div style="font-size:14px;">ลากิจมาแล้ว<span style="${U}; width:30px;">&nbsp;</span>ครั้ง รวม<span style="${U}; width:30px;">&nbsp;</span>วัน รวมครั้งนี้เป็น</div>
+          <div style="font-size:14px;">วันลา<span style="${U}; width:30px;">&nbsp;</span>วัน ลาคลอดบุตร<span style="${U}; width:30px;">&nbsp;</span>วัน</div>
 
-          <!-- ความเห็นผู้บังเสนอ -->
-          <div style="font-weight: bold; margin-top: 10px; margin-bottom: 5px; text-decoration: underline;">ความเห็นผู้บังเสนอ</div>
-          <div style="margin-bottom: 3px; font-size: 13px;">
-            เห็นควรอนุญาตให้ลาได้ <span style="display: inline-block; width: 40px; ${line};"></span> วัน
-          </div>
-          <div style="margin-bottom: 3px;">(ลงชื่อ) <span style="display: inline-block; width: 130px; ${line};"></span></div>
-          <div style="margin-left: 30px; font-size: 13px;">ผู้อำนวยการกลุ่มงานอำนวยการ วันที่ <span style="display: inline-block; width: 80px; ${line};"></span></div>
+          <div style="margin-top:6px;">(ลงชื่อ)<span style="${U}; width:130px;">&nbsp;</span>หัวหน้าฝ่ายบริหารทั่วไป</div>
+          <div style="margin-left:14px; margin-bottom:6px;">วันที่<span style="${U}; width:28px;">&nbsp;</span>/<span style="${U}; width:28px;">&nbsp;</span>/<span style="${U}; width:38px;">&nbsp;</span></div>
+
+          <div style="font-weight:bold; text-decoration:underline; font-size:15px; margin-bottom:2px;">ความเห็นผู้นำเสนอ</div>
+          <div style="font-size:14px; margin-left:18px;">เห็นควรอนุญาตให้ลาได้<span style="${U}; width:30px;">&nbsp;</span>วัน</div>
+          <div style="white-space:nowrap;">(ลงชื่อ)<span style="${U}; width:100px;">&nbsp;</span>ผู้อำนวยการกลุ่มงานอำนวยการ</div>
+          <div style="margin-left:14px;">วันที่<span style="${U}; width:28px;">&nbsp;</span>/<span style="${U}; width:28px;">&nbsp;</span>/<span style="${U}; width:38px;">&nbsp;</span></div>
+
         </div>
 
-        <!-- Right Column -->
-        <div style="width: 52%;">
-          <!-- ขอแสดงความนับถือ -->
-          <div style="text-align: center; margin-bottom: 15px;">
-            <div style="font-weight: bold;">ขอแสดงความนับถือ</div>
-            <div style="height: 40px;"></div>
-            <div>(ลงชื่อ) <span style="display: inline-block; width: 150px; ${line};"></span></div>
-            <div style="margin-top: 3px;">( <span style="display: inline-block; width: 150px; ${line}; text-align: center;">${fullName}</span> )</div>
-            <div style="margin-top: 3px;">ตำแหน่ง <span style="display: inline-block; width: 150px; ${line};"></span></div>
+        <!-- RIGHT COLUMN -->
+        <div style="width:52%;">
+
+          <div style="text-align:center; margin-bottom:10px;">
+            <div style="font-weight:bold;">ขอแสดงความนับถือ</div>
+            <div style="height:40px;"></div>
+            <div>(ลงชื่อ)<span style="${U}; width:170px;">&nbsp;</span></div>
+            <div>( <span style="${U}; width:170px; text-align:center;">${fullName}</span> )</div>
+            <div>ตำแหน่ง<span style="${U}; width:170px;">&nbsp;</span></div>
           </div>
 
-          <!-- ความเห็นผู้บังคับบัญชา -->
-          <div style="font-weight: bold; margin-bottom: 5px; text-decoration: underline;">ความเห็นผู้บังคับบัญชา (ผอ.กลุ่มงาน/ผอ.สสจ.)</div>
-          <div style="border: 1px solid #000; padding: 10px; min-height: 60px; margin-bottom: 10px;">
-            <div style="${line}; height: 20px; margin-bottom: 5px;"></div>
-            <div style="${line}; height: 20px; margin-bottom: 5px;"></div>
-            <div style="text-align: right; margin-top: 10px;">
-              <div>(ลงชื่อ) <span style="display: inline-block; width: 120px; ${line};"></span></div>
-              <div style="margin-top: 3px;">ตำแหน่ง <span style="display: inline-block; width: 120px; ${line};"></span></div>
-            </div>
-          </div>
+          <div style="font-weight:bold; text-decoration:underline; font-size:15px; margin-bottom:2px;">ความเห็นผู้บังคับบัญชา (ผอ.กลุ่มงาน/ผอ.สสจ.)</div>
+          <div><span style="${U}; width:100%;">&nbsp;</span></div>
+          <div><span style="${U}; width:100%;">&nbsp;</span></div>
+          <div style="text-align:right;">(ลงชื่อ)<span style="${U}; width:150px;">&nbsp;</span></div>
+          <div style="text-align:right;">ตำแหน่ง<span style="${U}; width:150px;">&nbsp;</span></div>
+          <div style="text-align:right;">วันที่<span style="${U}; width:30px;">&nbsp;</span>/<span style="${U}; width:30px;">&nbsp;</span>/<span style="${U}; width:40px;">&nbsp;</span></div>
 
-          <!-- คำสั่ง -->
-          <div style="font-weight: bold; margin-bottom: 5px; text-decoration: underline;">คำสั่ง</div>
-          <div style="margin-left: 20px; margin-bottom: 5px;">
-            <div>( ) อนุญาต &nbsp;&nbsp;&nbsp;&nbsp; ( ) ไม่อนุญาต</div>
-          </div>
-          <div style="text-align: right; margin-top: 10px;">
-            <div>(ลงชื่อ) <span style="display: inline-block; width: 120px; ${line};"></span></div>
-            <div style="margin-top: 3px;">ตำแหน่ง <span style="display: inline-block; width: 120px; ${line};"></span></div>
-            <div style="margin-top: 3px;">วันที่ <span style="display: inline-block; width: 30px; ${line};"></span> / <span style="display: inline-block; width: 30px; ${line};"></span> / <span style="display: inline-block; width: 40px; ${line};"></span></div>
-          </div>
+          <div style="font-weight:bold; text-decoration:underline; font-size:15px; margin-top:10px; margin-bottom:2px;">คำสั่ง</div>
+          <div style="margin-left:18px;">( &nbsp; ) อนุญาต &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ( &nbsp; ) ไม่อนุญาต</div>
+          <div style="text-align:right;">(ลงชื่อ)<span style="${U}; width:150px;">&nbsp;</span></div>
+          <div style="text-align:right;">ตำแหน่ง<span style="${U}; width:150px;">&nbsp;</span></div>
+          <div style="text-align:right;">วันที่<span style="${U}; width:30px;">&nbsp;</span>/<span style="${U}; width:30px;">&nbsp;</span>/<span style="${U}; width:40px;">&nbsp;</span></div>
+
         </div>
       </div>
     </div>

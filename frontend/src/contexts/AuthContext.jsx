@@ -9,11 +9,11 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Initialize auth from localStorage
+  // Initialize auth from sessionStorage
   useEffect(() => {
     const initAuth = async () => {
-      const storedToken = localStorage.getItem(STORAGE_KEYS.TOKEN);
-      const storedUser = localStorage.getItem(STORAGE_KEYS.USER);
+      const storedToken = sessionStorage.getItem(STORAGE_KEYS.TOKEN);
+      const storedUser = sessionStorage.getItem(STORAGE_KEYS.USER);
 
       if (storedToken && storedUser) {
         // Validate token with backend and get fresh user data
@@ -23,15 +23,15 @@ export const AuthProvider = ({ children }) => {
             // Use fresh data from API
             setToken(storedToken);
             setUser(response.data);
-            localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(response.data));
+            sessionStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(response.data));
           } else {
             throw new Error('Invalid token');
           }
         } catch (error) {
           // Token invalid - clear localStorage
           console.log('Token invalid, clearing auth...');
-          localStorage.removeItem(STORAGE_KEYS.TOKEN);
-          localStorage.removeItem(STORAGE_KEYS.USER);
+          sessionStorage.removeItem(STORAGE_KEYS.TOKEN);
+          sessionStorage.removeItem(STORAGE_KEYS.USER);
         }
       }
       setLoading(false);
@@ -52,9 +52,9 @@ export const AuthProvider = ({ children }) => {
         setToken(token);
         setUser(user);
         
-        // Save to localStorage
-        localStorage.setItem(STORAGE_KEYS.TOKEN, token);
-        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
+        // Save to sessionStorage
+        sessionStorage.setItem(STORAGE_KEYS.TOKEN, token);
+        sessionStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
         
         return { success: true };
       }
@@ -77,8 +77,8 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setUser(null);
     setToken(null);
-    localStorage.removeItem(STORAGE_KEYS.TOKEN);
-    localStorage.removeItem(STORAGE_KEYS.USER);
+    sessionStorage.removeItem(STORAGE_KEYS.TOKEN);
+    sessionStorage.removeItem(STORAGE_KEYS.USER);
   };
 
   // Check if user is authenticated
@@ -97,7 +97,7 @@ export const AuthProvider = ({ children }) => {
       const data = await authAPI.getProfile();
       if (data.success) {
         setUser(data.data);
-        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.data));
+        sessionStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.data));
         return { success: true };
       }
       return { success: false };
