@@ -138,56 +138,56 @@ export default function DirectorCancelRequests() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 p-6 bg-slate-50 min-h-screen">
+    <div className="space-y-6 p-6 bg-gray-50 min-h-screen">
       {/* Back Button */}
       <button
         onClick={() => navigate('/dashboard')}
-        className="flex items-center gap-2 text-slate-600 hover:text-slate-800 transition-colors group"
+        className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors group"
       >
         <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
         <span className="font-medium">กลับหน้าหลัก</span>
       </button>
 
       {/* Header */}
-      <div className="bg-gradient-to-r from-slate-600 to-slate-700 rounded-xl p-6 text-white shadow-lg">
+      <div className="bg-[#1a2744] rounded-xl p-6 text-white">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-xl font-bold flex items-center gap-3">
               <XCircle className="w-7 h-7" />
               คำขอยกเลิกการลา
             </h1>
-            <p className="text-slate-300 mt-1">ผู้อำนวยการกลุ่มงาน - รออนุมัติยกเลิก</p>
+            <p className="text-gray-400 mt-1">ผู้อำนวยการกลุ่มงาน - รออนุมัติยกเลิก</p>
           </div>
-          <div className="bg-white/10 backdrop-blur rounded-lg px-6 py-3 text-center border border-slate-400">
+          <div className="bg-white/10 rounded-lg px-6 py-3 text-center border border-gray-600">
             <div className="text-3xl font-bold">{pendingCancels.length}</div>
-            <div className="text-sm text-slate-300">รออนุมัติ</div>
+            <div className="text-sm text-gray-400">รออนุมัติ</div>
           </div>
         </div>
       </div>
 
       {/* Department Filter */}
       {pendingCancels.length > 0 && (
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
           <div className="flex items-center gap-3 mb-3">
-            <Filter className="w-5 h-5 text-slate-500" />
-            <h2 className="font-semibold text-slate-700">กรองตามกอง/ฝ่าย</h2>
+            <Filter className="w-5 h-5 text-gray-500" />
+            <h2 className="font-semibold text-gray-700">กรองตามกอง/ฝ่าย</h2>
           </div>
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setSelectedDepartment('all')}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                selectedDepartment === 'all' ? 'bg-slate-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                selectedDepartment === 'all' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
               <Users className="w-4 h-4" />
               <span>ทั้งหมด</span>
-              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${selectedDepartment === 'all' ? 'bg-white/20' : 'bg-slate-200'}`}>
+              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${selectedDepartment === 'all' ? 'bg-white/20' : 'bg-gray-200'}`}>
                 {pendingCancels.length}
               </span>
             </button>
@@ -196,12 +196,12 @@ export default function DirectorCancelRequests() {
                 key={dept}
                 onClick={() => setSelectedDepartment(dept)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                  selectedDepartment === dept ? 'bg-slate-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  selectedDepartment === dept ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
                 <Building2 className="w-4 h-4" />
                 <span>{DEPARTMENT_NAMES[dept] || dept}</span>
-                <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${selectedDepartment === dept ? 'bg-white/20' : 'bg-slate-200'}`}>
+                <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${selectedDepartment === dept ? 'bg-white/20' : 'bg-gray-200'}`}>
                   {count}
                 </span>
               </button>
@@ -212,27 +212,27 @@ export default function DirectorCancelRequests() {
 
       {/* Search Box */}
       {pendingCancels.length > 0 && (
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
               placeholder="ค้นหาด้วยชื่อพนักงาน, รหัสพนักงาน หรือเลขที่ใบลา..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-all"
+              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-gray-400 transition-all"
             />
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
                 <XCircle className="w-5 h-5" />
               </button>
             )}
           </div>
           {searchTerm && (
-            <div className="mt-2 text-sm text-slate-600">
+            <div className="mt-2 text-sm text-gray-600">
               พบ {filteredCancels.length} รายการ
             </div>
           )}
@@ -252,18 +252,18 @@ export default function DirectorCancelRequests() {
       ) : (
         <div className="grid gap-6">
           {filteredCancels.map((leave) => (
-            <Card key={leave.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300 border-l-4 border-slate-500">
+            <Card key={leave.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300 border border-gray-200">
               <div className="flex flex-col lg:flex-row">
                 {/* Left Section - Employee Info */}
-                <div className="p-6 lg:w-1/4 bg-slate-50">
+                <div className="p-6 lg:w-1/4 bg-gray-50">
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-slate-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-md">
+                    <div className="w-14 h-14 bg-gray-400 rounded-full flex items-center justify-center text-white font-bold text-xl">
                       {leave.employee?.name?.charAt(0) || 'U'}
                     </div>
                     <div>
-                      <h3 className="font-bold text-slate-800">{leave.employee?.name || 'ไม่ระบุ'}</h3>
-                      <p className="text-sm text-slate-500">รหัส: {leave.employee?.employeeCode}</p>
-                      <span className="inline-block mt-1 px-3 py-1 bg-slate-600 text-white text-xs font-medium rounded-full">
+                      <h3 className="font-bold text-gray-800">{leave.employee?.name || 'ไม่ระบุ'}</h3>
+                      <p className="text-sm text-gray-500">รหัส: {leave.employee?.employeeCode}</p>
+                      <span className="inline-block mt-1 px-3 py-1 bg-gray-200 text-gray-700 text-xs font-medium rounded-full">
                         {getDepartmentThaiCode(leave.employee?.department)}
                       </span>
                     </div>
@@ -272,44 +272,44 @@ export default function DirectorCancelRequests() {
 
                 {/* Middle Section - Leave Info */}
                 <div className="p-6 lg:flex-1 space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
-                      <div className="flex items-center gap-2 text-blue-600 mb-1">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                      <div className="flex items-center gap-2 text-gray-500 mb-1">
                         <FileText className="w-4 h-4" />
                         <span className="text-xs font-medium">ประเภทการลา</span>
                       </div>
-                      <p className="font-semibold text-slate-800">{leave.leaveType}</p>
+                      <p className="font-bold text-gray-900">{leave.leaveType}</p>
                     </div>
-                    <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-                      <div className="flex items-center gap-2 text-slate-500 mb-1">
+                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                      <div className="flex items-center gap-2 text-gray-500 mb-1">
                         <Clock className="w-4 h-4" />
                         <span className="text-xs font-medium">จำนวนวัน</span>
                       </div>
-                      <p className="font-semibold text-slate-800">{leave.totalDays} วัน</p>
+                      <p className="font-bold text-gray-900">{leave.totalDays} วัน</p>
                     </div>
-                    <div className="bg-green-50 rounded-lg p-4 border border-green-100">
-                      <div className="flex items-center gap-2 text-green-600 mb-1">
+                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                      <div className="flex items-center gap-2 text-gray-500 mb-1">
                         <Calendar className="w-4 h-4" />
                         <span className="text-xs font-medium">วันที่เริ่มต้น</span>
                       </div>
-                      <p className="font-semibold text-slate-800">{formatDate(leave.startDate)}</p>
+                      <p className="font-bold text-gray-900">{formatDate(leave.startDate)}</p>
                     </div>
-                    <div className="bg-rose-50 rounded-lg p-4 border border-rose-100">
-                      <div className="flex items-center gap-2 text-rose-500 mb-1">
+                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                      <div className="flex items-center gap-2 text-gray-500 mb-1">
                         <Calendar className="w-4 h-4" />
                         <span className="text-xs font-medium">วันที่สิ้นสุด</span>
                       </div>
-                      <p className="font-semibold text-slate-800">{formatDate(leave.endDate)}</p>
+                      <p className="font-bold text-gray-900">{formatDate(leave.endDate)}</p>
                     </div>
                   </div>
 
                   {/* Cancel Reason */}
-                  <div className="bg-red-50 rounded-lg p-4 border border-red-200">
+                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
                     <div className="flex items-center gap-2 mb-2">
-                      <AlertTriangle className="w-5 h-5 text-red-500" />
-                      <p className="text-sm font-semibold text-red-700">เหตุผลที่ขอยกเลิก:</p>
+                      <AlertTriangle className="w-5 h-5 text-gray-500" />
+                      <p className="text-sm font-semibold text-gray-700">เหตุผลที่ขอยกเลิก:</p>
                     </div>
-                    <p className="text-red-800 font-medium">{leave.cancelledReason || 'ไม่ระบุเหตุผล'}</p>
+                    <p className="text-gray-800 font-medium">{leave.cancelledReason || 'ไม่ระบุเหตุผล'}</p>
                   </div>
 
                   {/* Original Reason */}
@@ -326,7 +326,7 @@ export default function DirectorCancelRequests() {
                   {selectedCancel === leave.id ? (
                     <>
                       <textarea
-                        className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none"
+                        className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-400 focus:border-gray-400 resize-none"
                         rows="3"
                         placeholder="หมายเหตุ (จำเป็นสำหรับการไม่อนุมัติ)"
                         value={remarks}
@@ -337,7 +337,7 @@ export default function DirectorCancelRequests() {
                         <button
                           onClick={() => handleApproveCancel(leave.id)}
                           disabled={actionLoading}
-                          className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold hover:from-green-600 hover:to-green-700 transition-all disabled:opacity-50 shadow-md"
+                          className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition-all disabled:opacity-50"
                         >
                           <CheckCircle className="w-5 h-5" />
                           อนุมัติ (ยกเลิกใบลา)
@@ -345,7 +345,7 @@ export default function DirectorCancelRequests() {
                         <button
                           onClick={() => handleRejectCancel(leave.id)}
                           disabled={actionLoading}
-                          className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-semibold hover:from-red-600 hover:to-red-700 transition-all disabled:opacity-50 shadow-md"
+                          className="flex items-center justify-center gap-2 px-4 py-3 bg-white text-gray-700 border border-gray-300 rounded-xl font-semibold hover:bg-gray-50 transition-all disabled:opacity-50"
                         >
                           <XCircle className="w-5 h-5" />
                           ไม่อนุมัติ (ใบลายังมีผล)
@@ -364,7 +364,7 @@ export default function DirectorCancelRequests() {
                   ) : (
                     <button
                       onClick={() => setSelectedCancel(leave.id)}
-                      className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-orange-700 transition-all shadow-md"
+                      className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition-all"
                     >
                       <AlertCircle className="w-5 h-5" />
                       พิจารณาคำขอยกเลิก

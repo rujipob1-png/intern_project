@@ -4,9 +4,12 @@ import {
   getUnreadCount,
   markAsRead,
   markAllAsRead,
-  deleteNotification
+  deleteNotification,
+  cleanupOldNotifications,
+  adminCleanupNotifications
 } from '../controllers/notification.controller.js';
 import { authenticate } from '../middlewares/auth.middleware.js';
+import { adminOnly } from '../middlewares/role.middleware.js';
 
 const router = express.Router();
 
@@ -47,5 +50,19 @@ router.put('/read-all', markAllAsRead);
  * @access  Private
  */
 router.delete('/:id', deleteNotification);
+
+/**
+ * @route   DELETE /api/notifications/cleanup/old
+ * @desc    ลบแจ้งเตือนเก่าที่อ่านแล้ว (?days=30)
+ * @access  Private
+ */
+router.delete('/cleanup/old', cleanupOldNotifications);
+
+/**
+ * @route   DELETE /api/notifications/cleanup/system
+ * @desc    Admin: ลบแจ้งเตือนเก่าทั้งระบบ (?days=90)
+ * @access  Admin only
+ */
+router.delete('/cleanup/system', adminOnly, adminCleanupNotifications);
 
 export default router;

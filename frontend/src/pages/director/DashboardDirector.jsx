@@ -228,7 +228,7 @@ export default function DashboardDirector() {
       </button>
 
       {/* Header */}
-      <div className="bg-gradient-to-r from-slate-600 to-slate-700 rounded-xl p-6 text-white shadow-lg">
+      <div className="bg-[#1a2744] rounded-xl p-6 text-white shadow-lg">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-xl font-bold flex items-center gap-3">

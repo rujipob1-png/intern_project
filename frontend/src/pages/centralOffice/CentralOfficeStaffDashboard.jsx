@@ -168,7 +168,7 @@ export default function CentralOfficeStaffDashboard() {
   return (
     <div className="space-y-6 p-6 bg-slate-50 min-h-screen">
       {/* Header */}
-      <div className="bg-gradient-to-r from-slate-600 to-slate-700 rounded-xl p-6 text-white shadow-lg">
+      <div className="bg-[#1a2744] rounded-xl p-6 text-white shadow-lg">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-4">
             <button

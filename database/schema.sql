@@ -49,7 +49,7 @@ CREATE TABLE users (
     is_active BOOLEAN DEFAULT true,
     
     -- สิทธิ์การลาประจำปี (จำนวนวันที่เหลือ)
-    sick_leave_balance INTEGER DEFAULT 30, -- ลาป่วย 30 วัน/ปี
+    sick_leave_balance INTEGER DEFAULT 60, -- ลาป่วย 60 วันทำการ/ปี (ตามระเบียบสำนักนายกฯ)
     personal_leave_balance INTEGER DEFAULT 0, -- ลากิจ (คำนวณตามเกณฑ์)
     vacation_leave_balance INTEGER DEFAULT 10, -- ลาพักผ่อน 10 วัน/ปี
     
@@ -177,8 +177,8 @@ INSERT INTO roles (role_name, role_level, description) VALUES
 -- Insert ข้อมูล Leave Types เริ่มต้น
 -- ============================================
 INSERT INTO leave_types (type_code, type_name, description, requires_document, max_days_per_year, is_paid) VALUES
-    ('SICK', 'ลาป่วย', 'ลาเนื่องจากเจ็บป่วย', false, 30, true),
-    ('PERSONAL', 'ลากิจส่วนตัว', 'ลากิจส่วนตัว/กิจธุระ', false, null, true),
+    ('SICK', 'ลาป่วย', 'ลาเนื่องจากเจ็บป่วย (เกิน 3 วัน ต้องมีใบรับรองแพทย์)', false, 60, true),
+    ('PERSONAL', 'ลากิจส่วนตัว', 'ลากิจส่วนตัว/กิจธุระ', false, 45, true),
     ('VACATION', 'ลาพักผ่อน', 'ลาพักผ่อนประจำปี', false, 10, true),
     ('MATERNITY', 'ลาคลอดบุตร', 'ลาคลอดบุตรสำหรับพนักงานหญิง', true, 90, true),
     ('PATERNITY', 'คลอดบุตร', 'ลาเพื่อช่วยเหลือภริยาคลอดบุตร', true, 15, true),

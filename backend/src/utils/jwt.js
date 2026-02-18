@@ -4,6 +4,10 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error('❌ CRITICAL: JWT_SECRET environment variable is not set!');
+  process.exit(1);
+}
 const JWT_EXPIRES_IN = '7d'; // Token หมดอายุใน 7 วัน
 
 /**

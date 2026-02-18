@@ -529,7 +529,7 @@ const UserManagementPage = () => {
     <MainLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="bg-gradient-to-r from-slate-700 to-slate-800 rounded-2xl p-6 text-white shadow-xl">
+        <div className="bg-[#1a2744] rounded-2xl p-6 text-white shadow-xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="p-3 bg-white/15 rounded-xl">

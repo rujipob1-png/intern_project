@@ -9,11 +9,20 @@ import rateLimit from 'express-rate-limit';
 
 /**
  * Rate limiter สำหรับ Login endpoint
- * จำกัด 5 ครั้ง/15 นาที
+ * จำกัด 10 ครั้ง/15 นาที ต่อ "รหัสพนักงาน + IP"
+ * ทำให้ผู้ใช้คนละคนไม่บล็อกกัน แม้ใช้ IP เดียวกัน (เช่น ใน Office เดียวกัน)
  */
 export const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 นาที
-  max: 5, // จำกัด 5 ครั้ง/window
+  max: 10, // จำกัด 10 ครั้ง/window ต่อ key (รหัสพนักงาน+IP)
+  keyGenerator: (req) => {
+    // แยก rate limit ตามรหัสพนักงาน + IP
+    // ถ้าไม่มี employeeCode ให้ใช้ IP อย่างเดียว (ป้องกัน brute force แบบไม่ส่ง code)
+    const employeeCode = req.body?.employeeCode || 'unknown';
+    const ip = req.ip || req.socket?.remoteAddress || 'no-ip';
+    return `login_${ip}_${employeeCode}`;
+  },
+  validate: { xForwardedForHeader: false, default: false },
   message: {
     success: false,
     message: 'มีการพยายามเข้าสู่ระบบมากเกินไป กรุณารอ 15 นาทีแล้วลองใหม่',
@@ -23,7 +32,8 @@ export const loginLimiter = rateLimit({
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   skipSuccessfulRequests: true, // ไม่นับ requests ที่ login สำเร็จ
   handler: (req, res, next, options) => {
-    console.log(`⚠️ Rate limit exceeded for IP: ${req.ip}`);
+    const employeeCode = req.body?.employeeCode || 'unknown';
+    console.log(`⚠️ Rate limit exceeded for IP: ${req.ip}, employeeCode: ${employeeCode}`);
     res.status(429).json(options.message);
   }
 });

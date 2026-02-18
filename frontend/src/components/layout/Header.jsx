@@ -7,13 +7,13 @@ export const Header = () => {
   const { user } = useAuth();
 
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-3 shadow-sm">
+    <header className="bg-[#1a2744] border-b border-[#243356] px-6 py-3 shadow-sm">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-800">
+          <h1 className="text-xl font-bold text-white">
             ระบบการลาออนไลน์
           </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-blue-200/70 mt-0.5">
             {getDepartmentThaiCode(user?.department) || 'ยินดีต้อนรับ'}
           </p>
         </div>
@@ -23,7 +23,7 @@ export const Header = () => {
           <NotificationBell />
 
           {/* User Menu */}
-          <div className="flex items-center gap-3 px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg">
+          <div className="flex items-center gap-3 px-4 py-2 bg-[#253d6a]/50 border border-[#2a3f6a] rounded-lg">
             {user?.profileImageUrl ? (
               <img 
                 src={user.profileImageUrl} 
@@ -36,8 +36,8 @@ export const Header = () => {
               </div>
             )}
             <div className="text-sm">
-              <p className="font-semibold text-slate-800">{user?.fullName}</p>
-              <p className="text-xs text-slate-500">{user?.employeeCode}</p>
+              <p className="font-semibold text-white">{user?.fullName}</p>
+              <p className="text-xs text-blue-200/70">{user?.employeeCode}</p>
             </div>
           </div>
         </div>

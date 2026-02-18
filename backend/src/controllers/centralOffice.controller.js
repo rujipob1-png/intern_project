@@ -37,11 +37,10 @@ export const getPendingLeavesStaff = async (req, res) => {
       throw error;
     }
 
-    // ดึงข้อมูลการอนุมัติจาก approvals table สำหรับแต่ละ leave
-    const leavesWithApprovals = await Promise.all(
-      leaves.map(async (leave) => {
-        // ดึงการอนุมัติ level 1 (Director)
-        const { data: level1Approval } = await supabaseAdmin
+    // ดึงข้อมูลการอนุมัติ level 1 ใน 1 query (แก้ N+1)
+    const staffLeaveIds = leaves.map(l => l.id);
+    const { data: level1Approvals } = staffLeaveIds.length > 0
+      ? await supabaseAdmin
           .from('approvals')
           .select(`
             *,
@@ -51,16 +50,19 @@ export const getPendingLeavesStaff = async (req, res) => {
               last_name
             )
           `)
-          .eq('leave_id', leave.id)
+          .in('leave_id', staffLeaveIds)
           .eq('approval_level', 1)
-          .single();
+      : { data: [] };
 
-        return {
-          ...leave,
-          level1Approval
-        };
-      })
-    );
+    const staffApprovalMap = {};
+    (level1Approvals || []).forEach(a => {
+      staffApprovalMap[a.leave_id] = a;
+    });
+
+    const leavesWithApprovals = leaves.map(leave => ({
+      ...leave,
+      level1Approval: staffApprovalMap[leave.id] || null
+    }));
 
     return successResponse(
       res,
@@ -387,11 +389,10 @@ export const getPendingLeavesHead = async (req, res) => {
       throw error;
     }
 
-    // ดึงข้อมูลการอนุมัติจาก approvals table สำหรับแต่ละ leave
-    const leavesWithApprovals = await Promise.all(
-      leaves.map(async (leave) => {
-        // ดึงการอนุมัติ level 1 (Director)
-        const { data: level1Approval } = await supabaseAdmin
+    // ดึงข้อมูลการอนุมัติ level 1-2 ใน 1 query (แก้ N+1)
+    const headLeaveIds = leaves.map(l => l.id);
+    const { data: headApprovals } = headLeaveIds.length > 0
+      ? await supabaseAdmin
           .from('approvals')
           .select(`
             *,
@@ -401,32 +402,21 @@ export const getPendingLeavesHead = async (req, res) => {
               last_name
             )
           `)
-          .eq('leave_id', leave.id)
-          .eq('approval_level', 1)
-          .single();
+          .in('leave_id', headLeaveIds)
+          .in('approval_level', [1, 2])
+      : { data: [] };
 
-        // ดึงการอนุมัติ level 2 (Staff)
-        const { data: level2Approval } = await supabaseAdmin
-          .from('approvals')
-          .select(`
-            *,
-            approver:users!approvals_approver_id_fkey (
-              title,
-              first_name,
-              last_name
-            )
-          `)
-          .eq('leave_id', leave.id)
-          .eq('approval_level', 2)
-          .single();
+    const headApprovalMap = {};
+    (headApprovals || []).forEach(a => {
+      if (!headApprovalMap[a.leave_id]) headApprovalMap[a.leave_id] = {};
+      headApprovalMap[a.leave_id][a.approval_level] = a;
+    });
 
-        return {
-          ...leave,
-          level1Approval,
-          level2Approval
-        };
-      })
-    );
+    const leavesWithApprovals = leaves.map(leave => ({
+      ...leave,
+      level1Approval: headApprovalMap[leave.id]?.[1] || null,
+      level2Approval: headApprovalMap[leave.id]?.[2] || null
+    }));
 
     return successResponse(
       res,

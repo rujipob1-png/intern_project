@@ -33,7 +33,7 @@ export const getLeavesSummaryReport = async (req, res) => {
           type_name,
           type_code
         ),
-        users (
+        users!leaves_user_id_fkey (
           employee_code,
           title,
           first_name,
@@ -46,7 +46,22 @@ export const getLeavesSummaryReport = async (req, res) => {
       .order('created_at', { ascending: false });
 
     if (department) {
-      query = query.eq('users.department', department);
+      // ดึง user IDs ในแผนกที่ต้องการก่อน แล้วใช้ filter
+      const { data: deptUsers } = await supabaseAdmin
+        .from('users')
+        .select('id')
+        .eq('department', department);
+      const deptUserIds = deptUsers?.map(u => u.id) || [];
+      if (deptUserIds.length > 0) {
+        query = query.in('user_id', deptUserIds);
+      } else {
+        // ไม่มีพนักงานในแผนกนี้
+        return successResponse(res, HTTP_STATUS.OK, 'Summary report retrieved successfully', {
+          period: { startDate: start, endDate: end },
+          summary: { totalLeaves: 0, totalDays: 0, avgDaysPerLeave: 0 },
+          byStatus: {}, byType: {}, byDepartment: {}, byMonth: {}, recentLeaves: []
+        });
+      }
     }
 
     if (status) {
@@ -158,14 +173,14 @@ export const getDepartmentReport = async (req, res) => {
       uniqueDepartments.map(async (dept) => {
         const { count: totalLeaves } = await supabaseAdmin
           .from('leaves')
-          .select('*, users!inner(*)', { count: 'exact', head: true })
+          .select('*, users!leaves_user_id_fkey!inner(*)', { count: 'exact', head: true })
           .eq('users.department', dept)
           .gte('created_at', startDate)
           .lte('created_at', endDate);
 
         const { count: pending } = await supabaseAdmin
           .from('leaves')
-          .select('*, users!inner(*)', { count: 'exact', head: true })
+          .select('*, users!leaves_user_id_fkey!inner(*)', { count: 'exact', head: true })
           .eq('users.department', dept)
           .eq('status', LEAVE_STATUS.PENDING)
           .gte('created_at', startDate)
@@ -173,7 +188,7 @@ export const getDepartmentReport = async (req, res) => {
 
         const { count: approved } = await supabaseAdmin
           .from('leaves')
-          .select('*, users!inner(*)', { count: 'exact', head: true })
+          .select('*, users!leaves_user_id_fkey!inner(*)', { count: 'exact', head: true })
           .eq('users.department', dept)
           .eq('status', LEAVE_STATUS.APPROVED_FINAL)
           .gte('created_at', startDate)
@@ -181,7 +196,7 @@ export const getDepartmentReport = async (req, res) => {
 
         const { count: rejected } = await supabaseAdmin
           .from('leaves')
-          .select('*, users!inner(*)', { count: 'exact', head: true })
+          .select('*, users!leaves_user_id_fkey!inner(*)', { count: 'exact', head: true })
           .eq('users.department', dept)
           .eq('status', LEAVE_STATUS.REJECTED)
           .gte('created_at', startDate)
@@ -386,7 +401,11 @@ export const getLeaveBalanceReport = async (req, res) => {
     }
 
     if (search) {
-      query = query.or(`first_name.ilike.%${search}%,last_name.ilike.%${search}%,employee_code.ilike.%${search}%`);
+      // Sanitize search input to prevent filter injection
+      const sanitizedSearch = search.replace(/[%_.,()]/g, '');
+      if (sanitizedSearch.length > 0) {
+        query = query.or(`first_name.ilike.%${sanitizedSearch}%,last_name.ilike.%${sanitizedSearch}%,employee_code.ilike.%${sanitizedSearch}%`);
+      }
     }
 
     const { data: employees, error } = await query;

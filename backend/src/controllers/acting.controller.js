@@ -3,7 +3,7 @@
  * จัดการเรื่องผู้ปฏิบัติหน้าที่แทนและการแจ้งเตือน
  */
 
-import { supabase } from '../config/supabase.js';
+import { supabaseAdmin as supabase } from '../config/supabase.js';
 
 /**
  * ดึงรายชื่อพนักงานในชั้นเดียวกัน (Same Department/Level)

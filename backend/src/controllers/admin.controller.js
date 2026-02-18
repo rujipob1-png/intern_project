@@ -42,11 +42,10 @@ export const getPendingLeaves = async (req, res) => {
       throw error;
     }
 
-    // ดึงข้อมูลการอนุมัติจาก approvals table สำหรับแต่ละ leave
-    const leavesWithApprovals = await Promise.all(
-      leaves.map(async (leave) => {
-        // ดึงการอนุมัติ level 1 (Director)
-        const { data: level1Approval } = await supabaseAdmin
+    // ดึงข้อมูลการอนุมัติทั้งหมดใน 1 query (แก้ N+1 problem)
+    const leaveIds = leaves.map(l => l.id);
+    const { data: allApprovals } = leaveIds.length > 0
+      ? await supabaseAdmin
           .from('approvals')
           .select(`
             *,
@@ -56,48 +55,23 @@ export const getPendingLeaves = async (req, res) => {
               last_name
             )
           `)
-          .eq('leave_id', leave.id)
-          .eq('approval_level', 1)
-          .single();
+          .in('leave_id', leaveIds)
+          .in('approval_level', [1, 2, 3])
+      : { data: [] };
 
-        // ดึงการอนุมัติ level 2 (Staff)
-        const { data: level2Approval } = await supabaseAdmin
-          .from('approvals')
-          .select(`
-            *,
-            approver:users!approvals_approver_id_fkey (
-              title,
-              first_name,
-              last_name
-            )
-          `)
-          .eq('leave_id', leave.id)
-          .eq('approval_level', 2)
-          .single();
+    // จัดกลุ่ม approvals ตาม leave_id และ level
+    const approvalMap = {};
+    (allApprovals || []).forEach(a => {
+      if (!approvalMap[a.leave_id]) approvalMap[a.leave_id] = {};
+      approvalMap[a.leave_id][a.approval_level] = a;
+    });
 
-        // ดึงการอนุมัติ level 3 (Head)
-        const { data: level3Approval } = await supabaseAdmin
-          .from('approvals')
-          .select(`
-            *,
-            approver:users!approvals_approver_id_fkey (
-              title,
-              first_name,
-              last_name
-            )
-          `)
-          .eq('leave_id', leave.id)
-          .eq('approval_level', 3)
-          .single();
-
-        return {
-          ...leave,
-          level1Approval,
-          level2Approval,
-          level3Approval
-        };
-      })
-    );
+    const leavesWithApprovals = leaves.map(leave => ({
+      ...leave,
+      level1Approval: approvalMap[leave.id]?.[1] || null,
+      level2Approval: approvalMap[leave.id]?.[2] || null,
+      level3Approval: approvalMap[leave.id]?.[3] || null
+    }));
 
     return successResponse(
       res,
@@ -194,10 +168,10 @@ export const getApprovalHistory = async (req, res) => {
       throw error;
     }
 
-    // ดึงข้อมูลการอนุมัติ level 4 (Admin) สำหรับแต่ละ leave
-    const leavesWithApprovals = await Promise.all(
-      leaves.map(async (leave) => {
-        const { data: adminApproval } = await supabaseAdmin
+    // ดึงข้อมูลการอนุมัติ level 4 (Admin) ใน 1 query (แก้ N+1)
+    const historyLeaveIds = leaves.map(l => l.id);
+    const { data: adminApprovals } = historyLeaveIds.length > 0
+      ? await supabaseAdmin
           .from('approvals')
           .select(`
             *,
@@ -207,16 +181,19 @@ export const getApprovalHistory = async (req, res) => {
               last_name
             )
           `)
-          .eq('leave_id', leave.id)
+          .in('leave_id', historyLeaveIds)
           .eq('approval_level', 4)
-          .single();
+      : { data: [] };
 
-        return {
-          ...leave,
-          adminApproval
-        };
-      })
-    );
+    const adminApprovalMap = {};
+    (adminApprovals || []).forEach(a => {
+      adminApprovalMap[a.leave_id] = a;
+    });
+
+    const leavesWithApprovals = leaves.map(leave => ({
+      ...leave,
+      adminApproval: adminApprovalMap[leave.id] || null
+    }));
 
     return successResponse(
       res,
@@ -308,49 +285,44 @@ export const approveLeaveFinal = async (req, res) => {
     const totalDays = leave.total_days;
     const user = leave.users;
 
-    let updateBalance = {};
     let balanceField = '';
+    let deductResult = null;
 
+    // กำหนด balance field ตามประเภทการลา
     switch (leaveType) {
-      case 'SICK':
-        if (user.sick_leave_balance < totalDays) {
-          return errorResponse(
-            res,
-            HTTP_STATUS.BAD_REQUEST,
-            `Insufficient sick leave balance. Available: ${user.sick_leave_balance} days, Required: ${totalDays} days`
-          );
-        }
-        updateBalance.sick_leave_balance = user.sick_leave_balance - totalDays;
-        balanceField = 'sick_leave_balance';
-        break;
+      case 'SICK': balanceField = 'sick_leave_balance'; break;
+      case 'PERSONAL': balanceField = 'personal_leave_balance'; break;
+      case 'VACATION': balanceField = 'vacation_leave_balance'; break;
+      default: balanceField = ''; // ประเภทลาอื่นๆ ไม่ต้องหักวัน
+    }
 
-      case 'PERSONAL':
-        if (user.personal_leave_balance < totalDays) {
-          return errorResponse(
-            res,
-            HTTP_STATUS.BAD_REQUEST,
-            `Insufficient personal leave balance. Available: ${user.personal_leave_balance} days, Required: ${totalDays} days`
-          );
-        }
-        updateBalance.personal_leave_balance = user.personal_leave_balance - totalDays;
-        balanceField = 'personal_leave_balance';
-        break;
+    // หักวันลาแบบ atomic (ป้องกัน race condition)
+    if (balanceField) {
+      const { data: rpcData, error: rpcError } = await supabaseAdmin.rpc('deduct_leave_balance', {
+        p_user_id: user.id,
+        p_balance_field: balanceField,
+        p_deduct_days: totalDays
+      });
 
-      case 'VACATION':
-        if (user.vacation_leave_balance < totalDays) {
-          return errorResponse(
-            res,
-            HTTP_STATUS.BAD_REQUEST,
-            `Insufficient vacation leave balance. Available: ${user.vacation_leave_balance} days, Required: ${totalDays} days`
-          );
+      if (rpcError) {
+        // Fallback: ถ้า RPC ไม่มี ใช้วิธีเดิม (สำหรับ backward compatibility)
+        const currentBalance = user[balanceField] || 0;
+        if (currentBalance < totalDays) {
+          return errorResponse(res, HTTP_STATUS.BAD_REQUEST,
+            `ยอดวันลาไม่เพียงพอ: คงเหลือ ${currentBalance} วัน, ต้องการ ${totalDays} วัน`);
         }
-        updateBalance.vacation_leave_balance = user.vacation_leave_balance - totalDays;
-        balanceField = 'vacation_leave_balance';
-        break;
-
-      default:
-        // ประเภทการลาอื่นๆ ที่ไม่ต้องหักวัน (เช่น ลาคลอด, ลาบวช)
-        updateBalance = null;
+        const { error: updateBalErr } = await supabaseAdmin
+          .from('users')
+          .update({ [balanceField]: currentBalance - totalDays, updated_at: new Date().toISOString() })
+          .eq('id', user.id);
+        if (updateBalErr) throw updateBalErr;
+        deductResult = { success: true, new_balance: currentBalance - totalDays };
+      } else if (rpcData && !rpcData.success) {
+        return errorResponse(res, HTTP_STATUS.BAD_REQUEST,
+          `ยอดวันลาไม่เพียงพอ: คงเหลือ ${rpcData.current_balance} วัน, ต้องการ ${rpcData.required} วัน`);
+      } else {
+        deductResult = rpcData;
+      }
     }
 
     // อัพเดทสถานะเป็น approved_final (final)
@@ -383,18 +355,6 @@ export const approveLeaveFinal = async (req, res) => {
       console.error('Error inserting approval record:', approvalError);
     }
 
-    // หักวันลา (ถ้าต้องหัก)
-    if (updateBalance) {
-      const { error: updateBalanceError } = await supabaseAdmin
-        .from('users')
-        .update(updateBalance)
-        .eq('id', user.id);
-
-      if (updateBalanceError) {
-        throw updateBalanceError;
-      }
-    }
-
     // ส่งแจ้งเตือนไปยังผู้ยื่นใบลา
     await createNotification(
       leave.user_id,
@@ -417,9 +377,9 @@ export const approveLeaveFinal = async (req, res) => {
       {
         leaveId: id,
         status: 'approved_final',
-        deductedDays: updateBalance ? totalDays : 0,
+        deductedDays: balanceField ? totalDays : 0,
         balanceField: balanceField || 'none',
-        newBalance: updateBalance ? updateBalance[balanceField] : null
+        newBalance: deductResult ? deductResult.new_balance : null
       }
     );
   } catch (error) {
@@ -674,15 +634,25 @@ export const partialApproveLeaveFinal = async (req, res) => {
       console.error('Error inserting approval record:', approvalError);
     }
 
-    // หักวันลา
-    if (updateBalance) {
-      const { error: updateBalanceError } = await supabaseAdmin
-        .from('users')
-        .update(updateBalance)
-        .eq('id', user.id);
+    // หักวันลาแบบ atomic (ป้องกัน race condition)
+    if (balanceField) {
+      const { data: rpcData, error: rpcError } = await supabaseAdmin.rpc('deduct_leave_balance', {
+        p_user_id: user.id,
+        p_balance_field: balanceField,
+        p_deduct_days: newTotalDays
+      });
 
-      if (updateBalanceError) {
-        throw updateBalanceError;
+      if (rpcError) {
+        // Fallback: ถ้า RPC ไม่มี ใช้วิธีเดิม
+        if (updateBalance) {
+          const { error: updateBalanceError } = await supabaseAdmin
+            .from('users')
+            .update(updateBalance)
+            .eq('id', user.id);
+          if (updateBalanceError) throw updateBalanceError;
+        }
+      } else if (rpcData && !rpcData.success) {
+        return errorResponse(res, HTTP_STATUS.BAD_REQUEST, `ยอดวันลาไม่เพียงพอ`);
       }
     }
 
@@ -814,14 +784,23 @@ export const approveCancelFinal = async (req, res) => {
     else if (leaveTypeCode === 'PERSONAL') balanceField = 'personal_leave_balance';
     else if (leaveTypeCode === 'VACATION') balanceField = 'vacation_leave_balance';
 
+    // คืนวันลาแบบ atomic (ป้องกัน race condition)
     if (balanceField && user) {
-      const currentBalance = user[balanceField] || 0;
-      const newBalance = currentBalance + totalDays;
+      const { data: rpcData, error: rpcError } = await supabaseAdmin.rpc('refund_leave_balance', {
+        p_user_id: leave.user_id,
+        p_balance_field: balanceField,
+        p_refund_days: totalDays
+      });
 
-      await supabaseAdmin
-        .from('users')
-        .update({ [balanceField]: newBalance })
-        .eq('id', leave.user_id);
+      if (rpcError) {
+        // Fallback: ถ้า RPC ไม่มี ใช้วิธีเดิม
+        const currentBalance = user[balanceField] || 0;
+        const newBalance = currentBalance + totalDays;
+        await supabaseAdmin
+          .from('users')
+          .update({ [balanceField]: newBalance, updated_at: new Date().toISOString() })
+          .eq('id', leave.user_id);
+      }
     }
 
     // อัพเดทสถานะเป็น cancelled
@@ -973,10 +952,10 @@ export const getCancelHistory = async (req, res) => {
       throw error;
     }
 
-    // ดึงข้อมูลการอนุมัติ level 4 (Admin) สำหรับแต่ละ leave
-    const leavesWithApprovals = await Promise.all(
-      leaves.map(async (leave) => {
-        const { data: adminApproval } = await supabaseAdmin
+    // ดึงข้อมูลการอนุมัติ level 4 ใน 1 query (แก้ N+1)
+    const cancelLeaveIds = leaves.map(l => l.id);
+    const { data: cancelApprovals } = cancelLeaveIds.length > 0
+      ? await supabaseAdmin
           .from('approvals')
           .select(`
             *,
@@ -986,17 +965,20 @@ export const getCancelHistory = async (req, res) => {
               last_name
             )
           `)
-          .eq('leave_id', leave.id)
+          .in('leave_id', cancelLeaveIds)
           .eq('approval_level', 4)
           .in('action', ['cancel_approved_final', 'cancel_rejected'])
-          .single();
+      : { data: [] };
 
-        return {
-          ...leave,
-          adminApproval
-        };
-      })
-    );
+    const cancelApprovalMap = {};
+    (cancelApprovals || []).forEach(a => {
+      cancelApprovalMap[a.leave_id] = a;
+    });
+
+    const leavesWithApprovals = leaves.map(leave => ({
+      ...leave,
+      adminApproval: cancelApprovalMap[leave.id] || null
+    }));
 
     return successResponse(
       res,
@@ -1650,8 +1632,12 @@ export const resetUserPassword = async (req, res) => {
     const { id } = req.params;
     const { new_password } = req.body;
 
-    if (!new_password || new_password.length < 6) {
-      return errorResponse(res, HTTP_STATUS.BAD_REQUEST, 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร');
+    if (!new_password || new_password.length < 8) {
+      return errorResponse(res, HTTP_STATUS.BAD_REQUEST, 'รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร');
+    }
+
+    if (!/(?=.*[a-zA-Z])(?=.*\d)/.test(new_password)) {
+      return errorResponse(res, HTTP_STATUS.BAD_REQUEST, 'รหัสผ่านต้องมีทั้งตัวอักษรและตัวเลข');
     }
 
     // Check if user exists

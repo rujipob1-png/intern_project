@@ -200,3 +200,112 @@ export const deleteNotification = async (req, res) => {
     );
   }
 };
+
+/**
+ * ลบแจ้งเตือนเก่าที่อ่านแล้ว (สำหรับผู้ใช้)
+ * ลบแจ้งเตือนที่อ่านแล้วและเก่ากว่า 30 วัน
+ */
+export const cleanupOldNotifications = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const daysOld = parseInt(req.query.days) || 30;
+
+    // คำนวณวันที่ตัด
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - daysOld);
+
+    // ลบ notifications ที่อ่านแล้วและเก่ากว่า cutoff
+    const { data, error } = await supabaseAdmin
+      .from('notifications')
+      .delete()
+      .eq('user_id', userId)
+      .eq('is_read', true)
+      .lt('created_at', cutoffDate.toISOString())
+      .select('id');
+
+    if (error) {
+      throw error;
+    }
+
+    return successResponse(
+      res,
+      HTTP_STATUS.OK,
+      `ลบแจ้งเตือนเก่าแล้ว ${data?.length || 0} รายการ`,
+      { deletedCount: data?.length || 0 }
+    );
+  } catch (error) {
+    console.error('Cleanup notifications error:', error);
+    return errorResponse(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      'Failed to cleanup notifications'
+    );
+  }
+};
+
+/**
+ * ลบแจ้งเตือนเก่าทั้งระบบ (Admin only)
+ * ลบแจ้งเตือนที่อ่านแล้วและเก่ากว่า N วัน
+ */
+export const adminCleanupNotifications = async (req, res) => {
+  try {
+    const daysOld = parseInt(req.query.days) || 90;
+
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - daysOld);
+
+    // ลบ notifications ที่อ่านแล้วและเก่ากว่า cutoff ทั้งระบบ
+    const { data, error } = await supabaseAdmin
+      .from('notifications')
+      .delete()
+      .eq('is_read', true)
+      .lt('created_at', cutoffDate.toISOString())
+      .select('id');
+
+    if (error) {
+      throw error;
+    }
+
+    return successResponse(
+      res,
+      HTTP_STATUS.OK,
+      `ลบแจ้งเตือนเก่าทั้งระบบแล้ว ${data?.length || 0} รายการ (เก่ากว่า ${daysOld} วัน)`,
+      { deletedCount: data?.length || 0, cutoffDate: cutoffDate.toISOString() }
+    );
+  } catch (error) {
+    console.error('Admin cleanup notifications error:', error);
+    return errorResponse(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      'Failed to cleanup notifications'
+    );
+  }
+};
+
+/**
+ * Auto-cleanup: ลบแจ้งเตือนอ่านแล้วเก่ากว่า 90 วัน (เรียกจาก cron หรือ startup)
+ */
+export const autoCleanupNotifications = async () => {
+  try {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - 90);
+
+    const { data, error } = await supabaseAdmin
+      .from('notifications')
+      .delete()
+      .eq('is_read', true)
+      .lt('created_at', cutoffDate.toISOString())
+      .select('id');
+
+    if (error) {
+      console.error('Auto cleanup notifications error:', error);
+      return;
+    }
+
+    if (data && data.length > 0) {
+      console.log(`[Notification Cleanup] ลบแจ้งเตือนเก่า ${data.length} รายการ`);
+    }
+  } catch (error) {
+    console.error('Auto cleanup notifications error:', error);
+  }
+};

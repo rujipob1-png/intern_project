@@ -6,7 +6,7 @@ import { Input } from '../../components/common/Input';
 import { Card } from '../../components/common/Card';
 import { sanitizeString, loginSchema, validateData } from '../../utils/validation';
 import toast from 'react-hot-toast';
-import { LogIn, Building2, AlertCircle, XCircle } from 'lucide-react';
+import { LogIn, AlertCircle, XCircle } from 'lucide-react';
 
 export const LoginPage = () => {
   const [employeeCode, setEmployeeCode] = useState('');
@@ -130,8 +130,8 @@ export const LoginPage = () => {
       <div className="w-full max-w-md mx-auto">
         {/* Logo & Title */}
         <div className="text-center mb-8 animate-fade-in">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gray-800 rounded-2xl shadow-lg mb-6 transform hover:scale-105 transition-transform duration-300">
-            <Building2 className="w-10 h-10 text-white" />
+          <div className="inline-flex items-center justify-center mb-6 transform hover:scale-105 transition-transform duration-300">
+            <img src="/logo.png" alt="ตราสำนักนายกรัฐมนตรี" className="w-24 h-24 rounded-full drop-shadow-lg" />
           </div>
           <h1 className="text-4xl font-bold text-gray-800 mb-3 tracking-tight">
             ระบบการลาออนไลน์

@@ -261,11 +261,20 @@ export const changePassword = async (req, res) => {
       );
     }
 
-    if (newPassword.length < 6) {
+    if (newPassword.length < 8) {
       return errorResponse(
         res,
         HTTP_STATUS.BAD_REQUEST,
-        'New password must be at least 6 characters'
+        'รหัสผ่านใหม่ต้องมีอย่างน้อย 8 ตัวอักษร และต้องมีทั้งตัวอักษรและตัวเลข'
+      );
+    }
+
+    // ตรวจสอบความซับซ้อนของรหัสผ่าน
+    if (!/(?=.*[a-zA-Z])(?=.*\d)/.test(newPassword)) {
+      return errorResponse(
+        res,
+        HTTP_STATUS.BAD_REQUEST,
+        'รหัสผ่านต้องมีทั้งตัวอักษรและตัวเลข'
       );
     }
 
@@ -332,7 +341,8 @@ export const updateNotificationSettings = async (req, res) => {
     const { email, emailNotifications } = req.body;
 
     // Validate email format
-    if (email && !email.includes('@')) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (email && !emailRegex.test(email)) {
       return errorResponse(
         res,
         HTTP_STATUS.BAD_REQUEST,

@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import compression from 'compression';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.routes.js';
 import leaveRoutes from './routes/leave.routes.js';
@@ -14,18 +16,40 @@ import healthRoutes from './routes/health.routes.js';
 import { errorResponse } from './utils/response.js';
 import { HTTP_STATUS } from './config/constants.js';
 import { apiLimiter } from './middlewares/rateLimit.middleware.js';
-import { securityHeaders, csrfProtection, sanitizeBody } from './middlewares/security.middleware.js';
+import { csrfProtection, sanitizeBody } from './middlewares/security.middleware.js';
 
 dotenv.config();
 
 const app = express();
 
-// Security Headers
-app.use(securityHeaders);
+// Security Headers (helmet แทนที่ securityHeaders เดิม — ครอบคลุมกว่า 15+ headers)
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
+  crossOriginEmbedderPolicy: false, // ปิดเพื่อให้โหลดรูปจาก Supabase Storage ได้
+}));
+
+// Gzip Compression — บีบอัด response ~70%
+app.use(compression());
 
 // Middleware
+const allowedOrigins = (process.env.CORS_ORIGIN || '*').split(',').map(s => s.trim());
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
+  origin: allowedOrigins.length === 1 && allowedOrigins[0] === '*' 
+    ? '*' 
+    : (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error('Not allowed by CORS'));
+        }
+      },
   credentials: true
 }));
 

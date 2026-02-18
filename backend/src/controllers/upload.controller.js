@@ -207,18 +207,19 @@ export const getLeaveDocuments = async (req, res) => {
     // กรองเฉพาะไฟล์ที่เกี่ยวข้องกับคำขอลานี้
     const leaveFiles = files.filter(file => file.name.startsWith(leaveId));
 
-    const documents = leaveFiles.map(file => {
-      const { data: urlData } = supabaseAdmin.storage
+    const documents = await Promise.all(leaveFiles.map(async (file) => {
+      // ใช้ createSignedUrl แทน getPublicUrl เพราะ bucket เป็น private
+      const { data: signedUrlData, error: signError } = await supabaseAdmin.storage
         .from(BUCKET_NAME)
-        .getPublicUrl(`${leave.user_id}/${file.name}`);
+        .createSignedUrl(`${leave.user_id}/${file.name}`, 3600); // 1 hour expiry
 
       return {
         name: file.name,
-        url: urlData.publicUrl,
+        url: signError ? null : signedUrlData.signedUrl,
         size: formatFileSize(file.metadata?.size || 0),
         uploadedAt: file.created_at
       };
-    });
+    }));
 
     return successResponse(
       res,

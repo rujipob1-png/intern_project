@@ -15,7 +15,7 @@ import {
   Clock,
   XCircle
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { ROLES } from '../../utils/constants';
 import { getActingRequests } from '../../api/acting.api';
 
@@ -25,6 +25,8 @@ export const Sidebar = () => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(true);
   const [actingRequestCount, setActingRequestCount] = useState(0);
+  const [canScrollDown, setCanScrollDown] = useState(false);
+  const navRef = useRef(null);
   const [openSections, setOpenSections] = useState({
     leave: true,
     approval: true,
@@ -55,6 +57,23 @@ export const Sidebar = () => {
     logout();
     navigate('/login');
   };
+
+  // ตรวจสอบว่ายังเลื่อนลงได้อีกไหม
+  const checkScroll = useCallback(() => {
+    const el = navRef.current;
+    if (!el) return;
+    setCanScrollDown(el.scrollTop + el.clientHeight < el.scrollHeight - 10);
+  }, []);
+
+  useEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
+    checkScroll();
+    el.addEventListener('scroll', checkScroll, { passive: true });
+    const ro = new ResizeObserver(checkScroll);
+    ro.observe(el);
+    return () => { el.removeEventListener('scroll', checkScroll); ro.disconnect(); };
+  }, [checkScroll, openSections]);
 
   const toggleSection = (section) => {
     setOpenSections(prev => ({
@@ -244,43 +263,30 @@ export const Sidebar = () => {
       {/* Sidebar */}
       <aside
         className={`
-          fixed top-0 left-0 h-screen bg-gradient-to-b from-slate-800 to-slate-900 border-r border-slate-700
-          transition-all duration-300 z-40 shadow-xl
+          fixed top-0 left-0 h-screen bg-[#1a2744] border-r border-[#243356]
+          transition-all duration-300 z-50 shadow-xl
           ${isOpen ? 'w-64' : 'w-0 lg:w-20'}
         `}
       >
         <div className="flex flex-col h-full">
-          {/* Logo & User */}
-          <div className="p-4 border-b border-slate-700">
-            <div className={`flex items-center gap-3 ${!isOpen && 'lg:justify-center'}`}>
-              {user?.profileImageUrl ? (
-                <img 
-                  src={user.profileImageUrl} 
-                  alt="Profile" 
-                  className="w-10 h-10 rounded-lg object-cover flex-shrink-0 shadow-md"
-                />
-              ) : (
-                <div className="w-10 h-10 bg-[#2c2c2e] rounded-xl flex items-center justify-center flex-shrink-0">
-                  <span className="text-white font-bold text-lg">
-                    {user?.firstName?.charAt(0) || 'U'}
-                  </span>
-                </div>
-              )}
-              {isOpen && (
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-white truncate">
-                    {user?.fullName || user?.firstName}
-                  </p>
-                  <p className="text-xs text-slate-400 truncate">
-                    {user?.position}
-                  </p>
-                </div>
-              )}
-            </div>
+          {/* Logo Only */}
+          <div className="border-b border-[#2a3f6a]">
+            {isOpen ? (
+              <div className="flex flex-col items-center py-5">
+                <img src="/logo.png" alt="ตราสำนักนายกรัฐมนตรี" className="w-16 h-16 rounded-full ring-2 ring-amber-400/40 mb-2" />
+                <h1 className="text-white font-bold text-sm">ระบบการลาออนไลน์</h1>
+                <p className="text-[11px] text-slate-400">สำนักนายกรัฐมนตรี</p>
+              </div>
+            ) : (
+              <div className="flex justify-center py-4">
+                <img src="/logo.png" alt="ตราสำนักนายกรัฐมนตรี" className="w-10 h-10 rounded-full ring-2 ring-amber-400/40" />
+              </div>
+            )}
           </div>
 
           {/* Menu Items */}
-          <nav className="flex-1 p-4 overflow-y-auto">
+          <div className="relative flex-1 min-h-0">
+            <nav ref={navRef} className="h-full p-4 overflow-y-auto sidebar-scroll">
             <ul className="space-y-2">
               {filteredSections.map((section) => (
                 <li key={section.id}>
@@ -291,7 +297,7 @@ export const Sidebar = () => {
                         onClick={() => toggleSection(section.id)}
                         className={`
                           w-full flex items-center gap-3 px-3 py-2.5 rounded-lg
-                          transition-all duration-200 text-white bg-slate-700/30 hover:bg-slate-600/50 font-bold
+                          transition-all duration-200 text-white bg-[#253d6a]/30 hover:bg-[#253d6a]/50 font-bold
                           ${!isOpen && 'lg:justify-center'}
                         `}
                       >
@@ -322,8 +328,8 @@ export const Sidebar = () => {
                                     w-full flex items-center gap-3 px-3 py-2 rounded-lg
                                     transition-all duration-200 relative
                                     ${isActive(item.path)
-                                      ? 'bg-blue-600 text-white font-bold shadow-md' 
-                                      : 'text-white bg-slate-700/20 hover:bg-slate-600/40 font-semibold'
+                                      ? 'bg-amber-400 text-[#1a2744] font-bold shadow-md' 
+                                      : 'text-white bg-[#253d6a]/20 hover:bg-[#253d6a]/40 font-semibold'
                                     }
                                   `}
                                 >
@@ -354,8 +360,8 @@ export const Sidebar = () => {
                             w-full flex items-center gap-3 px-3 py-2.5 rounded-lg
                             transition-all duration-200
                             ${isActive(item.path)
-                              ? 'bg-blue-600 text-white font-bold shadow-md' 
-                              : 'text-white bg-slate-700/30 hover:bg-slate-600/50 font-semibold'
+                              ? 'bg-amber-400 text-[#1a2744] font-bold shadow-md' 
+                              : 'text-white bg-[#253d6a]/30 hover:bg-[#253d6a]/50 font-semibold'
                             }
                             ${!isOpen && 'lg:justify-center'}
                           `}
@@ -374,10 +380,21 @@ export const Sidebar = () => {
                 </li>
               ))}
             </ul>
-          </nav>
+            </nav>
+
+            {/* ลูกศรเด้งๆ บอกว่าเลื่อนลงได้อีก */}
+            {isOpen && canScrollDown && (
+              <div className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none">
+                <div className="h-10 bg-gradient-to-t from-[#1a2744] via-[#1a2744]/80 to-transparent" />
+                <div className="absolute bottom-1 left-1/2 -translate-x-1/2">
+                  <ChevronDown className="w-5 h-5 text-amber-400 animate-bounce" />
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Logout */}
-          <div className="p-4 border-t border-slate-700">
+          <div className="p-4 border-t border-[#2a3f6a]">
             <button
               onClick={handleLogout}
               className={`

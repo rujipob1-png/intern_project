@@ -258,7 +258,8 @@ export const createUserValidation = [
     
   body('password')
     .notEmpty().withMessage('กรุณากรอกรหัสผ่าน')
-    .isLength({ min: 6, max: 100 }).withMessage('รหัสผ่านต้องมี 6-100 ตัวอักษร'),
+    .isLength({ min: 8, max: 100 }).withMessage('รหัสผ่านต้องมี 8-100 ตัวอักษร')
+    .matches(/^(?=.*[a-zA-Z])(?=.*\d)/).withMessage('รหัสผ่านต้องมีทั้งตัวอักษรและตัวเลข'),
     
   validate
 ];
@@ -284,7 +285,8 @@ export const updateUserValidation = [
     
   body('password')
     .optional()
-    .isLength({ min: 6, max: 100 }).withMessage('รหัสผ่านต้องมี 6-100 ตัวอักษร'),
+    .isLength({ min: 8, max: 100 }).withMessage('รหัสผ่านต้องมี 8-100 ตัวอักษร')
+    .matches(/^(?=.*[a-zA-Z])(?=.*\d)/).withMessage('รหัสผ่านต้องมีทั้งตัวอักษรและตัวเลข'),
     
   validate
 ];

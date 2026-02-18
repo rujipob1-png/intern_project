@@ -61,6 +61,45 @@ export const createLeave = async (req, res) => {
       );
     }
 
+    // Server-side totalDays validation: ต้องตรงกับจำนวนวันที่เลือก
+    const serverTotalDays = selectedDates.length;
+    if (Number(totalDays) !== serverTotalDays) {
+      console.warn(`⚠️ totalDays mismatch: client=${totalDays}, server=${serverTotalDays} (user: ${userId})`);
+    }
+    // ใช้ค่าจาก server เพื่อความปลอดภัย
+    const validatedTotalDays = serverTotalDays;
+
+    // ตรวจสอบวันที่ซ้ำกับใบลาที่มีอยู่แล้ว
+    const { data: existingLeaves } = await supabaseAdmin
+      .from('leaves')
+      .select('id, start_date, end_date, reason, status')
+      .eq('user_id', userId)
+      .not('status', 'in', '("cancelled","rejected")');
+
+    if (existingLeaves && existingLeaves.length > 0) {
+      for (const existingLeave of existingLeaves) {
+        let existingDates = [];
+        // ดึง selected_dates จาก reason JSON
+        try {
+          const parsed = JSON.parse(existingLeave.reason);
+          if (parsed.selected_dates) {
+            existingDates = parsed.selected_dates;
+          }
+        } catch (e) {
+          // ถ้า parse ไม่ได้ ใช้ start_date/end_date range
+        }
+        
+        const overlap = selectedDates.filter(d => existingDates.includes(d));
+        if (overlap.length > 0) {
+          return errorResponse(
+            res,
+            HTTP_STATUS.BAD_REQUEST,
+            `มีวันที่ซ้ำกับใบลาที่มีอยู่แล้ว: ${overlap.join(', ')}`
+          );
+        }
+      }
+    }
+
     // ตรวจสอบว่าวันที่ถูกต้องหรือไม่
     const dates = selectedDates.sort();
     const startDate = dates[0];
@@ -81,6 +120,49 @@ export const createLeave = async (req, res) => {
       );
     }
 
+    // ตรวจสอบกฎการลาตามระเบียบราชการ
+    // ตรวจสอบเอกสารสำหรับประเภทลาที่ต้องแนบเอกสาร
+    // ลาป่วย: ต้องแนบใบรับรองแพทย์เฉพาะกรณีลาเกิน 3 วัน (ตามระเบียบสำนักนายกรัฐมนตรี)
+    // ประเภทอื่น (ลาคลอด, ลาบวช, ลาทหาร, ลาฮัจย์): ต้องแนบเอกสารทุกกรณี
+    const isSickLeave = leaveType.type_name === 'ลาป่วย';
+    if (isSickLeave && validatedTotalDays > 3 && !documentUrl) {
+      return errorResponse(
+        res,
+        HTTP_STATUS.BAD_REQUEST,
+        'ลาป่วยเกิน 3 วัน ต้องแนบใบรับรองแพทย์ (ตามระเบียบสำนักนายกรัฐมนตรีว่าด้วยการลาของข้าราชการ)'
+      );
+    }
+    if (!isSickLeave && leaveType.requires_document && !documentUrl) {
+      return errorResponse(
+        res,
+        HTTP_STATUS.BAD_REQUEST,
+        `การลาประเภท "${leaveType.type_name}" ต้องแนบเอกสารประกอบ`
+      );
+    }
+
+    // ตรวจสอบเพดานวันลาต่อปี (ถ้ามีกำหนด)
+    if (leaveType.max_days_per_year) {
+      // นับวันที่ใช้ไปแล้วในปีปัจจุบัน
+      const currentYear = new Date().getFullYear();
+      const { data: usedLeaves } = await supabaseAdmin
+        .from('leaves')
+        .select('total_days')
+        .eq('user_id', userId)
+        .eq('leave_type_id', leaveTypeId)
+        .not('status', 'in', '("cancelled","rejected")')
+        .gte('created_at', `${currentYear}-01-01`)
+        .lte('created_at', `${currentYear}-12-31`);
+
+      const totalUsed = (usedLeaves || []).reduce((sum, l) => sum + (l.total_days || 0), 0);
+      if (totalUsed + validatedTotalDays > leaveType.max_days_per_year) {
+        return errorResponse(
+          res,
+          HTTP_STATUS.BAD_REQUEST,
+          `ลา${leaveType.type_name}เกินสิทธิ์ต่อปี (ใช้ไปแล้ว ${totalUsed} วัน, ขอลาอีก ${validatedTotalDays} วัน, สิทธิ์สูงสุด ${leaveType.max_days_per_year} วัน/ปี)`
+        );
+      }
+    }
+
     // สร้างคำขอลา (leave_number จะถูกสร้างอัตโนมัติโดย trigger)
     // เก็บ selectedDates ใน reason (JSON format) เพื่อหลีกเลี่ยงปัญหา schema cache
     const reasonWithDates = {
@@ -95,7 +177,7 @@ export const createLeave = async (req, res) => {
         leave_type_id: leaveTypeId,
         start_date: startDate,
         end_date: endDate,
-        total_days: totalDays,
+        total_days: validatedTotalDays,
         reason: JSON.stringify(reasonWithDates), // เก็บ reason + dates รวมกัน
         document_url: documentUrl || null,
         acting_person_id: actingPersonId || null,
@@ -272,9 +354,9 @@ export const createLeave = async (req, res) => {
 export const getMyLeaves = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { status, page = 1, limit = 10 } = req.query;
-
-    console.log('getMyLeaves - userId:', userId);
+    const { status } = req.query;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
 
     const offset = (page - 1) * limit;
 
@@ -520,8 +602,6 @@ export const cancelLeave = async (req, res) => {
     const { id } = req.params;
     const { cancelReason } = req.body;
 
-    console.log('Cancel leave request - leaveId:', id, 'userId:', userId, 'reason:', cancelReason);
-
     // ตรวจสอบว่ามีคำขอลานี้หรือไม่
     const { data: leave, error: fetchError } = await supabaseAdmin
       .from('leaves')
@@ -530,17 +610,7 @@ export const cancelLeave = async (req, res) => {
       .eq('user_id', userId)
       .single();
 
-    console.log('Leave found:', leave, 'Error:', fetchError);
-
     if (fetchError || !leave) {
-      // ดู leave โดยไม่ filter user_id เพื่อ debug
-      const { data: anyLeave } = await supabaseAdmin
-        .from('leaves')
-        .select('id, user_id, leave_number')
-        .eq('id', id)
-        .single();
-      console.log('Leave without user filter:', anyLeave);
-      
       return errorResponse(
         res,
         HTTP_STATUS.NOT_FOUND,
@@ -670,7 +740,7 @@ export const cancelLeave = async (req, res) => {
 export const approveCancelLeave = async (req, res) => {
   try {
     const approverId = req.user.id;
-    const approverRole = req.user.role_name;
+    const approverRole = req.user.roleName;
     const { id } = req.params;
     const { action, comment } = req.body; // action: 'approve' or 'reject'
 
@@ -834,13 +904,11 @@ export const getLeaveBalance = async (req, res) => {
         .eq('leave_type_id', sickType.id)
         .eq('status', 'approved_final');
 
-      console.log('Sick leaves found:', sickLeaves);
-
       if (sickLeaves && sickLeaves.length > 0) {
         sickDaysUsed = sickLeaves.reduce((sum, leave) => sum + (leave.total_days || 0), 0);
       }
     } else {
-      console.log('Sick leave type not found');
+      // Sick leave type not found - skip
     }
 
     return successResponse(
@@ -872,7 +940,7 @@ export const getLeaveBalance = async (req, res) => {
 export const getCalendarLeaves = async (req, res) => {
   try {
     const userId = req.user.id;
-    const userRole = req.user.role;
+    const userRole = req.user.roleName;
     const { status, department, startDate, endDate } = req.query;
 
     // ดึงข้อมูลผู้ใช้
