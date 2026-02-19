@@ -71,8 +71,8 @@ const LeaveFormPDF = forwardRef(({ leave, user }, ref) => {
     downloadPDF,
   }));
 
-  // Underline style — simple bottom border only, no vertical-align tricks
-  const U = "display:inline-block; border-bottom:1px solid #000";
+  // Underline style — dotted border for จุดไข่ปลา
+  const U = "display:inline-block; border-bottom:1px dotted #000";
   // Table cell style
   const tc = "border:1px solid #000; padding:3px 5px";
 
@@ -88,15 +88,18 @@ const LeaveFormPDF = forwardRef(({ leave, user }, ref) => {
       <div style="text-align:right;">วันที่<span style="${U}; width:35px; text-align:center;">${today.day}</span>เดือน<span style="${U}; width:110px; text-align:center;">${today.month}</span>พ.ศ.<span style="${U}; width:55px; text-align:center;">${today.year}</span></div>
 
       <!-- BODY -->
-      <div>เรื่อง<span style="${U}; width:560px;">&nbsp;</span></div>
-      <div>เรียน<span style="${U}; width:560px;">&nbsp;</span></div>
-      <div><span style="margin-left:45px;">ข้าพเจ้า</span><span style="${U}; width:210px; text-align:center;">${fullName}</span>ตำแหน่ง<span style="${U}; width:210px; text-align:center;">${position}</span></div>
-      <div>สังกัด<span style="${U}; width:160px; text-align:center;">${department}</span>ขอลา ( ${chk(leaveTypeId === 1)} ) ป่วย ( ${chk(leaveTypeId === 3)} ) กิจส่วนตัว ( ${chk(leaveTypeId === 2)} ) คลอดบุตร</div>
-      <div>เนื่องจาก<span style="${U}; width:155px; text-align:center;">${reason}</span>ตั้งแต่วันที่<span style="${U}; width:130px; text-align:center;">${startDate.day ? startDate.day+' '+startDate.month+' '+startDate.year : ''}</span>ถึงวันที่<span style="${U}; width:130px; text-align:center;">${endDate.day ? endDate.day+' '+endDate.month+' '+endDate.year : ''}</span></div>
-      <div>มีกำหนดการ<span style="${U}; width:35px; text-align:center;">${totalDays}</span>วัน ข้าพเจ้าได้ลา ( ) ป่วย ( ) กิจส่วนตัว ( ) คลอดบุตร ครั้งสุดท้ายตั้งแต่</div>
-      <div>วันที่<span style="${U}; width:35px;">&nbsp;</span>เดือน<span style="${U}; width:90px;">&nbsp;</span>พ.ศ.<span style="${U}; width:50px;">&nbsp;</span>ถึงวันที่<span style="${U}; width:35px;">&nbsp;</span>เดือน<span style="${U}; width:90px;">&nbsp;</span>พ.ศ.<span style="${U}; width:50px;">&nbsp;</span></div>
-      <div style="text-align:right;">มีกำหนด<span style="${U}; width:35px;">&nbsp;</span>วัน ในระหว่างลา</div>
-      <div style="margin-bottom:12px;">จะติดต่อข้าพเจ้าได้ที่<span style="${U}; width:440px;">${contactAddress} ${contactPhone}</span></div>
+      <div>เรื่อง<span style="${U}; width:220px;">&nbsp;</span></div>
+      <div>เรียน<span style="${U}; width:220px;">&nbsp;</span></div>
+      <div><span style="margin-left:45px;">ข้าพเจ้า</span><span style="${U}; width:270px; text-align:center;">${fullName}</span>ตำแหน่ง<span style="${U}; width:280px; text-align:center;">${position}</span></div>
+      <div>สังกัด<span style="${U}; width:400px; text-align:center;">${department}</span>ขอลา ( ${chk(leaveTypeId === 1)} ) ป่วย ( ${chk(leaveTypeId === 3)} ) กิจส่วนตัว ( ${chk(leaveTypeId === 2)} ) คลอดบุตร</div>
+      <div>เนื่องจาก<span style="${U}; width:200px; text-align:center;">${reason}</span>ตั้งแต่วันที่<span style="${U}; width:180px; text-align:center;">${startDate.day ? startDate.day+' '+startDate.month+' '+startDate.year : ''}</span>ถึงวันที่<span style="${U}; width:150px; text-align:center;">${endDate.day ? endDate.day+' '+endDate.month+' '+endDate.year : ''}</span></div>
+      <div>มีกำหนดการ<span style="${U}; width:135px; text-align:center;">${totalDays}</span>วัน ข้าพเจ้าได้ลา ( ) ป่วย ( ) กิจส่วนตัว ( ) คลอดบุตร ครั้งสุดท้ายตั้งแต่</div>
+      <div>
+        วันที่<span style="${U}; width:190px;">&nbsp;</span>
+        ถึงวันที่<span style="${U}; width:190px;">&nbsp;</span>
+        มีกำหนด<span style="${U}; width:70px;">&nbsp;</span>วัน ในระหว่างลา</span>
+      </div>
+      <div style="margin-bottom:12px;">จะติดต่อข้าพเจ้าได้ที่<span style="${U}; width:560px;"><span style="margin-left:24px;">${contactAddress} ${contactPhone}</span></span></div>
 
       <!-- ===== TWO COLUMNS ===== -->
       <div style="display:flex; gap:18px;">
@@ -146,24 +149,28 @@ const LeaveFormPDF = forwardRef(({ leave, user }, ref) => {
 
           <div style="text-align:center; margin-bottom:10px;">
             <div style="font-weight:bold;">ขอแสดงความนับถือ</div>
-            <div style="height:40px;"></div>
+            <div style="height:15px;"></div>
             <div>(ลงชื่อ)<span style="${U}; width:170px;">&nbsp;</span></div>
-            <div>( <span style="${U}; width:170px; text-align:center;">${fullName}</span> )</div>
+            <div><span style="display:inline-block; margin-left:32px;">(</span> <span style="${U}; width:170px; text-align:center;">${fullName}</span> )</div>
             <div>ตำแหน่ง<span style="${U}; width:170px;">&nbsp;</span></div>
           </div>
 
           <div style="font-weight:bold; text-decoration:underline; font-size:15px; margin-bottom:2px;">ความเห็นผู้บังคับบัญชา (ผอ.กลุ่มงาน/ผอ.สสจ.)</div>
-          <div><span style="${U}; width:100%;">&nbsp;</span></div>
-          <div><span style="${U}; width:100%;">&nbsp;</span></div>
-          <div style="text-align:right;">(ลงชื่อ)<span style="${U}; width:150px;">&nbsp;</span></div>
-          <div style="text-align:right;">ตำแหน่ง<span style="${U}; width:150px;">&nbsp;</span></div>
-          <div style="text-align:right;">วันที่<span style="${U}; width:30px;">&nbsp;</span>/<span style="${U}; width:30px;">&nbsp;</span>/<span style="${U}; width:40px;">&nbsp;</span></div>
+          <div style="margin: 12px 0 0 0; display:block; border-bottom:1px dotted #000; width:100%; height:18px;"></div>
+          <div style="display:block; border-bottom:1px dotted #000; width:100%; height:18px;"></div>
+          <div style="height:15px;"></div>
+          <div>(ลงชื่อ)<span style="display:inline-block; border-bottom:1px dotted #000; width:296px;">&nbsp;</span></div>
+          <div>ตำแหน่ง<span style="display:inline-block; border-bottom:1px dotted #000; width:290px;">&nbsp;</span></div>
+          <div>วันที่<span style="display:inline-block; border-bottom:1px dotted #000; width:50px;">&nbsp;</span>/<span style="display:inline-block; border-bottom:1px dotted #000; width:50px;">&nbsp;</span>/<span style="display:inline-block; border-bottom:1px dotted #000; width:50px;">&nbsp;</span></div>
 
           <div style="font-weight:bold; text-decoration:underline; font-size:15px; margin-top:10px; margin-bottom:2px;">คำสั่ง</div>
           <div style="margin-left:18px;">( &nbsp; ) อนุญาต &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ( &nbsp; ) ไม่อนุญาต</div>
-          <div style="text-align:right;">(ลงชื่อ)<span style="${U}; width:150px;">&nbsp;</span></div>
-          <div style="text-align:right;">ตำแหน่ง<span style="${U}; width:150px;">&nbsp;</span></div>
-          <div style="text-align:right;">วันที่<span style="${U}; width:30px;">&nbsp;</span>/<span style="${U}; width:30px;">&nbsp;</span>/<span style="${U}; width:40px;">&nbsp;</span></div>
+          <div style="margin: 12px 0 0 0; display:block; border-bottom:1px dotted #000; width:100%; height:18px;"></div>
+          <div style="display:block; border-bottom:1px dotted #000; width:100%; height:18px;"></div>
+          <div style="height:10px;"></div>
+          <div>(ลงชื่อ)<span style="display:inline-block; border-bottom:1px dotted #000; width:296px;">&nbsp;</span></div>
+          <div>ตำแหน่ง<span style="display:inline-block; border-bottom:1px dotted #000; width:290px;">&nbsp;</span></div>
+          <div>วันที่<span style="display:inline-block; border-bottom:1px dotted #000; width:50px;">&nbsp;</span>/<span style="display:inline-block; border-bottom:1px dotted #000; width:50px;">&nbsp;</span>/<span style="display:inline-block; border-bottom:1px dotted #000; width:50px;">&nbsp;</span></div>
 
         </div>
       </div>

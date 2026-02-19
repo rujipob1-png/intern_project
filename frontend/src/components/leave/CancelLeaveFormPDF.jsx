@@ -73,7 +73,7 @@ export const CancelLeaveFormPDF = forwardRef(({ leave, user }, ref) => {
 
   const Line = ({ width = 80, children }) => (
     <span style={{ 
-      borderBottom: '1px solid #000', 
+      borderBottom: '1px dotted #000', 
       display: 'inline-block', 
       minWidth: `${width}px`,
       textAlign: 'center',
@@ -85,7 +85,7 @@ export const CancelLeaveFormPDF = forwardRef(({ leave, user }, ref) => {
 
   const FullLine = ({ children }) => (
     <div style={{ 
-      borderBottom: '1px solid #000', 
+      borderBottom: '1px dotted #000', 
       width: '100%',
       minHeight: '22px',
       marginBottom: '5px'
@@ -94,7 +94,7 @@ export const CancelLeaveFormPDF = forwardRef(({ leave, user }, ref) => {
 
   const SignatureLine = ({ width = 140, children }) => (
     <span style={{ 
-      borderBottom: '1px solid #000', 
+      borderBottom: '1px dotted #000', 
       display: 'inline-block', 
       width: `${width}px`,
       textAlign: 'center',
@@ -171,11 +171,11 @@ export const CancelLeaveFormPDF = forwardRef(({ leave, user }, ref) => {
         <div style={{ marginTop: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 260 }}>
           <div style={{ minWidth: 220, display: 'flex', flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center' }}>
             <span style={{ minWidth: 60, textAlign: 'right', marginRight: '6px' }}>(ลงชื่อ)</span>
-            <span style={{ display: 'inline-block', width: '140px', borderBottom: '1px solid #000', paddingBottom: '2px' }}></span>
+            <span style={{ display: 'inline-block', width: '140px', borderBottom: '1px dotted #000', paddingBottom: '2px' }}></span>
           </div>
           <div style={{ minWidth: 220, display: 'flex', flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', marginTop: 4, marginBottom: 0 }}>
             <span style={{ minWidth: 60 }}></span>
-            <span style={{ display: 'inline-block', width: '140px', textAlign: 'center', borderBottom: '1px solid #000', paddingBottom: '2px', marginLeft: '6px' }}>({fullName})</span>
+            <span style={{ display: 'inline-block', width: '140px', textAlign: 'center', borderBottom: '1px dotted #000', paddingBottom: '2px', marginLeft: '6px' }}>({fullName})</span>
           </div>
         </div>
       </div>

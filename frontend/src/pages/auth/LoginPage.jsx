@@ -134,7 +134,7 @@ export const LoginPage = () => {
             <img src="/logo.png" alt="ตราสำนักนายกรัฐมนตรี" className="w-24 h-24 rounded-full drop-shadow-lg" />
           </div>
           <h1 className="text-4xl font-bold text-gray-800 mb-3 tracking-tight">
-            ระบบการลาออนไลน์
+            ระบบการลาอิเล็กทรอนิกส์ 
           </h1>
           <p className="text-gray-500 text-lg">
             สำหรับข้าราชการและเจ้าหน้าที่
