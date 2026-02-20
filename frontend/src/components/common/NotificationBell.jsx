@@ -29,7 +29,7 @@ export const NotificationBell = () => {
   // Fallback polling if realtime is not enabled (every 30 seconds)
   useEffect(() => {
     if (isRealtimeEnabled) return; // Skip polling if realtime is enabled
-    
+
     const interval = setInterval(() => {
       fetchUnreadCount();
     }, 30000);
@@ -87,11 +87,11 @@ export const NotificationBell = () => {
   const handleMarkAsRead = async (notificationId, actionUrl) => {
     try {
       await notificationAPI.markAsRead(notificationId);
-      setNotifications(prev => 
+      setNotifications(prev =>
         prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
       );
       setUnreadCount(prev => Math.max(0, prev - 1));
-      
+
       if (actionUrl) {
         setIsOpen(false);
         navigate(actionUrl);
@@ -128,14 +128,30 @@ export const NotificationBell = () => {
     }
   };
 
+  const handleDeleteAllRead = async () => {
+    const readCount = notifications.filter(n => n.is_read).length;
+    if (readCount === 0) {
+      toast('ไม่มีแจ้งเตือนที่อ่านแล้ว', { icon: 'ℹ️' });
+      return;
+    }
+    try {
+      const result = await notificationAPI.deleteAllRead();
+      setNotifications(prev => prev.filter(n => !n.is_read));
+      toast.success(`ลบแจ้งเตือนที่อ่านแล้ว ${result.data?.deletedCount || readCount} รายการ`);
+    } catch (error) {
+      console.error('Error deleting read notifications:', error);
+      toast.error('เกิดข้อผิดพลาดในการลบ');
+    }
+  };
+
   const handleNotificationClick = (notification) => {
     if (!notification.is_read) {
       handleMarkAsRead(notification.id);
     }
-    
+
     const userRole = user?.role_name;
     const notificationType = notification.type;
-    
+
     // Navigate based on notification type and user role
     if (notificationType === 'leave_request' || notificationType === 'new_leave' || notificationType === 'leave_pending') {
       // คำขอลาใหม่ - ไปหน้าอนุมัติตาม role
@@ -172,7 +188,7 @@ export const NotificationBell = () => {
     } else if (notification.action_url) {
       navigate(notification.action_url);
     }
-    
+
     setIsOpen(false);
   };
 
@@ -243,7 +259,7 @@ export const NotificationBell = () => {
     } else {
       return '-';
     }
-    
+
     const now = new Date();
     const diffMs = now - date;
     const diffMins = Math.floor(diffMs / 60000);
@@ -276,101 +292,121 @@ export const NotificationBell = () => {
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg border border-slate-200 z-50 max-h-[600px] flex flex-col">
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-slate-200">
-            <div>
-              <h3 className="font-semibold text-slate-900">การแจ้งเตือน</h3>
-              {unreadCount > 0 && (
-                <p className="text-xs text-slate-500">{unreadCount} รายการใหม่</p>
-              )}
-            </div>
-            {unreadCount > 0 && (
-              <button
-                onClick={handleMarkAllAsRead}
-                className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-              >
-                <CheckCheck className="w-4 h-4" />
-                อ่านทั้งหมด
-              </button>
-            )}
-          </div>
-
-          {/* Notifications List */}
-          <div className="overflow-y-auto flex-1">
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <>
+          {/* Mobile Overlay */}
+          <div
+            className="fixed inset-0 z-40 sm:hidden"
+            onClick={() => setIsOpen(false)}
+          />
+          <div className="fixed inset-x-4 top-[70px] z-50 sm:z-50 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 w-[calc(100vw-2rem)] sm:w-96 bg-white rounded-lg shadow-xl ring-1 ring-black ring-opacity-5 sm:shadow-lg border border-slate-200 max-h-[calc(100vh-100px)] sm:max-h-[600px] flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-slate-200">
+              <div>
+                <h3 className="font-semibold text-slate-900">การแจ้งเตือน</h3>
+                {unreadCount > 0 && (
+                  <p className="text-xs text-slate-500">{unreadCount} รายการใหม่</p>
+                )}
               </div>
-            ) : notifications.length > 0 ? (
-              <ul className="divide-y divide-slate-100">
-                {notifications.map((notification) => (
-                  <li
-                    key={notification.id}
-                    className={`${
-                      notification.is_read ? 'bg-white' : 'bg-blue-50'
-                    } hover:bg-slate-50 transition-colors`}
+              <div className="flex flex-wrap items-center justify-end gap-1">
+                {notifications.some(n => n.is_read) && (
+                  <button
+                    onClick={handleDeleteAllRead}
+                    className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    title="ลบแจ้งเตือนที่อ่านแล้วทั้งหมด"
                   >
-                    <div
-                      onClick={() => handleNotificationClick(notification)}
-                      className="w-full p-4 text-left cursor-pointer"
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span className="hidden xs:inline">ลบที่อ่านแล้ว</span>
+                    <span className="xs:hidden">ลบ</span>
+                  </button>
+                )}
+                {unreadCount > 0 && (
+                  <button
+                    onClick={handleMarkAllAsRead}
+                    className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                  >
+                    <CheckCheck className="w-4 h-4" />
+                    <span className="hidden xs:inline">อ่านทั้งหมด</span>
+                    <span className="xs:hidden">อ่าน</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Notifications List */}
+            <div className="overflow-y-auto flex-1">
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              ) : notifications.length > 0 ? (
+                <ul className="divide-y divide-slate-100">
+                  {notifications.map((notification) => (
+                    <li
+                      key={notification.id}
+                      className={`${notification.is_read ? 'bg-white' : 'bg-blue-50'
+                        } hover:bg-slate-50 transition-colors`}
                     >
-                      <div className="flex gap-3">
-                        <span className="text-2xl flex-shrink-0">
-                          {getNotificationIcon(notification.type)}
-                        </span>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2 mb-1">
-                            <h4 className="font-semibold text-slate-900 text-sm">
-                              {getNotificationDisplayTitle(notification)}
-                            </h4>
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                              {!notification.is_read && (
-                                <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                              )}
-                              <button
-                                onClick={(e) => handleDelete(notification.id, e)}
-                                className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
+                      <div
+                        onClick={() => handleNotificationClick(notification)}
+                        className="w-full p-4 text-left cursor-pointer"
+                      >
+                        <div className="flex gap-3">
+                          <span className="text-2xl flex-shrink-0">
+                            {getNotificationIcon(notification.type)}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2 mb-1">
+                              <h4 className="font-semibold text-slate-900 text-sm">
+                                {getNotificationDisplayTitle(notification)}
+                              </h4>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                {!notification.is_read && (
+                                  <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                                )}
+                                <button
+                                  onClick={(e) => handleDelete(notification.id, e)}
+                                  className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                          <p className="text-sm text-slate-600 line-clamp-2 mb-2">
-                            {notification.message}
-                          </p>
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-slate-500">
-                              {formatTimeAgo(notification.created_at)}
-                            </span>
-                            {(notification.action_url || notification.reference_id) && (
-                              <span className="text-xs text-blue-600 font-medium">
-                                คลิกเพื่อดูรายละเอียด →
+                            <p className="text-sm text-slate-600 line-clamp-2 mb-2">
+                              {notification.message}
+                            </p>
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-slate-500">
+                                {formatTimeAgo(notification.created_at)}
                               </span>
-                            )}
+                              {(notification.action_url || notification.reference_id) && (
+                                <span className="text-xs text-blue-600 font-medium">
+                                  คลิกเพื่อดูรายละเอียด →
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-12 px-4">
-                <Bell className="w-16 h-16 text-slate-300 mb-3" />
-                <p className="text-slate-500 font-medium">ไม่มีการแจ้งเตือน</p>
-                <p className="text-sm text-slate-400 mt-1">คุณไม่มีการแจ้งเตือนใหม่</p>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 px-4">
+                  <Bell className="w-16 h-16 text-slate-300 mb-3" />
+                  <p className="text-slate-500 font-medium">ไม่มีการแจ้งเตือน</p>
+                  <p className="text-sm text-slate-400 mt-1">คุณไม่มีการแจ้งเตือนใหม่</p>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            {notifications.length > 0 && (
+              <div className="p-3 border-t border-slate-200 text-center">
+                <p className="text-xs text-slate-500">แสดง {notifications.length} รายการ</p>
               </div>
             )}
           </div>
-
-          {/* Footer */}
-          {notifications.length > 0 && (
-            <div className="p-3 border-t border-slate-200 text-center">
-              <p className="text-xs text-slate-500">แสดง {notifications.length} รายการ</p>
-            </div>
-          )}
-        </div>
+        </>
       )}
     </div>
   );

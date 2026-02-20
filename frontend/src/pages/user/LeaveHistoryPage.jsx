@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { leaveAPI } from '../../api/leave.api';
 import { formatDate } from '../../utils/formatDate';
 import { LEAVE_TYPE_CODES, LEAVE_TYPE_NAMES } from '../../utils/constants';
-import { 
-  Eye, 
-  Search, 
+import {
+  Eye,
+  Search,
   Filter,
   CheckCircle,
   XCircle,
@@ -31,7 +31,7 @@ export const LeaveHistoryPage = () => {
     rejected: 0,
     cancelled: 0,
     pending: 0,
-  });  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  }); const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [selectedLeave, setSelectedLeave] = useState(null);
   useEffect(() => {
     loadHistory();
@@ -46,9 +46,9 @@ export const LeaveHistoryPage = () => {
       setLoading(true);
       const response = await leaveAPI.getMyLeaves();
       const allLeaves = response.data?.leaves || response.data || [];
-      
+
       setLeaves(allLeaves);
-      
+
       const newStats = {
         approved: allLeaves.filter(l => (l.status || '').toLowerCase() === 'approved').length,
         rejected: allLeaves.filter(l => (l.status || '').toLowerCase() === 'rejected').length,
@@ -69,7 +69,7 @@ export const LeaveHistoryPage = () => {
 
     // กรองตามสถานะ
     if (statusFilter !== 'all') {
-      filtered = filtered.filter(leave => 
+      filtered = filtered.filter(leave =>
         (leave.status || '').toLowerCase() === statusFilter.toLowerCase()
       );
     }
@@ -88,73 +88,73 @@ export const LeaveHistoryPage = () => {
   const getStatusBadge = (status) => {
     const statusLower = (status || '').toLowerCase();
     const statusConfig = {
-      pending: { 
-        label: 'รอพิจารณา', 
+      pending: {
+        label: 'รอพิจารณา',
         className: 'bg-yellow-100 text-yellow-800',
-        icon: Clock 
+        icon: Clock
       },
-      approved_level1: { 
-        label: 'รอพิจารณา', 
+      approved_level1: {
+        label: 'รอพิจารณา',
         className: 'bg-yellow-100 text-yellow-800',
-        icon: Clock 
+        icon: Clock
       },
-      approved_level2: { 
-        label: 'รอพิจารณา', 
+      approved_level2: {
+        label: 'รอพิจารณา',
         className: 'bg-yellow-100 text-yellow-800',
-        icon: Clock 
+        icon: Clock
       },
-      approved_level3: { 
-        label: 'รอพิจารณา', 
+      approved_level3: {
+        label: 'รอพิจารณา',
         className: 'bg-yellow-100 text-yellow-800',
-        icon: Clock 
+        icon: Clock
       },
-      approved: { 
-        label: 'อนุมัติ', 
+      approved: {
+        label: 'อนุมัติ',
         className: 'bg-green-100 text-green-800',
-        icon: CheckCircle 
+        icon: CheckCircle
       },
-      approved_final: { 
-        label: 'อนุมัติ', 
+      approved_final: {
+        label: 'อนุมัติ',
         className: 'bg-green-100 text-green-800',
-        icon: CheckCircle 
+        icon: CheckCircle
       },
-      rejected: { 
-        label: 'ไม่อนุมัติ', 
+      rejected: {
+        label: 'ไม่อนุมัติ',
         className: 'bg-red-100 text-red-800',
-        icon: XCircle 
+        icon: XCircle
       },
-      cancelled: { 
-        label: 'ยกเลิก', 
+      cancelled: {
+        label: 'ยกเลิก',
         className: 'bg-gray-100 text-gray-800',
-        icon: Ban 
+        icon: Ban
       },
       // สถานะการยกเลิก
-      pending_cancel: { 
-        label: 'รอพิจารณายกเลิก', 
+      pending_cancel: {
+        label: 'รอพิจารณายกเลิก',
         className: 'bg-orange-100 text-orange-800',
-        icon: Clock 
+        icon: Clock
       },
-      cancel_level1: { 
-        label: 'รอพิจารณายกเลิก', 
+      cancel_level1: {
+        label: 'รอพิจารณายกเลิก',
         className: 'bg-orange-100 text-orange-800',
-        icon: Clock 
+        icon: Clock
       },
-      cancel_level2: { 
-        label: 'รอพิจารณายกเลิก', 
+      cancel_level2: {
+        label: 'รอพิจารณายกเลิก',
         className: 'bg-orange-100 text-orange-800',
-        icon: Clock 
+        icon: Clock
       },
-      cancel_level3: { 
-        label: 'รอพิจารณายกเลิก', 
+      cancel_level3: {
+        label: 'รอพิจารณายกเลิก',
         className: 'bg-orange-100 text-orange-800',
-        icon: Clock 
+        icon: Clock
       },
     };
 
-    const config = statusConfig[statusLower] || { 
-      label: status, 
+    const config = statusConfig[statusLower] || {
+      label: status,
       className: 'bg-gray-100 text-gray-800',
-      icon: FileText 
+      icon: FileText
     };
     const Icon = config.icon;
 
@@ -167,18 +167,18 @@ export const LeaveHistoryPage = () => {
   };
 
   const getLeaveTypeName = (leave) => {
-    return leave.leaveType || 
-           leave.leaveTypes?.typeName || 
-           leave.leave_types?.type_name ||
-           LEAVE_TYPE_NAMES[leave.leaveTypeCode] ||
-           'ไม่ระบุ';
+    return leave.leaveType ||
+      leave.leaveTypes?.typeName ||
+      leave.leave_types?.type_name ||
+      LEAVE_TYPE_NAMES[leave.leaveTypeCode] ||
+      'ไม่ระบุ';
   };
 
   const getLeaveTypeCode = (leave) => {
-    const code = leave.leaveTypeCode || 
-           leave.leaveTypes?.typeCode || 
-           leave.leave_types?.type_code ||
-           '';
+    const code = leave.leaveTypeCode ||
+      leave.leaveTypes?.typeCode ||
+      leave.leave_types?.type_code ||
+      '';
     // แปลงเป็นตัวย่อภาษาไทย
     return LEAVE_TYPE_CODES[code.toLowerCase()] || code;
   };
@@ -196,9 +196,9 @@ export const LeaveHistoryPage = () => {
     try {
       // TODO: Call API to submit cancellation request
       console.log('Cancellation data:', cancellationData);
-      
+
       toast.success('ส่งคำขอยกเลิกเรียบร้อยแล้ว กำลังรอการอนุมัติ');
-      
+
       // Reload data
       await loadHistory();
       setCancelModalOpen(false);
@@ -221,16 +221,16 @@ export const LeaveHistoryPage = () => {
   return (
     <div className="max-w-7xl mx-auto space-y-6 py-4">
       {/* Header with Back Button */}
-      <div className="flex items-center justify-between mb-8 bg-white rounded-xl p-6 shadow-md border border-gray-200">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col md:flex-row items-center justify-between mb-8 bg-white rounded-xl p-6 shadow-md border border-gray-200 gap-4">
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
           <button
             onClick={() => navigate('/dashboard')}
-            className="p-2.5 hover:bg-gray-100 rounded-lg transition-colors group border border-gray-200"
+            className="p-2.5 hover:bg-gray-100 rounded-lg transition-colors group border border-gray-200 self-start sm:self-auto"
           >
             <ArrowLeft className="w-5 h-5 text-gray-500 group-hover:text-gray-700 transition-colors" />
           </button>
-          <div className="flex items-center gap-4">
-            <div className="p-4 bg-gray-800 rounded-xl shadow-md">
+          <div className="flex items-center gap-4 w-full sm:w-auto">
+            <div className="p-4 bg-gray-800 rounded-xl shadow-md shrink-0">
               <History className="w-7 h-7 text-white" />
             </div>
             <div>
@@ -241,7 +241,7 @@ export const LeaveHistoryPage = () => {
         </div>
         <button
           onClick={() => navigate('/create-leave')}
-          className="px-6 py-3 bg-gray-900 hover:bg-gray-800 text-white rounded-lg transition-all font-semibold shadow-md hover:shadow-lg flex items-center gap-2"
+          className="px-6 py-3 bg-gray-900 hover:bg-gray-800 text-white rounded-lg transition-all font-semibold shadow-md hover:shadow-lg flex items-center justify-center gap-2 w-full md:w-auto"
         >
           <FileText className="w-4 h-4" />
           สร้างคำขอลา
@@ -338,7 +338,7 @@ export const LeaveHistoryPage = () => {
           </div>
         </div>
       </div>
-{/* Leave History List */}
+      {/* Leave History List */}
       <div className="bg-white border border-gray-200 rounded-xl overflow-visible shadow-lg">
         <div className="bg-gray-800 px-6 py-4 border-b-2 border-gray-700">
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
@@ -353,9 +353,9 @@ export const LeaveHistoryPage = () => {
             </div>
             <p className="text-gray-800 text-xl font-bold mb-2">ไม่พบประวัติการลา</p>
             <p className="text-gray-500 text-sm mb-6">
-              {searchTerm 
+              {searchTerm
                 ? 'ไม่พบคำขอที่ตรงกับคำค้นหา'
-                : statusFilter !== 'all' 
+                : statusFilter !== 'all'
                   ? `ไม่พบคำขอลาที่มีสถานะ "${statusFilter}"`
                   : 'คุณยังไม่มีคำขอลา'}
             </p>

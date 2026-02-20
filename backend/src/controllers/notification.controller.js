@@ -79,7 +79,7 @@ export const markAsRead = async (req, res) => {
 
     const { error } = await supabaseAdmin
       .from('notifications')
-      .update({ 
+      .update({
         is_read: true,
         read_at: new Date().toISOString()
       })
@@ -114,7 +114,7 @@ export const markAllAsRead = async (req, res) => {
 
     const { error } = await supabaseAdmin
       .from('notifications')
-      .update({ 
+      .update({
         is_read: true,
         read_at: new Date().toISOString()
       })
@@ -197,6 +197,40 @@ export const deleteNotification = async (req, res) => {
       res,
       HTTP_STATUS.INTERNAL_SERVER_ERROR,
       'Failed to delete notification'
+    );
+  }
+};
+
+/**
+ * ลบแจ้งเตือนที่อ่านแล้วทั้งหมด (สำหรับผู้ใช้)
+ */
+export const deleteAllReadNotifications = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const { data, error } = await supabaseAdmin
+      .from('notifications')
+      .delete()
+      .eq('user_id', userId)
+      .eq('is_read', true)
+      .select('id');
+
+    if (error) {
+      throw error;
+    }
+
+    return successResponse(
+      res,
+      HTTP_STATUS.OK,
+      `ลบแจ้งเตือนที่อ่านแล้ว ${data?.length || 0} รายการ`,
+      { deletedCount: data?.length || 0 }
+    );
+  } catch (error) {
+    console.error('Delete all read notifications error:', error);
+    return errorResponse(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      'Failed to delete read notifications'
     );
   }
 };

@@ -30,4 +30,10 @@ export const notificationAPI = {
     const response = await axios.delete(`/notifications/${id}`);
     return response.data;
   },
+
+  // ลบแจ้งเตือนที่อ่านแล้วทั้งหมด
+  deleteAllRead: async () => {
+    const response = await axios.delete('/notifications/read-all');
+    return response.data;
+  },
 };

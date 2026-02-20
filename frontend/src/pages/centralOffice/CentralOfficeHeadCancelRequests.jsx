@@ -2,7 +2,7 @@
 import { useNavigate } from 'react-router-dom';
 import { centralOfficeAPI } from '../../api/centralOffice.api';
 import { formatDate } from '../../utils/formatDate';
-import { getDepartmentThaiCode } from '../../utils/departmentMapping';
+import { getDepartmentThaiAbbr } from '../../utils/departmentMapping';
 import { Card } from '../../components/common/Card';
 import { useConfirm } from '../../components/common/ConfirmDialog';
 import toast from 'react-hot-toast';
@@ -19,16 +19,7 @@ const parseReason = (reason) => {
   }
 };
 
-// Department display names mapping
-const DEPARTMENT_NAMES = {
-  'GYS': 'กยส.', 'GOK': 'กอก.', 'GTS': 'กทส.', 'GTP': 'กตป.', 'GSS': 'กสส.', 'GKC': 'กคฐ.',
-  'GPS': 'กปส.', 'GKM': 'กกม.', 'SLK': 'สลก.', 'TSN': 'ตสน.', 'KPR': 'กพร.',
-  'กลุ่มงานยุทธศาสตร์สารสนเทศและการสื่อสาร': 'กยส.', 'กลุ่มงานอำนวยการ': 'กอก.',
-  'กลุ่มงานเทคโนโลยีสารสนเทศ': 'กทส.', 'กลุ่มงานติดตามประเมินผลด้านสารสนเทศและการสื่อสาร': 'กตป.',
-  'กลุ่มงานเทคโนโลยีการสื่อสาร': 'กสส.', 'กลุ่มงานโครงสร้างพื้นฐานด้านสารสนเทศและการสื่อสาร': 'กคฐ.',
-  'กองหลักประกันสุขภาพ': 'กปส.', 'กองกฎหมาย': 'กกม.',
-  'สำนักงานเลขานุการกรม': 'สลก.', 'กลุ่มตรวจสอบภายใน': 'ตสน.', 'กลุ่มพัฒนาระบบบริหาร': 'กพร.',
-};
+
 
 export default function CentralOfficeHeadCancelRequests() {
   const navigate = useNavigate();
@@ -51,7 +42,7 @@ export default function CentralOfficeHeadCancelRequests() {
   // Filter by department and search term
   const filteredCancels = pendingCancels.filter(leave => {
     const matchDept = selectedDepartment === 'all' || leave.employee?.department === selectedDepartment;
-    const matchSearch = !searchTerm || 
+    const matchSearch = !searchTerm ||
       leave.employee?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       leave.employee?.employeeCode?.includes(searchTerm) ||
       leave.leaveNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -181,9 +172,8 @@ export default function CentralOfficeHeadCancelRequests() {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setSelectedDepartment('all')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                selectedDepartment === 'all' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${selectedDepartment === 'all' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
             >
               <Users className="w-4 h-4" />
               <span>ทั้งหมด</span>
@@ -198,17 +188,15 @@ export default function CentralOfficeHeadCancelRequests() {
                 <button
                   key={dept}
                   onClick={() => setSelectedDepartment(dept)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                    selectedDepartment === dept
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${selectedDepartment === dept
                       ? 'bg-gray-800 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
+                    }`}
                 >
                   <Building2 className="w-4 h-4" />
-                  <span>{DEPARTMENT_NAMES[dept] || dept}</span>
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                    selectedDepartment === dept ? 'bg-white/20' : 'bg-gray-200 text-gray-600'
-                  }`}>
+                  <span>{getDepartmentThaiAbbr(dept)}</span>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${selectedDepartment === dept ? 'bg-white/20' : 'bg-gray-200 text-gray-600'
+                    }`}>
                     {count}
                   </span>
                 </button>
@@ -281,7 +269,7 @@ export default function CentralOfficeHeadCancelRequests() {
                       <h3 className="font-bold text-gray-800">{leave.employee?.name || 'ไม่ระบุ'}</h3>
                       <p className="text-sm text-gray-500">รหัส: {leave.employee?.employeeCode}</p>
                       <span className="inline-block mt-1 px-3 py-1 bg-gray-200 text-gray-700 text-xs font-medium rounded-full">
-                        {getDepartmentThaiCode(leave.employee?.department)}
+                        {getDepartmentThaiAbbr(leave.employee?.department)}
                       </span>
                     </div>
                   </div>

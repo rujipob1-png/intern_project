@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  ArrowLeft, Search, Clock, CheckCircle, XCircle, User, Calendar, 
+import {
+  ArrowLeft, Search, Clock, CheckCircle, XCircle, User, Calendar,
   FileText, Eye, Filter, X, Phone, Download, ClipboardCheck,
   MapPin, Hash, MessageSquare, AlertCircle, Briefcase, Building2, ArrowRight
 } from 'lucide-react';
@@ -51,10 +51,10 @@ const ApprovalHistoryPage = () => {
       cancel_level3: { label: 'รอพิจารณายกเลิก', color: 'bg-orange-100 text-orange-800', icon: Clock },
       pending_cancel: { label: 'รอพิจารณายกเลิก', color: 'bg-orange-100 text-orange-800', icon: Clock },
     };
-    
+
     const config = statusConfig[status] || { label: status, color: 'bg-gray-100 text-gray-800', icon: Clock };
     const Icon = config.icon;
-    
+
     return (
       <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${config.color}`}>
         <Icon className="w-3 h-3" />
@@ -105,12 +105,12 @@ const ApprovalHistoryPage = () => {
   };
 
   const filteredLeaves = leaves.filter(leave => {
-    const matchesSearch = 
+    const matchesSearch =
       leave.employee?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       leave.leaveNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       leave.employee?.employeeCode?.includes(searchTerm);
     const matchesStatus = statusFilter === 'all' || leave.status === statusFilter;
-    const matchesAction = actionFilter === 'all' || 
+    const matchesAction = actionFilter === 'all' ||
       (actionFilter === 'approved' && leave.myAction?.includes('approved')) ||
       (actionFilter === 'rejected' && leave.myAction?.includes('rejected'));
     return matchesSearch && matchesStatus && matchesAction;
@@ -124,33 +124,33 @@ const ApprovalHistoryPage = () => {
       {/* Header */}
       <div className="bg-[#1a2744] text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-4 w-full md:w-auto">
               <button
                 onClick={() => navigate('/dashboard')}
-                className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+                className="flex items-center justify-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors shrink-0"
               >
                 <ArrowLeft className="w-5 h-5" />
                 <span>หน้าหลัก</span>
               </button>
               <div>
-                <h1 className="text-2xl font-bold flex items-center gap-2">
+                <h1 className="text-2xl font-bold flex items-center gap-2 flex-wrap">
                   <ClipboardCheck className="w-7 h-7" />
-                  ประวัติการอนุมัติ
+                  <span>ประวัติการอนุมัติ</span>
                 </h1>
                 <p className="text-gray-400 mt-1">ผอ.กอง (Level 1)</p>
               </div>
             </div>
-            <div className="flex gap-4">
-              <div className="bg-white/10 rounded-xl px-5 py-3 text-center">
+            <div className="flex flex-wrap gap-4 w-full md:w-auto justify-center md:justify-end">
+              <div className="bg-white/10 rounded-xl px-5 py-3 text-center grow md:grow-0">
                 <div className="text-2xl font-bold">{leaves.length}</div>
                 <div className="text-xs text-gray-400">ทั้งหมด</div>
               </div>
-              <div className="bg-white/10 rounded-xl px-5 py-3 text-center">
+              <div className="bg-white/10 rounded-xl px-5 py-3 text-center grow md:grow-0">
                 <div className="text-2xl font-bold text-emerald-300">{approvedCount}</div>
                 <div className="text-xs text-gray-400">อนุมัติ</div>
               </div>
-              <div className="bg-white/10 rounded-xl px-5 py-3 text-center">
+              <div className="bg-white/10 rounded-xl px-5 py-3 text-center grow md:grow-0">
                 <div className="text-2xl font-bold text-rose-300">{rejectedCount}</div>
                 <div className="text-xs text-gray-400">ปฏิเสธ</div>
               </div>
@@ -174,7 +174,7 @@ const ApprovalHistoryPage = () => {
                 className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-gray-400"
               />
             </div>
-            
+
             {/* Action Filter */}
             <div className="relative">
               <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -228,7 +228,7 @@ const ApprovalHistoryPage = () => {
           /* Leave List */
           <div className="space-y-4">
             {filteredLeaves.map((leave) => (
-              <div 
+              <div
                 key={leave.id}
                 className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow overflow-hidden"
               >
@@ -251,7 +251,7 @@ const ApprovalHistoryPage = () => {
                     </div>
 
                     {/* Center - Leave Info */}
-                    <div className="flex-1 grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                       <div className="min-w-0">
                         <p className="text-xs text-gray-500">เลขที่</p>
                         <p className="font-medium text-gray-900 truncate">{leave.leaveNumber}</p>
@@ -263,7 +263,7 @@ const ApprovalHistoryPage = () => {
                       <div className="min-w-0">
                         <p className="text-xs text-gray-500">วันที่ลา</p>
                         <p className="font-medium text-gray-900">
-                          {leave.selectedDates?.length > 0 
+                          {leave.selectedDates?.length > 0
                             ? leave.selectedDates.map(d => formatDate(d)).join(', ')
                             : `${formatDate(leave.startDate)} - ${formatDate(leave.endDate)}`
                           }
@@ -309,7 +309,7 @@ const ApprovalHistoryPage = () => {
           <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={() => setShowModal(false)} />
             <div className="relative bg-white rounded-2xl shadow-xl max-w-3xl w-full mx-auto border border-gray-200">
-              
+
               {/* Modal Header */}
               <div className="bg-gray-50 border-b border-gray-200 rounded-t-2xl px-6 py-5">
                 <div className="flex items-start justify-between">
@@ -339,7 +339,7 @@ const ApprovalHistoryPage = () => {
 
               {/* Modal Content */}
               <div className="px-6 py-5 max-h-[70vh] overflow-y-auto space-y-4">
-                
+
                 {/* Employee Info */}
                 <div className="bg-gray-50 rounded-xl p-4">
                   <div className="flex items-center gap-4">
@@ -437,9 +437,9 @@ const ApprovalHistoryPage = () => {
                         const isRejected = step.action?.includes('rejected');
                         const isPartial = step.action === 'partial_approved';
                         const levelNames = { 1: 'ผอ.กอง (Level 1)', 2: 'เจ้าหน้าที่กองกลาง (Level 2)', 3: 'หัวหน้ากองกลาง (Level 3)', 4: 'ผู้ดูแลระบบ (Level 4)' };
-                        
+
                         const dotColor = isRejected ? 'bg-gray-800' : isPartial ? 'bg-gray-500' : isApproved ? 'bg-gray-600' : 'bg-gray-300';
-                        
+
                         return (
                           <div key={i} className="relative flex gap-3">
                             <div className="flex flex-col items-center">
@@ -451,9 +451,8 @@ const ApprovalHistoryPage = () => {
                             <div className="pb-4 flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
                                 <span className="text-sm font-medium text-gray-800">{levelNames[step.level] || `Level ${step.level}`}</span>
-                                <span className={`text-xs px-1.5 py-0.5 rounded ${
-                                  isRejected ? 'bg-gray-200 text-gray-700' : isPartial ? 'bg-gray-100 text-gray-600' : isApproved ? 'bg-gray-100 text-gray-700' : 'bg-gray-100 text-gray-500'
-                                }`}>
+                                <span className={`text-xs px-1.5 py-0.5 rounded ${isRejected ? 'bg-gray-200 text-gray-700' : isPartial ? 'bg-gray-100 text-gray-600' : isApproved ? 'bg-gray-100 text-gray-700' : 'bg-gray-100 text-gray-500'
+                                  }`}>
                                   {isRejected ? 'ปฏิเสธ' : isPartial ? 'อนุมัติบางส่วน' : isApproved ? 'อนุมัติ' : step.action}
                                 </span>
                               </div>

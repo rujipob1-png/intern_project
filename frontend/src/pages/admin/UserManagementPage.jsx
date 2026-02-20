@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from 'react';
-import { 
-  Users, Search, Filter, Edit2, Trash2, UserPlus, 
+import {
+  Users, Search, Filter, Edit2, Trash2, UserPlus,
   Shield, Building, Phone, Mail, ChevronDown, ChevronUp,
   Eye, EyeOff, Check, X, RefreshCw, Download, MoreHorizontal,
   Calendar, Clock, FileText, AlertCircle, Award, Briefcase,
@@ -30,6 +30,11 @@ const DEPARTMENT_CODES = {
   'GTP': { short: 'กตป.', full: 'กลุ่มงานติดตามประเมินผลด้านสารสนเทศและการสื่อสาร', color: 'bg-slate-100 text-slate-700 border border-slate-300' },
   'GSS': { short: 'กสส.', full: 'กลุ่มงานเทคโนโลยีการสื่อสาร', color: 'bg-slate-100 text-slate-700 border border-slate-300' },
   'GKC': { short: 'กคฐ.', full: 'กลุ่มงานโครงสร้างพื้นฐานด้านสารสนเทศและการสื่อสาร', color: 'bg-slate-100 text-slate-700 border border-slate-300' },
+  'GPS': { short: 'กปส.', full: 'กองหลักประกันสุขภาพ', color: 'bg-slate-100 text-slate-700 border border-slate-300' },
+  'GKM': { short: 'กกม.', full: 'กองกฎหมาย', color: 'bg-slate-100 text-slate-700 border border-slate-300' },
+  'SLK': { short: 'สลก.', full: 'สำนักงานเลขานุการกรม', color: 'bg-slate-100 text-slate-700 border border-slate-300' },
+  'TSN': { short: 'ตสน.', full: 'กลุ่มตรวจสอบภายใน', color: 'bg-slate-100 text-slate-700 border border-slate-300' },
+  'KPR': { short: 'กพร.', full: 'กลุ่มพัฒนาระบบบริหาร', color: 'bg-slate-100 text-slate-700 border border-slate-300' },
 };
 
 const TITLES = ['นาย', 'นาง', 'นางสาว', 'น.ส.', 'ดร.', 'ผศ.', 'รศ.', 'ศ.'];
@@ -48,7 +53,7 @@ const UserManagementPage = () => {
   const [selectedDepartment, setSelectedDepartment] = useState('all');
   const [selectedRole, setSelectedRole] = useState('all');
   const [sortConfig, setSortConfig] = useState({ key: 'employee_code', direction: 'asc' });
-  
+
   // Tab state - 'current' หรือ 'archived'
   const [activeTab, setActiveTab] = useState('current');
   const [archivedUsers, setArchivedUsers] = useState([]);
@@ -56,7 +61,7 @@ const UserManagementPage = () => {
   const [showArchivedDetailModal, setShowArchivedDetailModal] = useState(false);
   const [selectedArchivedUser, setSelectedArchivedUser] = useState(null);
   const [archivedUserLeaves, setArchivedUserLeaves] = useState([]);
-  
+
   // Modals
   const [selectedUser, setSelectedUser] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -70,7 +75,7 @@ const UserManagementPage = () => {
   const [showCarryoverModal, setShowCarryoverModal] = useState(false);
   const [carryoverProcessing, setCarryoverProcessing] = useState(false);
   const [carryoverResults, setCarryoverResults] = useState(null);
-  
+
   // Custom Confirm Modal
   const [confirmModal, setConfirmModal] = useState({
     show: false,
@@ -82,7 +87,7 @@ const UserManagementPage = () => {
     confirmColor: 'bg-gray-800 hover:bg-gray-900',
     onConfirm: null
   });
-  
+
   // Form states - ค่าเริ่มต้นตามระเบียบสำนักนายกฯ พ.ศ. 2555
   const [formData, setFormData] = useState({
     employee_code: '',
@@ -183,7 +188,7 @@ const UserManagementPage = () => {
 
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      result = result.filter(user => 
+      result = result.filter(user =>
         user.employee_code?.toLowerCase().includes(term) ||
         user.first_name?.toLowerCase().includes(term) ||
         user.last_name?.toLowerCase().includes(term) ||
@@ -269,7 +274,8 @@ const UserManagementPage = () => {
         department: freshUser.department_code || 'GOK',
         phone: freshUser.phone || '',
         email: freshUser.email || '',
-        role_id: roles.find(r => r.role_name === freshUser.role_name)?.id || ''
+        role_id: roles.find(r => r.role_name === freshUser.role_name)?.id || '',
+        hire_date: freshUser.hire_date || ''
       });
     } catch {
       setSelectedUser(user);
@@ -281,7 +287,8 @@ const UserManagementPage = () => {
         department: user.department_code || 'GOK',
         phone: user.phone || '',
         email: user.email || '',
-        role_id: roles.find(r => r.role_name === user.role_name)?.id || ''
+        role_id: roles.find(r => r.role_name === user.role_name)?.id || '',
+        hire_date: user.hire_date || ''
       });
     }
     setShowEditModal(true);
@@ -350,7 +357,7 @@ const UserManagementPage = () => {
     try {
       setSubmitting(true);
       await adminAPI.deleteUser(selectedUser.id, deleteMode, deleteReason);
-      
+
       const messages = {
         deactivate: 'ปิดการใช้งานบุคลากรสำเร็จ',
         archive: 'ลบบุคลากรและเก็บข้อมูลสำเร็จ',
@@ -423,7 +430,7 @@ const UserManagementPage = () => {
   // ================================
   // Vacation Carryover Functions
   // ================================
-  
+
   // คำนวณปีงบประมาณไทย (1 ต.ค. - 30 ก.ย.)
   const getCurrentFiscalYear = () => {
     const today = new Date();
@@ -530,9 +537,9 @@ const UserManagementPage = () => {
       <div className="space-y-6">
         {/* Header */}
         <div className="bg-[#1a2744] rounded-2xl p-6 text-white shadow-xl">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-white/15 rounded-xl">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-4 w-full lg:w-auto">
+              <div className="p-3 bg-white/15 rounded-xl shrink-0">
                 <Users className="w-8 h-8 text-white" />
               </div>
               <div>
@@ -540,33 +547,33 @@ const UserManagementPage = () => {
                 <p className="text-slate-300 mt-1 text-sm">ศูนย์เทคโนโลยีสารสนเทศและการสื่อสาร สป.</p>
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="text-center px-5 py-2 bg-white/10 rounded-xl">
+            <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto justify-start lg:justify-end">
+              <div className="text-center px-5 py-2 bg-white/10 rounded-xl grow lg:grow-0">
                 <p className="text-3xl font-bold text-white">{activeTab === 'current' ? users.length : archivedUsers.length}</p>
                 <p className="text-slate-300 text-xs">{activeTab === 'current' ? 'บุคลากรทั้งหมด' : 'ข้อมูลที่เก็บถาวร'}</p>
               </div>
               {activeTab === 'current' && (
                 <>
-                  <button 
+                  <button
                     onClick={handleOpenCreateModal}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 hover:bg-gray-800 text-white rounded-xl transition-colors font-semibold shadow-lg"
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-900 hover:bg-gray-800 text-white rounded-xl transition-colors font-semibold shadow-lg grow lg:grow-0"
                   >
                     <UserPlus className="w-5 h-5" />
-                    <span>เพิ่มบุคลากร</span>
+                    <span className="whitespace-nowrap">เพิ่มบุคลากร</span>
                   </button>
-                  <button 
+                  <button
                     onClick={() => setShowCarryoverModal(true)}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition-colors font-semibold shadow-lg"
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition-colors font-semibold shadow-lg grow lg:grow-0"
                     title="ยกยอดวันลาพักผ่อนประจำปี"
                   >
                     <RotateCcw className="w-5 h-5" />
-                    <span>ยกยอดวันลา</span>
+                    <span className="whitespace-nowrap">ยกยอดวันลา</span>
                   </button>
                 </>
               )}
-              <button 
+              <button
                 onClick={activeTab === 'current' ? fetchData : fetchArchivedUsers}
-                className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-700 rounded-xl transition-colors font-semibold shadow-lg"
+                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-700 rounded-xl transition-colors font-semibold shadow-lg grow lg:grow-0"
               >
                 <RefreshCw className={`w-5 h-5 ${(activeTab === 'current' ? loading : archivedLoading) ? 'animate-spin' : ''}`} />
                 <span>รีเฟรช</span>
@@ -579,11 +586,10 @@ const UserManagementPage = () => {
         <div className="bg-white rounded-xl shadow-md border p-2 flex gap-2">
           <button
             onClick={() => setActiveTab('current')}
-            className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${
-              activeTab === 'current'
-                ? 'bg-slate-700 text-white shadow-lg'
-                : 'text-slate-600 hover:bg-slate-100'
-            }`}
+            className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${activeTab === 'current'
+              ? 'bg-slate-700 text-white shadow-lg'
+              : 'text-slate-600 hover:bg-slate-100'
+              }`}
           >
             <Users className="w-5 h-5" />
             <span>บุคลากรปัจจุบัน</span>
@@ -591,11 +597,10 @@ const UserManagementPage = () => {
           </button>
           <button
             onClick={() => setActiveTab('archived')}
-            className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${
-              activeTab === 'archived'
-                ? 'bg-slate-700 text-white shadow-lg'
-                : 'text-slate-600 hover:bg-slate-100'
-            }`}
+            className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${activeTab === 'archived'
+              ? 'bg-slate-700 text-white shadow-lg'
+              : 'text-slate-600 hover:bg-slate-100'
+              }`}
           >
             <Archive className="w-5 h-5" />
             <span>ข้อมูลที่เก็บถาวร</span>
@@ -605,287 +610,289 @@ const UserManagementPage = () => {
 
         {activeTab === 'current' ? (
           <>
-        {/* Stats & Filters Combined Section */}
-        <div className="bg-white rounded-xl shadow-md border overflow-hidden">
-          {/* Stats Row */}
-          <div className="grid grid-cols-6 border-b">
-            {Object.entries(ROLE_STYLES).map(([role, style], index) => (
-              <div 
-                key={role} 
-                className={`p-4 cursor-pointer transition-all hover:bg-slate-50 ${index < 5 ? 'border-r' : ''} ${selectedRole === role ? 'bg-slate-100' : ''}`}
-                onClick={() => setSelectedRole(selectedRole === role ? 'all' : role)}
-              >
-                <div className="text-center">
-                  <p className="text-xs text-slate-500 font-medium mb-1">{style.label}</p>
-                  <p className="text-3xl font-bold text-slate-800">{roleCounts[role] || 0}</p>
-                </div>
-              </div>
-            ))}
-            <div className="p-4 bg-gradient-to-br from-slate-700 to-slate-800 text-white">
-              <div className="text-center">
-                <p className="text-xs text-slate-300 font-medium mb-1">รวมทั้งหมด</p>
-                <p className="text-3xl font-bold">{users.length}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Filters Row */}
-          <div className="p-4 bg-slate-50">
-            <div className="flex items-center gap-4">
-              {/* Search */}
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <input
-                    type="text"
-                    placeholder="ค้นหาด้วยรหัส, ชื่อ-นามสกุล, ตำแหน่ง..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-11 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-all bg-white"
-                  />
-                </div>
-              </div>
-
-              {/* Department Filter */}
-              <select
-                value={selectedDepartment}
-                onChange={(e) => setSelectedDepartment(e.target.value)}
-                className="px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 bg-white min-w-[200px] font-medium"
-              >
-                <option value="all">ทุกกลุ่มงาน ({users.length})</option>
-                {Object.entries(DEPARTMENT_CODES).map(([code, info]) => (
-                  departmentCounts[code] > 0 && (
-                    <option key={code} value={code}>
-                      {info.short} {info.full} ({departmentCounts[code] || 0})
-                    </option>
-                  )
-                ))}
-              </select>
-
-              {/* Role Filter */}
-              <select
-                value={selectedRole}
-                onChange={(e) => setSelectedRole(e.target.value)}
-                className="px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 bg-white min-w-[150px] font-medium"
-              >
-                <option value="all">ทุกบทบาท</option>
-                {Object.entries(ROLE_STYLES).map(([role, style]) => (
-                  <option key={role} value={role}>
-                    {style.label} ({roleCounts[role] || 0})
-                  </option>
-                ))}
-              </select>
-
-              {/* Clear Filters */}
-              {(searchTerm || selectedDepartment !== 'all' || selectedRole !== 'all') && (
-                <button 
-                  onClick={() => {
-                    setSearchTerm('');
-                    setSelectedDepartment('all');
-                    setSelectedRole('all');
-                  }}
-                  className="px-4 py-2.5 text-slate-600 hover:bg-slate-200 border border-slate-300 rounded-lg transition-colors flex items-center gap-2 font-medium bg-white"
-                >
-                  <X className="w-4 h-4" />
-                  ล้าง
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Users List */}
-        <div className="bg-white/50 rounded-2xl border border-gray-100">
-          {/* List Header */}
-          <div className="px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-gray-100 rounded-xl">
-                <Briefcase className="w-5 h-5 text-gray-600" />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-gray-800">รายชื่อบุคลากร</h2>
-                <p className="text-sm text-gray-400">
-                  {filteredUsers.length} ราย
-                  {filteredUsers.length !== users.length && ` จากทั้งหมด ${users.length} ราย`}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="border-t border-gray-100"></div>
-          <div>
-            {loading ? (
-              <div className="flex items-center justify-center py-20">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-500 border-t-transparent mx-auto"></div>
-                  <p className="text-slate-500 mt-4">กำลังโหลดข้อมูล...</p>
-                </div>
-              </div>
-            ) : filteredUsers.length === 0 ? (
-              <div className="text-center py-20 text-slate-500">
-                <Users className="w-16 h-16 mx-auto mb-4 opacity-30" />
-                <p className="text-lg font-medium">ไม่พบข้อมูลบุคลากร</p>
-                <p className="text-sm mt-1">ลองเปลี่ยนเงื่อนไขการค้นหา</p>
-              </div>
-            ) : (
-              <div className="p-4 space-y-3">
-                {filteredUsers.map((user, index) => {
-                  const roleStyle = getRoleStyle(user.role_name);
-                  const deptInfo = getDeptInfo(user.department_code);
-                  return (
-                    <div
-                      key={user.id}
-                      className="bg-white rounded-2xl border border-gray-100 hover:border-gray-200 hover:shadow-lg transition-all duration-200 overflow-hidden"
-                    >
-                      {/* Card Content */}
-                      <div className="p-5">
-                        {/* Row 1: Avatar + Info + Leave Balances */}
-                        <div className="flex items-start gap-4">
-                          {/* Index */}
-                          <span className="text-indigo-400 text-xs font-bold mt-3 w-5 text-right shrink-0">{index + 1}</span>
-
-                          {/* Avatar */}
-                          <div className="relative shrink-0">
-                            {user.profile_image_url ? (
-                              <img
-                                src={user.profile_image_url}
-                                alt="Profile"
-                                className="w-14 h-14 rounded-2xl object-cover border-2 border-gray-100"
-                              />
-                            ) : (
-                              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-100 to-blue-200 flex items-center justify-center text-indigo-600 font-bold text-xl border-2 border-indigo-50">
-                                {user.first_name?.charAt(0) || 'U'}
-                              </div>
-                            )}
-                            {/* Online Status Dot */}
-                            <span className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white ${user.is_active ? 'bg-emerald-400' : 'bg-gray-300'}`}></span>
-                          </div>
-
-                          {/* Name + Details */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2.5 flex-wrap">
-                              <h3 className="font-semibold text-gray-900 text-[15px] leading-tight">
-                                {user.title}{user.first_name} {user.last_name}
-                              </h3>
-                              <span className="font-mono text-[11px] text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-md font-semibold">
-                                {user.employee_code}
-                              </span>
-                            </div>
-                            <p className="text-sm text-gray-500 mt-1">
-                              {user.position || '-'}
-                            </p>
-                            {user.phone && (
-                              <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
-                                <Phone className="w-3 h-3" />
-                                {user.phone}
-                              </p>
-                            )}
-                          </div>
-
-                          {/* Leave Balances - Right Side */}
-                          <div className="shrink-0 hidden sm:flex items-center gap-2">
-                            <div className="text-center px-3 py-2 bg-gray-50 rounded-xl min-w-[56px]">
-                              <p className="text-[10px] text-gray-400 font-medium leading-tight">ลาป่วย</p>
-                              <p className="text-lg font-bold text-gray-700 leading-tight mt-0.5">{user.sick_leave_balance || 0}</p>
-                            </div>
-                            <div className="text-center px-3 py-2 bg-gray-50 rounded-xl min-w-[56px]">
-                              <p className="text-[10px] text-gray-400 font-medium leading-tight">ลากิจ</p>
-                              <p className="text-lg font-bold text-gray-700 leading-tight mt-0.5">{user.personal_leave_balance || 0}</p>
-                            </div>
-                            <div className={`text-center px-3 py-2 rounded-xl min-w-[56px] ${user.vacation_carryover > 0 ? 'bg-gray-100' : 'bg-gray-50'}`}>
-                              <p className="text-[10px] text-gray-400 font-medium leading-tight">พักผ่อน</p>
-                              <p className="text-lg font-bold text-gray-700 leading-tight mt-0.5" title={user.vacation_carryover > 0 ? `ปีนี้ ${user.vacation_leave_balance || 0} + ยกยอด ${user.vacation_carryover}` : ''}>
-                                {user.total_vacation_balance || (user.vacation_leave_balance || 0) + (user.vacation_carryover || 0)}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Row 2: Tags + Actions */}
-                        <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-50">
-                          {/* Tags */}
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${deptInfo.color}`} title={deptInfo.full}>
-                              {deptInfo.short}
-                            </span>
-                            <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${roleStyle.bg} ${roleStyle.text}`}>
-                              {roleStyle.label}
-                            </span>
-                            {user.is_active ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-50 text-emerald-600">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                                ปฏิบัติงาน
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-gray-50 text-gray-400">
-                                <span className="w-1.5 h-1.5 rounded-full bg-gray-300"></span>
-                                ไม่ใช้งาน
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Action Buttons */}
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => handleViewDetail(user)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition-colors"
-                              title="ดูรายละเอียด"
-                            >
-                              <Eye className="w-3.5 h-3.5" />
-                              <span className="hidden lg:inline">ดูข้อมูล</span>
-                            </button>
-                            <button
-                              onClick={() => handleOpenEditModal(user)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-600 hover:text-amber-800 hover:bg-amber-50 rounded-lg transition-colors"
-                              title="แก้ไข"
-                            >
-                              <Edit2 className="w-3.5 h-3.5" />
-                              <span className="hidden lg:inline">แก้ไข</span>
-                            </button>
-                            <button
-                              onClick={() => handleOpenResetPasswordModal(user)}
-                              className="p-1.5 text-orange-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-                              title="รีเซ็ตรหัสผ่าน"
-                            >
-                              <Key className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={() => handleOpenLeaveBalanceModal(user)}
-                              className="p-1.5 text-teal-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
-                              title="แก้ไขวันลา"
-                            >
-                              <Calendar className="w-3.5 h-3.5" />
-                            </button>
-                            {user.id === currentUser?.id ? (
-                              <span className="p-1.5 text-gray-200 cursor-not-allowed" title="บัญชีตัวเอง">
-                                <UserCircle className="w-3.5 h-3.5" />
-                              </span>
-                            ) : user.is_active ? (
-                              <button
-                                onClick={() => handleOpenDeleteModal(user)}
-                                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                title="ปิดการใช้งาน"
-                              >
-                                <PowerOff className="w-3.5 h-3.5" />
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() => handleActivateUser(user)}
-                                className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                                title="เปิดการใช้งาน"
-                              >
-                                <Power className="w-3.5 h-3.5" />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
+            {/* Stats & Filters Combined Section */}
+            <div className="bg-white rounded-xl shadow-md border overflow-hidden">
+              {/* Stats Row */}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 border-b divide-x divide-y md:divide-y-0">
+                {Object.entries(ROLE_STYLES).map(([role, style], index) => (
+                  <div
+                    key={role}
+                    className={`p-4 cursor-pointer transition-all hover:bg-slate-50 ${selectedRole === role ? 'bg-slate-100' : ''}`}
+                    onClick={() => setSelectedRole(selectedRole === role ? 'all' : role)}
+                  >
+                    <div className="text-center">
+                      <p className="text-xs text-slate-500 font-medium mb-1">{style.label}</p>
+                      <p className="text-3xl font-bold text-slate-800">{roleCounts[role] || 0}</p>
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
+                <div className="p-4 bg-gradient-to-br from-slate-700 to-slate-800 text-white">
+                  <div className="text-center">
+                    <p className="text-xs text-slate-300 font-medium mb-1">รวมทั้งหมด</p>
+                    <p className="text-3xl font-bold">{users.length}</p>
+                  </div>
+                </div>
               </div>
-            )}
-          </div>
-        </div>
+
+              {/* Filters Row */}
+              <div className="p-4 bg-slate-50">
+                <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4">
+                  {/* Search */}
+                  <div className="flex-1">
+                    <div className="relative">
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder="ค้นหาด้วยรหัส, ชื่อ-นามสกุล, ตำแหน่ง..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-11 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-all bg-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    {/* Department Filter */}
+                    <select
+                      value={selectedDepartment}
+                      onChange={(e) => setSelectedDepartment(e.target.value)}
+                      className="px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 bg-white min-w-[200px] font-medium w-full sm:w-auto"
+                    >
+                      <option value="all">ทุกกลุ่มงาน ({users.length})</option>
+                      {Object.entries(DEPARTMENT_CODES).map(([code, info]) => (
+                        departmentCounts[code] > 0 && (
+                          <option key={code} value={code}>
+                            {info.short} {info.full} ({departmentCounts[code] || 0})
+                          </option>
+                        )
+                      ))}
+                    </select>
+
+                    {/* Role Filter */}
+                    <select
+                      value={selectedRole}
+                      onChange={(e) => setSelectedRole(e.target.value)}
+                      className="px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 bg-white min-w-[150px] font-medium w-full sm:w-auto"
+                    >
+                      <option value="all">ทุกบทบาท</option>
+                      {Object.entries(ROLE_STYLES).map(([role, style]) => (
+                        <option key={role} value={role}>
+                          {style.label} ({roleCounts[role] || 0})
+                        </option>
+                      ))}
+                    </select>
+
+                    {/* Clear Filters */}
+                    {(searchTerm || selectedDepartment !== 'all' || selectedRole !== 'all') && (
+                      <button
+                        onClick={() => {
+                          setSearchTerm('');
+                          setSelectedDepartment('all');
+                          setSelectedRole('all');
+                        }}
+                        className="px-4 py-2.5 text-slate-600 hover:bg-slate-200 border border-slate-300 rounded-lg transition-colors flex items-center justify-center gap-2 font-medium bg-white w-full sm:w-auto"
+                      >
+                        <X className="w-4 h-4" />
+                        ล้าง
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Users List */}
+            <div className="bg-white/50 rounded-2xl border border-gray-100">
+              {/* List Header */}
+              <div className="px-6 py-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-gray-100 rounded-xl">
+                    <Briefcase className="w-5 h-5 text-gray-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-800">รายชื่อบุคลากร</h2>
+                    <p className="text-sm text-gray-400">
+                      {filteredUsers.length} ราย
+                      {filteredUsers.length !== users.length && ` จากทั้งหมด ${users.length} ราย`}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="border-t border-gray-100"></div>
+              <div>
+                {loading ? (
+                  <div className="flex items-center justify-center py-20">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-500 border-t-transparent mx-auto"></div>
+                      <p className="text-slate-500 mt-4">กำลังโหลดข้อมูล...</p>
+                    </div>
+                  </div>
+                ) : filteredUsers.length === 0 ? (
+                  <div className="text-center py-20 text-slate-500">
+                    <Users className="w-16 h-16 mx-auto mb-4 opacity-30" />
+                    <p className="text-lg font-medium">ไม่พบข้อมูลบุคลากร</p>
+                    <p className="text-sm mt-1">ลองเปลี่ยนเงื่อนไขการค้นหา</p>
+                  </div>
+                ) : (
+                  <div className="p-4 space-y-3">
+                    {filteredUsers.map((user, index) => {
+                      const roleStyle = getRoleStyle(user.role_name);
+                      const deptInfo = getDeptInfo(user.department_code);
+                      return (
+                        <div
+                          key={user.id}
+                          className="bg-white rounded-2xl border border-gray-100 hover:border-gray-200 hover:shadow-lg transition-all duration-200 overflow-hidden"
+                        >
+                          {/* Card Content */}
+                          <div className="p-5">
+                            {/* Row 1: Avatar + Info + Leave Balances */}
+                            <div className="flex items-start gap-4">
+                              {/* Index */}
+                              <span className="text-indigo-400 text-xs font-bold mt-3 w-5 text-right shrink-0">{index + 1}</span>
+
+                              {/* Avatar */}
+                              <div className="relative shrink-0">
+                                {user.profile_image_url ? (
+                                  <img
+                                    src={user.profile_image_url}
+                                    alt="Profile"
+                                    className="w-14 h-14 rounded-2xl object-cover border-2 border-gray-100"
+                                  />
+                                ) : (
+                                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-100 to-blue-200 flex items-center justify-center text-indigo-600 font-bold text-xl border-2 border-indigo-50">
+                                    {user.first_name?.charAt(0) || 'U'}
+                                  </div>
+                                )}
+                                {/* Online Status Dot */}
+                                <span className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white ${user.is_active ? 'bg-emerald-400' : 'bg-gray-300'}`}></span>
+                              </div>
+
+                              {/* Name + Details */}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2.5 flex-wrap">
+                                  <h3 className="font-semibold text-gray-900 text-[15px] leading-tight">
+                                    {user.title}{user.first_name} {user.last_name}
+                                  </h3>
+                                  <span className="font-mono text-[11px] text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-md font-semibold">
+                                    {user.employee_code}
+                                  </span>
+                                </div>
+                                <p className="text-sm text-gray-500 mt-1">
+                                  {user.position || '-'}
+                                </p>
+                                {user.phone && (
+                                  <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
+                                    <Phone className="w-3 h-3" />
+                                    {user.phone}
+                                  </p>
+                                )}
+                              </div>
+
+                              {/* Leave Balances - Right Side */}
+                              <div className="shrink-0 hidden sm:flex items-center gap-2">
+                                <div className="text-center px-3 py-2 bg-gray-50 rounded-xl min-w-[56px]">
+                                  <p className="text-[10px] text-gray-400 font-medium leading-tight">ลาป่วย</p>
+                                  <p className="text-lg font-bold text-gray-700 leading-tight mt-0.5">{user.sick_leave_balance || 0}</p>
+                                </div>
+                                <div className="text-center px-3 py-2 bg-gray-50 rounded-xl min-w-[56px]">
+                                  <p className="text-[10px] text-gray-400 font-medium leading-tight">ลากิจ</p>
+                                  <p className="text-lg font-bold text-gray-700 leading-tight mt-0.5">{user.personal_leave_balance || 0}</p>
+                                </div>
+                                <div className={`text-center px-3 py-2 rounded-xl min-w-[56px] ${user.vacation_carryover > 0 ? 'bg-gray-100' : 'bg-gray-50'}`}>
+                                  <p className="text-[10px] text-gray-400 font-medium leading-tight">พักผ่อน</p>
+                                  <p className="text-lg font-bold text-gray-700 leading-tight mt-0.5" title={user.vacation_carryover > 0 ? `ปีนี้ ${user.vacation_leave_balance || 0} + ยกยอด ${user.vacation_carryover}` : ''}>
+                                    {user.total_vacation_balance || (user.vacation_leave_balance || 0) + (user.vacation_carryover || 0)}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Row 2: Tags + Actions */}
+                            <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-50">
+                              {/* Tags */}
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${deptInfo.color}`} title={deptInfo.full}>
+                                  {deptInfo.short}
+                                </span>
+                                <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${roleStyle.bg} ${roleStyle.text}`}>
+                                  {roleStyle.label}
+                                </span>
+                                {user.is_active ? (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-50 text-emerald-600">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                    ปฏิบัติงาน
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-gray-50 text-gray-400">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-gray-300"></span>
+                                    ไม่ใช้งาน
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Action Buttons */}
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => handleViewDetail(user)}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition-colors"
+                                  title="ดูรายละเอียด"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                  <span className="hidden lg:inline">ดูข้อมูล</span>
+                                </button>
+                                <button
+                                  onClick={() => handleOpenEditModal(user)}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-600 hover:text-amber-800 hover:bg-amber-50 rounded-lg transition-colors"
+                                  title="แก้ไข"
+                                >
+                                  <Edit2 className="w-3.5 h-3.5" />
+                                  <span className="hidden lg:inline">แก้ไข</span>
+                                </button>
+                                <button
+                                  onClick={() => handleOpenResetPasswordModal(user)}
+                                  className="p-1.5 text-orange-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                                  title="รีเซ็ตรหัสผ่าน"
+                                >
+                                  <Key className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleOpenLeaveBalanceModal(user)}
+                                  className="p-1.5 text-teal-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
+                                  title="แก้ไขวันลา"
+                                >
+                                  <Calendar className="w-3.5 h-3.5" />
+                                </button>
+                                {user.id === currentUser?.id ? (
+                                  <span className="p-1.5 text-gray-200 cursor-not-allowed" title="บัญชีตัวเอง">
+                                    <UserCircle className="w-3.5 h-3.5" />
+                                  </span>
+                                ) : user.is_active ? (
+                                  <button
+                                    onClick={() => handleOpenDeleteModal(user)}
+                                    className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                    title="ปิดการใช้งาน"
+                                  >
+                                    <PowerOff className="w-3.5 h-3.5" />
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => handleActivateUser(user)}
+                                    className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                                    title="เปิดการใช้งาน"
+                                  >
+                                    <Power className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
           </>
         ) : (
           /* Archived Users Tab */
@@ -1010,9 +1017,9 @@ const UserManagementPage = () => {
                 {/* Profile Header */}
                 <div className="flex items-center gap-4 p-5 bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl border">
                   {selectedUser.profile_image_url ? (
-                    <img 
-                      src={selectedUser.profile_image_url} 
-                      alt="Profile" 
+                    <img
+                      src={selectedUser.profile_image_url}
+                      alt="Profile"
                       className="w-20 h-20 rounded-full object-cover shadow-lg border-2 border-white"
                     />
                   ) : (
@@ -1111,7 +1118,7 @@ const UserManagementPage = () => {
                       )}
                     </div>
                   </div>
-                  
+
                   {/* แสดงข้อมูลอายุราชการ */}
                   {selectedUser.hire_date && (
                     <div className="mt-4 pt-3 border-t border-slate-200">
@@ -1309,7 +1316,7 @@ const UserManagementPage = () => {
                     <Calendar className="w-5 h-5 text-gray-600" />
                     สิทธิ์การลาเริ่มต้น (ตามระเบียบสำนักนายกรัฐมนตรี พ.ศ. 2555)
                   </h4>
-                  
+
                   {/* Info Box */}
                   <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
                     <div className="flex items-start gap-2">
@@ -1531,6 +1538,21 @@ const UserManagementPage = () => {
                   </select>
                 </div>
 
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">วันเริ่มรับราชการ</label>
+                  <input
+                    type="date"
+                    value={formData.hire_date}
+                    onChange={(e) => setFormData({ ...formData, hire_date: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-gray-400"
+                  />
+                  {formData.hire_date && (
+                    <p className="text-xs text-slate-400 mt-1">
+                      อายุราชการ: {Math.max(0, Math.floor((new Date() - new Date(formData.hire_date)) / (365.25 * 24 * 60 * 60 * 1000)))} ปี
+                    </p>
+                  )}
+                </div>
+
                 <div className="flex gap-3 pt-4">
                   <button
                     type="button"
@@ -1586,7 +1608,7 @@ const UserManagementPage = () => {
                 {/* Delete Options */}
                 <div className="space-y-3">
                   <p className="font-semibold text-slate-700">เลือกวิธีการดำเนินการ:</p>
-                  
+
                   {/* Option 1: Deactivate */}
                   <label className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${deleteMode === 'deactivate' ? 'border-gray-500 bg-gray-50' : 'border-slate-200 hover:border-slate-300'}`}>
                     <input
@@ -1690,13 +1712,12 @@ const UserManagementPage = () => {
                     type="button"
                     onClick={handleDeleteUser}
                     disabled={submitting}
-                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-white rounded-xl transition-colors font-semibold disabled:opacity-50 ${
-                      deleteMode === 'permanent' 
-                        ? 'bg-gray-900 hover:bg-gray-800' 
-                        : deleteMode === 'archive'
-                          ? 'bg-gray-800 hover:bg-gray-700'
-                          : 'bg-gray-700 hover:bg-gray-600'
-                    }`}
+                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-white rounded-xl transition-colors font-semibold disabled:opacity-50 ${deleteMode === 'permanent'
+                      ? 'bg-gray-900 hover:bg-gray-800'
+                      : deleteMode === 'archive'
+                        ? 'bg-gray-800 hover:bg-gray-700'
+                        : 'bg-gray-700 hover:bg-gray-600'
+                      }`}
                   >
                     {submitting ? (
                       <RefreshCw className="w-4 h-4 animate-spin" />
@@ -1880,18 +1901,18 @@ const UserManagementPage = () => {
                       <p className="text-gray-300 text-sm">ปีงบประมาณ พ.ศ. {getCurrentFiscalYear()}</p>
                     </div>
                   </div>
-                  <button 
+                  <button
                     onClick={() => {
                       setShowCarryoverModal(false);
                       setCarryoverResults(null);
-                    }} 
+                    }}
                     className="p-2.5 bg-white/20 hover:bg-white/30 rounded-xl transition-all hover:rotate-90 duration-300"
                   >
                     <X className="w-5 h-5" />
                   </button>
                 </div>
               </div>
-              
+
               <div className="p-6 space-y-4 overflow-y-auto max-h-[calc(90vh-180px)]">
                 {/* ข้อมูลปีงบประมาณ */}
                 <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 shadow-sm">
@@ -1982,7 +2003,7 @@ const UserManagementPage = () => {
                     <span>ยกยอดวันลาพักผ่อน</span>
                     <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">เฉพาะคนที่ยังไม่ได้ยกยอด</span>
                   </button>
-                  
+
                   <button
                     onClick={() => handleProcessAllCarryover(true)}
                     disabled={carryoverProcessing}
@@ -2059,8 +2080,8 @@ const UserManagementPage = () => {
                   <Archive className="w-6 h-6" />
                   ข้อมูลบุคลากรที่เก็บถาวร
                 </h3>
-                <button 
-                  onClick={() => setShowArchivedDetailModal(false)} 
+                <button
+                  onClick={() => setShowArchivedDetailModal(false)}
                   className="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors"
                 >
                   <X className="w-5 h-5" />
@@ -2137,15 +2158,14 @@ const UserManagementPage = () => {
                               )}
                             </div>
                             <div className="text-right">
-                              <span className={`px-2 py-1 rounded-lg text-xs font-medium ${
-                                leave.status === 'approved' ? 'bg-gray-100 text-gray-700' :
+                              <span className={`px-2 py-1 rounded-lg text-xs font-medium ${leave.status === 'approved' ? 'bg-gray-100 text-gray-700' :
                                 leave.status === 'rejected' ? 'bg-gray-100 text-gray-500' :
-                                leave.status === 'cancelled' ? 'bg-slate-100 text-slate-700' :
-                                'bg-gray-100 text-gray-600'
-                              }`}>
+                                  leave.status === 'cancelled' ? 'bg-slate-100 text-slate-700' :
+                                    'bg-gray-100 text-gray-600'
+                                }`}>
                                 {leave.status === 'approved' ? 'อนุมัติ' :
-                                 leave.status === 'rejected' ? 'ไม่อนุมัติ' :
-                                 leave.status === 'cancelled' ? 'ยกเลิก' : 'รอดำเนินการ'}
+                                  leave.status === 'rejected' ? 'ไม่อนุมัติ' :
+                                    leave.status === 'cancelled' ? 'ยกเลิก' : 'รอดำเนินการ'}
                               </span>
                               <p className="text-sm text-slate-500 mt-1">{leave.total_days} วัน</p>
                             </div>
@@ -2182,12 +2202,12 @@ const UserManagementPage = () => {
                   </span>
                 </div>
               </div>
-              
+
               {/* Content */}
               <div className="px-6 pb-6 text-center">
                 <h3 className="text-xl font-bold text-slate-800 mb-2">{confirmModal.title}</h3>
                 <p className="text-slate-600 mb-4">{confirmModal.message}</p>
-                
+
                 {/* Details */}
                 {confirmModal.details && (
                   <div className="bg-slate-50 rounded-xl p-4 mb-4 space-y-2">
@@ -2199,7 +2219,7 @@ const UserManagementPage = () => {
                     ))}
                   </div>
                 )}
-                
+
                 {/* Warning */}
                 {confirmModal.warning && (
                   <div className="flex items-center gap-2 justify-center text-gray-600 bg-gray-50 rounded-lg px-4 py-2.5 mb-4">
@@ -2207,7 +2227,7 @@ const UserManagementPage = () => {
                     <span className="text-sm">{confirmModal.warning}</span>
                   </div>
                 )}
-                
+
                 {/* Buttons */}
                 <div className="flex gap-3 mt-6">
                   <button

@@ -2,7 +2,7 @@
 import { useNavigate } from 'react-router-dom';
 import { adminAPI } from '../../api/admin.api';
 import { formatDate } from '../../utils/formatDate';
-import { getDepartmentThaiCode } from '../../utils/departmentMapping';
+import { getDepartmentThaiAbbr } from '../../utils/departmentMapping';
 import toast from 'react-hot-toast';
 import { XCircle, Clock, Calendar, FileText, History, Filter, Building2, Users, Search, ArrowLeft } from 'lucide-react';
 
@@ -17,31 +17,7 @@ const parseReason = (reason) => {
   }
 };
 
-// Department names mapping
-const DEPARTMENT_NAMES = {
-  'GYS': 'กยส.',
-  'GOK': 'กอก.',
-  'GTS': 'กทส.',
-  'GTP': 'กตป.',
-  'GSS': 'กสส.',
-  'GKC': 'กคฐ.',
-  'GPS': 'กปส.',
-  'GKM': 'กกม.',
-  'SLK': 'สลก.',
-  'TSN': 'ตสน.',
-  'KPR': 'กพร.',
-  'กลุ่มงานยุทธศาสตร์สารสนเทศและการสื่อสาร': 'กยส.',
-  'กลุ่มงานอำนวยการ': 'กอก.',
-  'กลุ่มงานเทคโนโลยีสารสนเทศ': 'กทส.',
-  'กลุ่มงานติดตามประเมินผลด้านสารสนเทศและการสื่อสาร': 'กตป.',
-  'กลุ่มงานเทคโนโลยีการสื่อสาร': 'กสส.',
-  'กลุ่มงานโครงสร้างพื้นฐานด้านสารสนเทศและการสื่อสาร': 'กคฐ.',
-  'กองหลักประกันสุขภาพ': 'กปส.',
-  'กองกฎหมาย': 'กกม.',
-  'สำนักงานเลขานุการกรม': 'สลก.',
-  'กลุ่มตรวจสอบภายใน': 'ตสน.',
-  'กลุ่มพัฒนาระบบบริหาร': 'กพร.',
-};
+
 
 const getStatusBadge = (status) => {
   const statusConfig = {
@@ -99,7 +75,7 @@ export default function AdminCancelHistory() {
   const filteredHistory = cancelHistory.filter(leave => {
     const matchDept = selectedDepartment === 'all' || leave.employee?.department === selectedDepartment;
     const matchStatus = selectedStatus === 'all' || leave.status === selectedStatus;
-    const matchSearch = !searchTerm || 
+    const matchSearch = !searchTerm ||
       leave.employee?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       leave.employee?.employeeCode?.includes(searchTerm) ||
       leave.leaveNumber?.includes(searchTerm);
@@ -127,7 +103,7 @@ export default function AdminCancelHistory() {
 
       {/* Header */}
       <div className="bg-[#1a2744] rounded-xl p-6 text-white shadow-lg">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-xl font-bold flex items-center gap-3">
               <History className="w-7 h-7" />
@@ -135,7 +111,7 @@ export default function AdminCancelHistory() {
             </h1>
             <p className="text-gray-400 mt-1">ผู้บริหารสูงสุด (Level 4) - ประวัติการดำเนินการยกเลิก</p>
           </div>
-          <div className="bg-white/10 backdrop-blur rounded-lg px-6 py-3 text-center border border-gray-500">
+          <div className="bg-white/10 backdrop-blur rounded-lg px-6 py-3 text-center border border-gray-500 w-full md:w-auto">
             <div className="text-3xl font-bold">{cancelHistory.length}</div>
             <div className="text-sm text-gray-400">รายการทั้งหมด</div>
           </div>
@@ -167,11 +143,10 @@ export default function AdminCancelHistory() {
             <button
               key={status.value}
               onClick={() => setSelectedStatus(status.value)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                selectedStatus === status.value
-                  ? 'bg-gray-800 text-white'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${selectedStatus === status.value
+                ? 'bg-gray-800 text-white'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
             >
               {status.label}
             </button>
@@ -186,11 +161,10 @@ export default function AdminCancelHistory() {
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setSelectedDepartment('all')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  selectedDepartment === 'all'
-                    ? 'bg-gray-800 text-white shadow-md'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${selectedDepartment === 'all'
+                  ? 'bg-gray-800 text-white shadow-md'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
               >
                 <Users className="w-4 h-4" />
                 ทั้งหมด
@@ -202,14 +176,13 @@ export default function AdminCancelHistory() {
                 <button
                   key={dept}
                   onClick={() => setSelectedDepartment(dept)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    selectedDepartment === dept
-                      ? 'bg-gray-800 text-white shadow-md'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${selectedDepartment === dept
+                    ? 'bg-gray-800 text-white shadow-md'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
                 >
                   <Building2 className="w-4 h-4" />
-                  {DEPARTMENT_NAMES[dept] || getDepartmentThaiCode(dept) || dept}
+                  {getDepartmentThaiAbbr(dept)}
                   <span className="ml-1 px-2 py-0.5 bg-white/20 rounded-full text-xs">
                     {count}
                   </span>
@@ -230,12 +203,12 @@ export default function AdminCancelHistory() {
       ) : (
         <div className="space-y-4">
           {filteredHistory.map((leave) => (
-            <div 
-              key={leave.id} 
+            <div
+              key={leave.id}
               className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow"
             >
               <div className="p-6">
-                <div className="flex flex-wrap gap-6">
+                <div className="flex flex-col md:flex-row gap-6">
                   {/* Employee Info */}
                   <div className="flex items-center gap-4 min-w-[250px]">
                     <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
@@ -247,7 +220,7 @@ export default function AdminCancelHistory() {
                       <h3 className="font-semibold text-slate-800">{leave.employee?.name}</h3>
                       <p className="text-sm text-slate-500">รหัส: {leave.employee?.employeeCode}</p>
                       <span className="inline-block mt-1 px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded-full">
-                        {DEPARTMENT_NAMES[leave.employee?.department] || getDepartmentThaiCode(leave.employee?.department) || leave.employee?.department}
+                        {getDepartmentThaiAbbr(leave.employee?.department)}
                       </span>
                     </div>
                   </div>

@@ -17,9 +17,9 @@ export const authAPI = {
   },
 
   // Change password
-  changePassword: async (oldPassword, newPassword) => {
+  changePassword: async (currentPassword, newPassword) => {
     const response = await axios.put('/auth/change-password', {
-      oldPassword,
+      currentPassword,
       newPassword,
     });
     return response.data;

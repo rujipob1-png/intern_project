@@ -11,6 +11,11 @@ export const DEPARTMENT_MAP = {
   'GTP': 'กตป.',
   'GSS': 'กสส.',
   'GKC': 'กคฐ.',
+  'GPS': 'กปส.',
+  'GKM': 'กกม.',
+  'SLK': 'สลก.',
+  'TSN': 'ตสน.',
+  'KPR': 'กพร.',
 };
 
 // Mapping รหัสกลุ่ม → ชื่อเต็มภาษาไทย
@@ -21,6 +26,11 @@ export const DEPARTMENT_FULL_NAME = {
   'GTP': 'กลุ่มงานติดตามประเมินผลด้านสารสนเทศและการสื่อสาร',
   'GSS': 'กลุ่มงานเทคโนโลยีการสื่อสาร',
   'GKC': 'กลุ่มงานโครงสร้างพื้นฐานด้านสารสนเทศและการสื่อสาร (กคฐ.)',
+  'GPS': 'กองหลักประกันสุขภาพ',
+  'GKM': 'กองกฎหมาย',
+  'SLK': 'สำนักงานเลขานุการกรม',
+  'TSN': 'กลุ่มตรวจสอบภายใน',
+  'KPR': 'กลุ่มพัฒนาระบบบริหาร',
 };
 
 /**
@@ -41,6 +51,29 @@ export const getDepartmentThaiCode = (code) => {
 export const getDepartmentFullName = (code) => {
   if (!code) return '-';
   return DEPARTMENT_FULL_NAME[code.toUpperCase()] || code;
+};
+
+/**
+ * แปลงรหัสกลุ่มหรือชื่อเต็ม เป็นตัวย่อภาษาไทย
+ * @param {string} key - รหัสกลุ่มหรือชื่อเต็ม
+ * @returns {string} ตัวย่อภาษาไทย เช่น 'กอก.'
+ */
+export const getDepartmentThaiAbbr = (key) => {
+  if (!key) return '-';
+  const code = key.toUpperCase();
+
+  // Try mapping from code directly
+  if (DEPARTMENT_MAP[code]) {
+    return DEPARTMENT_MAP[code];
+  }
+
+  // Try finding code from full name
+  const entry = Object.entries(DEPARTMENT_FULL_NAME).find(([k, v]) => v === key);
+  if (entry) {
+    return DEPARTMENT_MAP[entry[0]];
+  }
+
+  return key;
 };
 
 /**

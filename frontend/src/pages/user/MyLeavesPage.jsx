@@ -9,10 +9,10 @@ import { formatDate } from '../../utils/formatDate';
 import { LEAVE_STATUS, LEAVE_STATUS_COLORS, LEAVE_TYPE_CODES } from '../../utils/constants';
 import { useRealtime } from '../../contexts/RealtimeContext';
 import toast from 'react-hot-toast';
-import { 
-  Search, 
-  Filter, 
-  Eye, 
+import {
+  Search,
+  Filter,
+  Eye,
   XCircle,
   Clock,
   CheckCircle,
@@ -29,7 +29,7 @@ export const MyLeavesPage = () => {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedLeave, setSelectedLeave] = useState(null);
   const [cancelReason, setCancelReason] = useState('');
-  
+
   const [filters, setFilters] = useState({
     search: '',
     status: 'all',
@@ -49,9 +49,9 @@ export const MyLeavesPage = () => {
     setLoading(true);
     try {
       const response = await leaveAPI.getMyLeaves();
-      
+
       console.log('My Leaves Response:', response);
-      
+
       if (response.success) {
         // Backend ส่งมาเป็น {leaves: [], pagination: {}}
         const leavesData = response.data?.leaves || response.data || [];
@@ -226,7 +226,7 @@ export const MyLeavesPage = () => {
     <MainLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">
               คำขอลาของฉัน
@@ -235,7 +235,7 @@ export const MyLeavesPage = () => {
               รายการคำขอลาทั้งหมด
             </p>
           </div>
-          <Button onClick={() => navigate('/create-leave')}>
+          <Button onClick={() => navigate('/create-leave')} className="w-full sm:w-auto">
             <FileText className="w-5 h-5" />
             สร้างคำขอลาใหม่
           </Button>
@@ -339,14 +339,14 @@ export const MyLeavesPage = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">
-                            {leave.leaveType || 
-                             leave.leaveTypes?.typeName || 
-                             leave.leave_types?.type_name_th ||
-                             leave.leave_types?.type_name || 
-                             'ไม่ระบุ'}
+                            {leave.leaveType ||
+                              leave.leaveTypes?.typeName ||
+                              leave.leave_types?.type_name_th ||
+                              leave.leave_types?.type_name ||
+                              'ไม่ระบุ'}
                           </div>
                           <div className="text-xs text-gray-500">
-                            {(leave.leaveTypeCode || leave.leaveTypes?.typeCode || leave.leave_types?.type_code) && 
+                            {(leave.leaveTypeCode || leave.leaveTypes?.typeCode || leave.leave_types?.type_code) &&
                               `(${LEAVE_TYPE_CODES[(leave.leaveTypeCode || leave.leaveTypes?.typeCode || leave.leave_types?.type_code).toLowerCase()] || ''})`
                             }
                           </div>
@@ -444,7 +444,7 @@ export const MyLeavesPage = () => {
                       <p className="font-semibold text-gray-900">{selectedLeave.leaveType || selectedLeave.leave_type}</p>
                     </div>
                   </div>
-                  
+
                   <div>
                     <label className="text-sm text-gray-600">ช่วงวันที่ลา</label>
                     <p className="font-semibold text-gray-900">

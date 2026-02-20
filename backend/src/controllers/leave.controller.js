@@ -88,7 +88,7 @@ export const createLeave = async (req, res) => {
         } catch (e) {
           // ถ้า parse ไม่ได้ ใช้ start_date/end_date range
         }
-        
+
         const overlap = selectedDates.filter(d => existingDates.includes(d));
         if (overlap.length > 0) {
           return errorResponse(
@@ -296,17 +296,17 @@ export const createLeave = async (req, res) => {
         remarks: 'สร้างคำขอลา'
       });
 
-    // ส่ง email แจ้งเตือนผู้อนุมัติ
-    try {
-      if (isGOKDepartment) {
-        // GOK ข้าม Director ไป central_office_staff เลย
-        await emailService.notifyApprovers(leave.id, 'central_office_staff');
-      } else {
-        // แจ้ง Director ในกองเดียวกัน
-        await emailService.notifyApprovers(leave.id, 'director', requestor?.department);
-      }
-    } catch (emailError) {
-      console.log('Approver email notification skipped:', emailError.message);
+    // ส่ง email แจ้งเตือนผู้อนุมัติ (fire-and-forget — ไม่บล็อค response)
+    if (isGOKDepartment) {
+      // GOK ข้าม Director ไป central_office_staff เลย
+      emailService.notifyApprovers(leave.id, 'central_office_staff').catch(err => {
+        console.log('Approver email notification skipped:', err.message);
+      });
+    } else {
+      // แจ้ง Director ในกองเดียวกัน
+      emailService.notifyApprovers(leave.id, 'director', requestor?.department).catch(err => {
+        console.log('Approver email notification skipped:', err.message);
+      });
     }
 
     // แยก reason และ selected_dates
@@ -390,7 +390,7 @@ export const getMyLeaves = async (req, res) => {
     const processedLeaves = leaves.map(leave => {
       let actualReason = leave.reason;
       let selectedDatesArray = leave.selected_dates || [];
-      
+
       // ถ้า column ว่าง ลองดึงจาก reason JSON
       try {
         const parsed = JSON.parse(leave.reason);
@@ -679,7 +679,7 @@ export const cancelLeave = async (req, res) => {
         .single();
 
       const requestorName = `${requestor?.first_name || ''} ${requestor?.last_name || ''}`.trim();
-      
+
       // ดึง leave type
       const { data: leaveType } = await supabaseAdmin
         .from('leave_types')
@@ -833,9 +833,9 @@ export const approveCancelLeave = async (req, res) => {
       });
 
     // แจ้งเตือนผู้ยื่นคำขอ
-    const statusMessage = newStatus === LEAVE_STATUS.CANCELLED 
+    const statusMessage = newStatus === LEAVE_STATUS.CANCELLED
       ? 'คำขอยกเลิกการลาของคุณได้รับการอนุมัติแล้ว'
-      : action === 'reject' 
+      : action === 'reject'
         ? 'คำขอยกเลิกการลาของคุณถูกปฏิเสธ'
         : 'คำขอยกเลิกการลาของคุณผ่านการพิจารณาขั้นหนึ่งแล้ว รอการพิจารณาจากผู้บังคับบัญชาขั้นถัดไป';
 
@@ -988,11 +988,11 @@ export const getCalendarLeaves = async (req, res) => {
         .from('users')
         .select('id')
         .eq('department', currentUser.department);
-      
+
       const deptUserIds = deptUsers?.map(u => u.id) || [userId];
-      
+
       query = query.in('user_id', deptUserIds);
-      
+
       // If not their own leave, only show approved
       if (!status) {
         query = query.or(`user_id.eq.${userId},status.eq.approved_final`);
@@ -1003,7 +1003,7 @@ export const getCalendarLeaves = async (req, res) => {
         .from('users')
         .select('id')
         .eq('department', currentUser.department);
-      
+
       const deptUserIds = deptUsers?.map(u => u.id) || [];
       query = query.in('user_id', deptUserIds);
     }
@@ -1020,7 +1020,7 @@ export const getCalendarLeaves = async (req, res) => {
         .from('users')
         .select('id')
         .eq('department', department);
-      
+
       const deptUserIds = deptUsers?.map(u => u.id) || [];
       if (deptUserIds.length > 0) {
         query = query.in('user_id', deptUserIds);

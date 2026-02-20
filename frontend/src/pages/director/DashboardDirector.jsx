@@ -4,7 +4,7 @@ import { directorAPI } from '../../api/director.api';
 import { notificationAPI } from '../../api/notification.api';
 import { LEAVE_STATUS } from '../../utils/constants';
 import { formatDate } from '../../utils/formatDate';
-import { getDepartmentThaiCode } from '../../utils/departmentMapping';
+import { getDepartmentThaiAbbr } from '../../utils/departmentMapping';
 import { Button } from '../../components/common/Button';
 import { Card } from '../../components/common/Card';
 import { useConfirm } from '../../components/common/ConfirmDialog';
@@ -12,33 +12,7 @@ import { useRealtime } from '../../contexts/RealtimeContext';
 import toast from 'react-hot-toast';
 import { CheckCircle, XCircle, Clock, User, Calendar, FileText, AlertCircle, ArrowLeft, Building2, Stamp, Bell, Trash2, Filter, Users, Search } from 'lucide-react';
 
-// Department names mapping (รองรับทั้งรหัสภาษาอังกฤษและชื่อเต็มภาษาไทย)
-const DEPARTMENT_NAMES = {
-  // รหัสภาษาอังกฤษ
-  'GYS': 'กยส.',
-  'GOK': 'กอก.',
-  'GTS': 'กทส.',
-  'GTP': 'กตป.',
-  'GSS': 'กสส.',
-  'GKC': 'กคฐ.',
-  'GPS': 'กปส.',
-  'GKM': 'กกม.',
-  'SLK': 'สลก.',
-  'TSN': 'ตสน.',
-  'KPR': 'กพร.',
-  // ชื่อเต็มภาษาไทย
-  'กลุ่มงานยุทธศาสตร์สารสนเทศและการสื่อสาร': 'กยส.',
-  'กลุ่มงานอำนวยการ': 'กอก.',
-  'กลุ่มงานเทคโนโลยีสารสนเทศ': 'กทส.',
-  'กลุ่มงานติดตามประเมินผลด้านสารสนเทศและการสื่อสาร': 'กตป.',
-  'กลุ่มงานเทคโนโลยีการสื่อสาร': 'กสส.',
-  'กลุ่มงานโครงสร้างพื้นฐานด้านสารสนเทศและการสื่อสาร': 'กคฐ.',
-  'กองหลักประกันสุขภาพ': 'กปส.',
-  'กองกฎหมาย': 'กกม.',
-  'สำนักงานเลขานุการกรม': 'สลก.',
-  'กลุ่มตรวจสอบภายใน': 'ตสน.',
-  'กลุ่มพัฒนาระบบบริหาร': 'กพร.', 
-};
+
 
 export default function DashboardDirector() {
   const navigate = useNavigate();
@@ -64,7 +38,7 @@ export default function DashboardDirector() {
   // Filter leaves by selected department and search term
   const filteredLeaves = pendingLeaves.filter(leave => {
     const matchDept = selectedDepartment === 'all' || leave.employee?.department === selectedDepartment;
-    const matchSearch = !searchTerm || 
+    const matchSearch = !searchTerm ||
       leave.employee?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       leave.employee?.employeeCode?.includes(searchTerm) ||
       leave.leaveNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -282,7 +256,7 @@ export default function DashboardDirector() {
                       if (dateStr && !dateStr.includes('Z') && !dateStr.includes('+')) {
                         dateStr = dateStr + 'Z';
                       }
-                      return new Date(dateStr).toLocaleDateString('th-TH', { 
+                      return new Date(dateStr).toLocaleDateString('th-TH', {
                         day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
                       });
                     })()}
@@ -312,17 +286,15 @@ export default function DashboardDirector() {
             {/* All departments button */}
             <button
               onClick={() => setSelectedDepartment('all')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                selectedDepartment === 'all'
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${selectedDepartment === 'all'
                   ? 'bg-slate-600 text-white shadow-md'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
+                }`}
             >
               <Users className="w-4 h-4" />
               <span>ทั้งหมด</span>
-              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                selectedDepartment === 'all' ? 'bg-white/20' : 'bg-slate-200 text-slate-600'
-              }`}>
+              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${selectedDepartment === 'all' ? 'bg-white/20' : 'bg-slate-200 text-slate-600'
+                }`}>
                 {pendingLeaves.length}
               </span>
             </button>
@@ -334,27 +306,25 @@ export default function DashboardDirector() {
                 <button
                   key={dept}
                   onClick={() => setSelectedDepartment(dept)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                    selectedDepartment === dept
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${selectedDepartment === dept
                       ? 'bg-slate-600 text-white shadow-md'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
+                    }`}
                 >
                   <Building2 className="w-4 h-4" />
-                  <span>{DEPARTMENT_NAMES[dept] || dept}</span>
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                    selectedDepartment === dept ? 'bg-white/20' : 'bg-slate-200 text-slate-600'
-                  }`}>
+                  <span>{getDepartmentThaiAbbr(dept)}</span>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${selectedDepartment === dept ? 'bg-white/20' : 'bg-slate-200 text-slate-600'
+                    }`}>
                     {count}
                   </span>
                 </button>
               ))}
           </div>
-          
+
           {selectedDepartment !== 'all' && (
             <div className="mt-3 flex items-center gap-2 text-sm text-slate-600">
               <span>แสดงเฉพาะ:</span>
-              <span className="font-semibold">{DEPARTMENT_NAMES[selectedDepartment] || selectedDepartment}</span>
+              <span className="font-semibold">{getDepartmentThaiAbbr(selectedDepartment)}</span>
               <span className="text-slate-400">({filteredLeaves.length} รายการ)</span>
             </div>
           )}
@@ -417,7 +387,7 @@ export default function DashboardDirector() {
                       </h3>
                       <p className="text-sm text-slate-500">รหัส: {leave.employee?.employeeCode}</p>
                       <span className="inline-block mt-1 px-3 py-1 bg-slate-200 text-slate-700 text-xs font-semibold rounded-full">
-                        {getDepartmentThaiCode(leave.employee?.department) || 'ไม่ระบุแผนก'}
+                        {getDepartmentThaiAbbr(leave.employee?.department) || 'ไม่ระบุแผนก'}
                       </span>
                     </div>
                   </div>

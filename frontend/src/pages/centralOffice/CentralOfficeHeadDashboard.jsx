@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { centralOfficeAPI } from '../../api/centralOffice.api';
 import { LEAVE_STATUS } from '../../utils/constants';
 import { formatDate } from '../../utils/formatDate';
-import { getDepartmentThaiCode } from '../../utils/departmentMapping';
+import { getDepartmentThaiAbbr } from '../../utils/departmentMapping';
 import { Card } from '../../components/common/Card';
 import { useConfirm } from '../../components/common/ConfirmDialog';
 import { useRealtime } from '../../contexts/RealtimeContext';
@@ -22,33 +22,7 @@ const parseReason = (reason) => {
   }
 };
 
-// Department names mapping (รองรับทั้งรหัสภาษาอังกฤษและชื่อเต็มภาษาไทย)
-const DEPARTMENT_NAMES = {
-  // รหัสภาษาอังกฤษ
-  'GYS': 'กยส.',
-  'GOK': 'กอก.',
-  'GTS': 'กทส.',
-  'GTP': 'กตป.',
-  'GSS': 'กสส.',
-  'GKC': 'กคฐ.',
-  'GPS': 'กปส.',
-  'GKM': 'กกม.',
-  'SLK': 'สลก.',
-  'TSN': 'ตสน.',
-  'KPR': 'กพร.',
-  // ชื่อเต็มภาษาไทย
-  'กลุ่มงานยุทธศาสตร์สารสนเทศและการสื่อสาร': 'กยส.',
-  'กลุ่มงานอำนวยการ': 'กอก.',
-  'กลุ่มงานเทคโนโลยีสารสนเทศ': 'กทส.',
-  'กลุ่มงานติดตามประเมินผลด้านสารสนเทศและการสื่อสาร': 'กตป.',
-  'กลุ่มงานเทคโนโลยีการสื่อสาร': 'กสส.',
-  'กลุ่มงานโครงสร้างพื้นฐานด้านสารสนเทศและการสื่อสาร': 'กคฐ.',
-  'กองหลักประกันสุขภาพ': 'กปส.',
-  'กองกฎหมาย': 'กกม.',
-  'สำนักงานเลขานุการกรม': 'สลก.',
-  'กลุ่มตรวจสอบภายใน': 'ตสน.',
-  'กลุ่มพัฒนาระบบบริหาร': 'กพร.',
-};
+
 
 export default function CentralOfficeHeadDashboard() {
   const navigate = useNavigate();
@@ -74,7 +48,7 @@ export default function CentralOfficeHeadDashboard() {
   // Filter leaves by selected department and search term
   const filteredLeaves = pendingLeaves.filter(leave => {
     const matchDept = selectedDepartment === 'all' || leave.employee?.department === selectedDepartment;
-    const matchSearch = !searchTerm || 
+    const matchSearch = !searchTerm ||
       leave.employee?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       leave.employee?.employeeCode?.includes(searchTerm) ||
       leave.leaveNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -175,13 +149,13 @@ export default function CentralOfficeHeadDashboard() {
         rejectReason,
         remarks
       );
-      
+
       let message = `🎉 อนุมัติ ${approvedDates.length} วัน`;
       if (rejectedDates.length > 0) {
         message += ` (ไม่อนุมัติ ${rejectedDates.length} วัน)`;
       }
       toast.success(message);
-      
+
       setEditModalOpen(false);
       setEditingLeave(null);
       setRemarks('');
@@ -241,17 +215,15 @@ export default function CentralOfficeHeadDashboard() {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setSelectedDepartment('all')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                selectedDepartment === 'all'
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${selectedDepartment === 'all'
                   ? 'bg-gray-800 text-white'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
+                }`}
             >
               <Users className="w-4 h-4" />
               <span>ทั้งหมด</span>
-              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                selectedDepartment === 'all' ? 'bg-white/20' : 'bg-gray-200 text-gray-600'
-              }`}>
+              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${selectedDepartment === 'all' ? 'bg-white/20' : 'bg-gray-200 text-gray-600'
+                }`}>
                 {pendingLeaves.length}
               </span>
             </button>
@@ -262,27 +234,25 @@ export default function CentralOfficeHeadDashboard() {
                 <button
                   key={dept}
                   onClick={() => setSelectedDepartment(dept)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                    selectedDepartment === dept
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${selectedDepartment === dept
                       ? 'bg-gray-800 text-white'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
+                    }`}
                 >
                   <Building2 className="w-4 h-4" />
-                  <span>{DEPARTMENT_NAMES[dept] || dept}</span>
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                    selectedDepartment === dept ? 'bg-white/20' : 'bg-gray-200 text-gray-600'
-                  }`}>
+                  <span>{getDepartmentThaiAbbr(dept)}</span>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${selectedDepartment === dept ? 'bg-white/20' : 'bg-gray-200 text-gray-600'
+                    }`}>
                     {count}
                   </span>
                 </button>
               ))}
           </div>
-          
+
           {selectedDepartment !== 'all' && (
             <div className="mt-3 flex items-center gap-2 text-sm text-gray-600">
               <span>แสดงเฉพาะ:</span>
-              <span className="font-semibold">{DEPARTMENT_NAMES[selectedDepartment] || selectedDepartment}</span>
+              <span className="font-semibold">{getDepartmentThaiAbbr(selectedDepartment)}</span>
               <span className="text-gray-400">({filteredLeaves.length} รายการ)</span>
             </div>
           )}
@@ -345,7 +315,7 @@ export default function CentralOfficeHeadDashboard() {
                       </h3>
                       <p className="text-sm text-gray-500">รหัส: {leave.employee?.employeeCode}</p>
                       <span className="inline-block mt-1 px-3 py-1 bg-gray-200 text-gray-700 text-xs font-semibold rounded-full">
-                        {getDepartmentThaiCode(leave.employee?.department || leave.department_name) || 'ไม่ระบุแผนก'}
+                        {getDepartmentThaiAbbr(leave.employee?.department || leave.department_name) || 'ไม่ระบุแผนก'}
                       </span>
                     </div>
                   </div>

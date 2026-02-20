@@ -87,7 +87,7 @@ export const LeaveDetailPage = () => {
     }
 
     setShowCancelModal(false);
-    
+
     try {
       const response = await leaveAPI.cancelLeave(id, cancelReason);
       if (response.success) {
@@ -209,10 +209,10 @@ export const LeaveDetailPage = () => {
                             <div className="mt-2 space-y-2">
                               <p className="text-red-700">
                                 <span className="font-medium">ผู้พิจารณา: </span>
-                                {rejectedApproval.approver?.name || 
-                                 rejectedApproval.approver?.full_name ||
-                                 `${rejectedApproval.approver?.title || ''}${rejectedApproval.approver?.first_name || ''} ${rejectedApproval.approver?.last_name || ''}`.trim() ||
-                                 'ไม่ระบุ'}
+                                {rejectedApproval.approver?.name ||
+                                  rejectedApproval.approver?.full_name ||
+                                  `${rejectedApproval.approver?.title || ''}${rejectedApproval.approver?.first_name || ''} ${rejectedApproval.approver?.last_name || ''}`.trim() ||
+                                  'ไม่ระบุ'}
                               </p>
                               {(rejectedApproval.comment || rejectedApproval.comments) && (
                                 <div className="bg-red-100 p-3 rounded-lg">
@@ -246,12 +246,12 @@ export const LeaveDetailPage = () => {
                     </label>
                     <p className="text-gray-900 font-medium">
                       {typeof leave.leaveType === 'string' ? leave.leaveType :
-                       leave.leaveType?.name ||
-                       LEAVE_TYPE_NAMES[leave.leaveTypeCode] ||
-                       LEAVE_TYPE_NAMES[leave.leaveTypes?.typeCode || leave.leave_types?.type_code] ||
-                       leave.leaveTypes?.typeName || 
-                       leave.leave_types?.type_name ||
-                       'ไม่ระบุ'}
+                        leave.leaveType?.name ||
+                        LEAVE_TYPE_NAMES[leave.leaveTypeCode] ||
+                        LEAVE_TYPE_NAMES[leave.leaveTypes?.typeCode || leave.leave_types?.type_code] ||
+                        leave.leaveTypes?.typeName ||
+                        leave.leave_types?.type_name ||
+                        'ไม่ระบุ'}
                     </p>
                   </div>
                   <div>
@@ -330,7 +330,7 @@ export const LeaveDetailPage = () => {
 
                 {/* ปุ่มดาวน์โหลดแบบฟอร์มคำขอลา */}
                 <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                     <div className="flex-1">
                       <h4 className="text-sm font-semibold text-green-900 mb-1">
                         📄 แบบฟอร์มคำขอลา
@@ -339,17 +339,17 @@ export const LeaveDetailPage = () => {
                         ดาวน์โหลดแบบฟอร์มคำขอลาแบบราชการเพื่อใช้ในการยื่นเอกสาร
                       </p>
                     </div>
-                    <div className="flex gap-2 flex-shrink-0">
+                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto flex-shrink-0">
                       <button
                         onClick={() => setShowLeaveFormPDFPreview(true)}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-green-300 text-green-700 rounded-lg hover:bg-green-50 transition-colors text-sm font-medium"
+                        className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 bg-white border border-green-300 text-green-700 rounded-lg hover:bg-green-50 transition-colors text-sm font-medium"
                       >
                         <Eye className="w-4 h-4" />
                         ดูตัวอย่าง
                       </button>
                       <button
                         onClick={handleDownloadLeaveFormPDF}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                        className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
                       >
                         <Download className="w-4 h-4" />
                         ดาวน์โหลด PDF
@@ -359,52 +359,49 @@ export const LeaveDetailPage = () => {
                 </div>
 
                 {/* Cancelled Reason - show if status is cancelled or pending cancellation */}
-                {(leave.status === 'cancelled' || 
-                  leave.status === 'pending_cancel' || 
-                  leave.status?.startsWith('cancel_level')) && 
+                {(leave.status === 'cancelled' ||
+                  leave.status === 'pending_cancel' ||
+                  leave.status?.startsWith('cancel_level')) &&
                   (leave.cancelledReason || leave.cancelled_reason) && (
-                  <div className={`mt-4 p-4 border rounded-lg ${
-                    leave.status === 'cancelled' 
-                      ? 'bg-gray-50 border-gray-200' 
+                    <div className={`mt-4 p-4 border rounded-lg ${leave.status === 'cancelled'
+                      ? 'bg-gray-50 border-gray-200'
                       : 'bg-orange-50 border-orange-200'
-                  }`}>
-                    <label className={`text-sm font-medium block mb-2 ${
-                      leave.status === 'cancelled' 
-                        ? 'text-gray-700' 
+                      }`}>
+                      <label className={`text-sm font-medium block mb-2 ${leave.status === 'cancelled'
+                        ? 'text-gray-700'
                         : 'text-orange-700'
-                    }`}>
-                      <FileText className="w-4 h-4 inline mr-1" />
-                      {leave.status === 'cancelled' ? 'เหตุผลที่ยกเลิก' : 'เหตุผลที่ขอยกเลิก'}
-                    </label>
-                    <p className={`whitespace-pre-line ${
-                      leave.status === 'cancelled' 
-                        ? 'text-gray-900' 
+                        }`}>
+                        <FileText className="w-4 h-4 inline mr-1" />
+                        {leave.status === 'cancelled' ? 'เหตุผลที่ยกเลิก' : 'เหตุผลที่ขอยกเลิก'}
+                      </label>
+                      <p className={`whitespace-pre-line ${leave.status === 'cancelled'
+                        ? 'text-gray-900'
                         : 'text-orange-900'
-                    }`}>{leave.cancelledReason || leave.cancelled_reason}</p>
-                    {leave.status !== 'cancelled' && (
-                      <p className="mt-2 text-xs text-orange-600">
-                        ⏳ กำลังรอการพิจารณายกเลิกจากผู้บังคับบัญชา
-                      </p>
-                    )}
-                    {/* ปุ่มดาวน์โหลด PDF แบบฟอร์มยกเลิก */}
-                    <div className="flex gap-2 mt-3">
-                      <button
-                        onClick={() => setShowPDFPreview(true)}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
-                      >
-                        <Eye className="w-4 h-4" />
-                        ดูตัวอย่าง
-                      </button>
-                      <button
-                        onClick={handleDownloadPDF}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                      >
-                        <Download className="w-4 h-4" />
-                        ดาวน์โหลด PDF
-                      </button>
+                        }`}>{leave.cancelledReason || leave.cancelled_reason}</p>
+                      {leave.status !== 'cancelled' && (
+                        <p className="mt-2 text-xs text-orange-600">
+                          ⏳ กำลังรอการพิจารณายกเลิกจากผู้บังคับบัญชา
+                        </p>
+                      )}
+                      {/* ปุ่มดาวน์โหลด PDF แบบฟอร์มยกเลิก */}
+                      <div className="flex flex-col sm:flex-row gap-2 mt-3 w-full sm:w-auto">
+                        <button
+                          onClick={() => setShowPDFPreview(true)}
+                          className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+                        >
+                          <Eye className="w-4 h-4" />
+                          ดูตัวอย่าง
+                        </button>
+                        <button
+                          onClick={handleDownloadPDF}
+                          className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                        >
+                          <Download className="w-4 h-4" />
+                          ดาวน์โหลด PDF
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 <div className="pt-3 border-t text-xs text-gray-500">
                   <Clock className="w-3 h-3 inline mr-1" />
@@ -430,8 +427,8 @@ export const LeaveDetailPage = () => {
                       </div>
                       <div>
                         <p className="font-semibold text-gray-900">
-                          {leave.actingPerson?.name || 
-                           `${leave.acting_person?.title || ''}${leave.acting_person?.first_name || ''} ${leave.acting_person?.last_name || ''}`.trim()}
+                          {leave.actingPerson?.name ||
+                            `${leave.acting_person?.title || ''}${leave.acting_person?.first_name || ''} ${leave.acting_person?.last_name || ''}`.trim()}
                         </p>
                         <p className="text-sm text-gray-600">
                           {leave.actingPerson?.position || leave.acting_person?.position || 'ไม่ระบุตำแหน่ง'}
@@ -480,15 +477,15 @@ export const LeaveDetailPage = () => {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="outline"
                           onClick={() => window.open(leave.documentUrl || leave.document_url, '_blank')}
                         >
                           <Eye className="w-4 h-4" />
                         </Button>
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="outline"
                           onClick={async () => {
                             try {
@@ -526,9 +523,9 @@ export const LeaveDetailPage = () => {
                 <CardTitle>สถานะการอนุมัติ</CardTitle>
               </CardHeader>
               <CardContent>
-                <Timeline 
-                  approvals={leave.approvals} 
-                  status={leave.status} 
+                <Timeline
+                  approvals={leave.approvals}
+                  status={leave.status}
                   department={user?.department}
                   selectedDates={leave.selectedDates || leave.selected_dates || []}
                 />
@@ -585,7 +582,7 @@ export const LeaveDetailPage = () => {
                       </p>
                     </div>
                   </div>
-                  
+
                   <div>
                     <label className="text-sm text-gray-600">ช่วงวันที่ลา</label>
                     <p className="font-semibold text-gray-900">

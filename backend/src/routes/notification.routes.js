@@ -5,6 +5,7 @@ import {
   markAsRead,
   markAllAsRead,
   deleteNotification,
+  deleteAllReadNotifications,
   cleanupOldNotifications,
   adminCleanupNotifications
 } from '../controllers/notification.controller.js';
@@ -43,6 +44,13 @@ router.put('/:id/read', markAsRead);
  * @access  Private
  */
 router.put('/read-all', markAllAsRead);
+
+/**
+ * @route   DELETE /api/notifications/read-all
+ * @desc    ลบแจ้งเตือนที่อ่านแล้วทั้งหมด
+ * @access  Private
+ */
+router.delete('/read-all', deleteAllReadNotifications);
 
 /**
  * @route   DELETE /api/notifications/:id

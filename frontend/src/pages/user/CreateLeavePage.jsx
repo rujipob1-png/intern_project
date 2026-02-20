@@ -246,7 +246,7 @@ export const CreateLeavePage = () => {
         return;
       }
     }
-    
+
     // สำหรับประเภทอื่นๆ - เลือกได้หลายวันอิสระ
     setFormData(prev => ({
       ...prev,
@@ -287,7 +287,7 @@ export const CreateLeavePage = () => {
       toast.error('กรุณากรอกเหตุผลการลา');
       return;
     }
-    
+
     // ⚠️ เฉพาะลาพักผ่อน (VACATION) ต้องใส่ผู้ปฏิบัติหน้าที่แทน
     if (selectedLeaveType?.type_code === 'VACATION' && !formData.actingPersonId) {
       toast.error('กรุณาเลือกผู้ปฏิบัติหน้าที่แทน (สำหรับลาพักผ่อนต้องระบุ)');
@@ -319,7 +319,7 @@ export const CreateLeavePage = () => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const daysInAdvance = Math.ceil((firstDate - today) / (1000 * 60 * 60 * 24));
-      
+
       if (daysInAdvance < 60) {
         const confirmSubmit = window.confirm(
           `⚠️ คำเตือน: ตามระเบียบต้องเสนอใบลาก่อนวัน${selectedLeaveType.type_code === 'ORDINATION' ? 'อุปสมบท' : 'ประกอบพิธีฮัจย์'}ไม่น้อยกว่า 60 วัน\n\nท่านเสนอใบลาล่วงหน้าเพียง ${daysInAdvance} วัน\n\nต้องการดำเนินการต่อหรือไม่?`
@@ -418,12 +418,12 @@ export const CreateLeavePage = () => {
     const sorted = [...dates].sort();
     let maxConsecutive = 1;
     let currentConsecutive = 1;
-    
+
     for (let i = 1; i < sorted.length; i++) {
       const prevDate = new Date(sorted[i - 1] + 'T00:00:00');
       const currDate = new Date(sorted[i] + 'T00:00:00');
       const diffDays = (currDate - prevDate) / (1000 * 60 * 60 * 24);
-      
+
       if (diffDays === 1) {
         currentConsecutive++;
         maxConsecutive = Math.max(maxConsecutive, currentConsecutive);
@@ -438,7 +438,7 @@ export const CreateLeavePage = () => {
   const handleLeaveTypeChange = (e) => {
     const { value } = e.target;
     const selectedType = leaveTypes.find(t => t.id === value);
-    
+
     setFormData(prev => ({
       ...prev,
       leaveTypeId: value,
@@ -473,7 +473,7 @@ export const CreateLeavePage = () => {
   // ฟังก์ชันตรวจสอบคำเตือนตามจำนวนวันลา
   const getActiveWarnings = () => {
     if (!currentLeaveRules?.warnings || formData.totalDays === 0) return [];
-    
+
     return currentLeaveRules.warnings.filter(warning => {
       if (warning.checkAdvanceSubmit) {
         // ตรวจสอบว่าเสนอใบลาล่วงหน้าเพียงพอหรือไม่
@@ -495,20 +495,20 @@ export const CreateLeavePage = () => {
   // ตรวจสอบว่าต้องแนบเอกสารหรือไม่
   const checkDocumentRequired = () => {
     if (!currentLeaveRules) return { required: false, message: '' };
-    
+
     // ลาป่วยเกิน 30 วัน ต้องมีใบรับรองแพทย์
     if (selectedLeaveType?.type_code === 'SICK' && formData.totalDays >= 30) {
       return { required: true, message: 'ต้องแนบใบรับรองแพทย์ (ลาป่วยตั้งแต่ 30 วันขึ้นไป)' };
     }
-    
+
     // ประเภทที่ต้องแนบเอกสาร
     if (currentLeaveRules.requireDocument) {
-      return { 
-        required: true, 
-        message: `ต้องแนบเอกสาร: ${currentLeaveRules.requiredDocuments?.join(', ') || 'เอกสารประกอบ'}` 
+      return {
+        required: true,
+        message: `ต้องแนบเอกสาร: ${currentLeaveRules.requiredDocuments?.join(', ') || 'เอกสารประกอบ'}`
       };
     }
-    
+
     return { required: false, message: '' };
   };
 
@@ -535,20 +535,20 @@ export const CreateLeavePage = () => {
                 <AlertCircle className="w-5 h-5 text-gray-600" />
                 <h3 className="font-semibold text-gray-900">วันลาคงเหลือของคุณ</h3>
               </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="text-center">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="text-center p-3 sm:p-0 bg-white sm:bg-transparent rounded-lg sm:rounded-none border sm:border-0 border-gray-100 shdaow-sm sm:shadow-none">
                   <p className="text-sm text-gray-600">ลาป่วย (ป)</p>
                   <p className="text-base font-semibold text-gray-900">
                     ลามาแล้ว {leaveBalance.sick || 0} วัน
                   </p>
                 </div>
-                <div className="text-center">
+                <div className="text-center p-3 sm:p-0 bg-white sm:bg-transparent rounded-lg sm:rounded-none border sm:border-0 border-gray-100 shdaow-sm sm:shadow-none">
                   <p className="text-sm text-gray-600">ลาพักผ่อน (พ)</p>
                   <p className="text-2xl font-bold text-gray-900">
                     {leaveBalance.vacation || 0} วัน
                   </p>
                 </div>
-                <div className="text-center">
+                <div className="text-center p-3 sm:p-0 bg-white sm:bg-transparent rounded-lg sm:rounded-none border sm:border-0 border-gray-100 shdaow-sm sm:shadow-none">
                   <p className="text-sm text-gray-600">ลากิจ (ก)</p>
                   <p className="text-2xl font-bold text-gray-900">
                     {leaveBalance.personal || 0} วัน
@@ -585,7 +585,7 @@ export const CreateLeavePage = () => {
 
                   {leaveTypes.map(type => (
                     <option key={type.id} value={type.id}>
-                      {LEAVE_TYPE_NAMES[type.type_name_th]|| type.type_name_th}
+                      {LEAVE_TYPE_NAMES[type.type_name_th] || type.type_name_th}
                     </option>
                   ))}
                 </select>
@@ -607,7 +607,7 @@ export const CreateLeavePage = () => {
                         </span>
                       )}
                     </div>
-                    
+
                     {/* รายการกฎ */}
                     <ul className="space-y-1.5 mb-3">
                       {currentLeaveRules.rules.map((rule, idx) => (
@@ -651,7 +651,7 @@ export const CreateLeavePage = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   {isPaternityLeave ? 'เลือกวันเริ่มต้นลา' : 'เลือกวันที่ลา'} <span className="text-red-500">*</span>
                 </label>
-                
+
                 <div>
                   <p className="mb-3 text-sm text-gray-600 flex items-center gap-2">
                     <Calendar className="w-4 h-4" />
@@ -661,7 +661,7 @@ export const CreateLeavePage = () => {
                       <>
                         คลิกที่วันในปฏิทินเพื่อเลือกหรือยกเลิก (เลือกได้หลายวัน)
                         {selectedLeaveType?.type_code === 'SICK' && (
-                      <span className="text-gray-600">(ลาป่วยสามารถเลือกวันย้อนหลังได้ไม่เกิน 30 วัน)</span>
+                          <span className="text-gray-600">(ลาป่วยสามารถเลือกวันย้อนหลังได้ไม่เกิน 30 วัน)</span>
                         )}
                       </>
                     )}
@@ -690,29 +690,25 @@ export const CreateLeavePage = () => {
                 {activeWarnings.length > 0 && (
                   <div className="mt-4 space-y-3">
                     {activeWarnings.map((warning, idx) => (
-                      <div 
-                        key={idx} 
-                        className={`p-4 rounded-lg border-2 ${
-                          warning.type === 'danger' 
-                            ? 'bg-red-50 border-red-400' 
+                      <div
+                        key={idx}
+                        className={`p-4 rounded-lg border-2 ${warning.type === 'danger'
+                            ? 'bg-red-50 border-red-400'
                             : warning.type === 'warning'
                               ? 'bg-amber-50 border-amber-400'
                               : 'bg-blue-50 border-blue-300'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-start gap-3">
-                          <AlertTriangle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
-                            warning.type === 'danger' ? 'text-red-600' : warning.type === 'warning' ? 'text-amber-600' : 'text-blue-600'
-                          }`} />
+                          <AlertTriangle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${warning.type === 'danger' ? 'text-red-600' : warning.type === 'warning' ? 'text-amber-600' : 'text-blue-600'
+                            }`} />
                           <div>
-                            <p className={`text-sm font-semibold ${
-                              warning.type === 'danger' ? 'text-red-900' : warning.type === 'warning' ? 'text-amber-900' : 'text-blue-900'
-                            }`}>
+                            <p className={`text-sm font-semibold ${warning.type === 'danger' ? 'text-red-900' : warning.type === 'warning' ? 'text-amber-900' : 'text-blue-900'
+                              }`}>
                               {warning.type === 'danger' ? '🚨 คำเตือนสำคัญ' : warning.type === 'warning' ? '⚠️ คำเตือน' : 'ℹ️ ข้อมูล'}
                             </p>
-                            <p className={`text-sm ${
-                              warning.type === 'danger' ? 'text-red-800' : warning.type === 'warning' ? 'text-amber-800' : 'text-blue-800'
-                            }`}>
+                            <p className={`text-sm ${warning.type === 'danger' ? 'text-red-800' : warning.type === 'warning' ? 'text-amber-800' : 'text-blue-800'
+                              }`}>
                               {warning.message}
                             </p>
                           </div>
