@@ -31,224 +31,224 @@ function App() {
   return (
     <AuthProvider>
       <RealtimeProvider>
-      <ConfirmProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route 
-            path="/dashboard" 
-            element={
-              <ProtectedRoute>
-                <DashboardPage />
-              </ProtectedRoute>
-            } 
+        <ConfirmProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <DashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/create-leave"
+                element={
+                  <ProtectedRoute>
+                    <CreateLeavePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/my-leaves"
+                element={
+                  <ProtectedRoute>
+                    <MyLeavesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/leave-detail/:id"
+                element={
+                  <ProtectedRoute>
+                    <LeaveDetailPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/leave-history"
+                element={
+                  <ProtectedRoute>
+                    <LeaveHistoryPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/acting-requests"
+                element={
+                  <ProtectedRoute>
+                    <ActingRequestsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <ProtectedRoute>
+                    <SettingsPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Director Routes */}
+              <Route
+                path="/director/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <DashboardDirector />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/director/history"
+                element={
+                  <ProtectedRoute>
+                    <ApprovalHistoryPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/director/cancel-requests"
+                element={
+                  <ProtectedRoute>
+                    <DirectorCancelRequests />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Central Office Staff Routes */}
+              <Route
+                path="/central-office/staff"
+                element={
+                  <ProtectedRoute>
+                    <CentralOfficeStaffDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/central-office/staff/cancel-requests"
+                element={
+                  <ProtectedRoute>
+                    <CentralOfficeStaffCancelRequests />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/central-office/staff/history"
+                element={
+                  <ProtectedRoute>
+                    <CentralOfficeStaffHistory />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Central Office Head Routes */}
+              <Route
+                path="/central-office/head"
+                element={
+                  <ProtectedRoute>
+                    <CentralOfficeHeadDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/central-office/head/cancel-requests"
+                element={
+                  <ProtectedRoute>
+                    <CentralOfficeHeadCancelRequests />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/central-office/head/history"
+                element={
+                  <ProtectedRoute>
+                    <CentralOfficeHeadHistory />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Admin Routes */}
+              <Route
+                path="/admin/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/approval-history"
+                element={
+                  <ProtectedRoute>
+                    <AdminApprovalHistory />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/cancel-requests"
+                element={
+                  <ProtectedRoute>
+                    <AdminCancelRequests />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/cancel-history"
+                element={
+                  <ProtectedRoute>
+                    <AdminCancelHistory />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/users"
+                element={
+                  <ProtectedRoute>
+                    <UserManagementPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route path="/" element={<Navigate to="/login" replace />} />
+              <Route path="*" element={<Navigate to="/login" replace />} />
+            </Routes>
+          </BrowserRouter>
+          <Toaster
+            position="top-center"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                fontFamily: 'Inter, Noto Sans Thai, sans-serif',
+                padding: '16px 24px',
+                borderRadius: '12px',
+                boxShadow: '0 10px 40px rgba(0, 0, 0, 0.15)',
+              },
+              success: {
+                style: {
+                  background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                  color: 'white',
+                },
+                iconTheme: {
+                  primary: '#fff',
+                  secondary: '#10B981',
+                },
+              },
+              error: {
+                style: {
+                  background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
+                  color: 'white',
+                },
+                iconTheme: {
+                  primary: '#fff',
+                  secondary: '#EF4444',
+                },
+              },
+            }}
           />
-          <Route 
-            path="/create-leave" 
-            element={
-              <ProtectedRoute>
-                <CreateLeavePage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/my-leaves" 
-            element={
-              <ProtectedRoute>
-                <MyLeavesPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/leave-detail/:id" 
-            element={
-              <ProtectedRoute>
-                <LeaveDetailPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/leave-history" 
-            element={
-              <ProtectedRoute>
-                <LeaveHistoryPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/acting-requests" 
-            element={
-              <ProtectedRoute>
-                <ActingRequestsPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/settings" 
-            element={
-              <ProtectedRoute>
-                <SettingsPage />
-              </ProtectedRoute>
-            } 
-          />
-          
-          {/* Director Routes */}
-          <Route 
-            path="/director/dashboard" 
-            element={
-              <ProtectedRoute>
-                <DashboardDirector />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/director/history" 
-            element={
-              <ProtectedRoute>
-                <ApprovalHistoryPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/director/cancel-requests" 
-            element={
-              <ProtectedRoute>
-                <DirectorCancelRequests />
-              </ProtectedRoute>
-            } 
-          />
-          
-          {/* Central Office Staff Routes */}
-          <Route 
-            path="/central-office/staff" 
-            element={
-              <ProtectedRoute>
-                <CentralOfficeStaffDashboard />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/central-office/staff/cancel-requests" 
-            element={
-              <ProtectedRoute>
-                <CentralOfficeStaffCancelRequests />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/central-office/staff/history" 
-            element={
-              <ProtectedRoute>
-                <CentralOfficeStaffHistory />
-              </ProtectedRoute>
-            } 
-          />
-          
-          {/* Central Office Head Routes */}
-          <Route 
-            path="/central-office/head" 
-            element={
-              <ProtectedRoute>
-                <CentralOfficeHeadDashboard />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/central-office/head/cancel-requests" 
-            element={
-              <ProtectedRoute>
-                <CentralOfficeHeadCancelRequests />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/central-office/head/history" 
-            element={
-              <ProtectedRoute>
-                <CentralOfficeHeadHistory />
-              </ProtectedRoute>
-            } 
-          />
-          
-          {/* Admin Routes */}
-          <Route 
-            path="/admin/dashboard" 
-            element={
-              <ProtectedRoute>
-                <AdminDashboard />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/admin/approval-history" 
-            element={
-              <ProtectedRoute>
-                <AdminApprovalHistory />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/admin/cancel-requests" 
-            element={
-              <ProtectedRoute>
-                <AdminCancelRequests />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/admin/cancel-history" 
-            element={
-              <ProtectedRoute>
-                <AdminCancelHistory />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/admin/users" 
-            element={
-              <ProtectedRoute>
-                <UserManagementPage />
-              </ProtectedRoute>
-            } 
-          />
-          
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </BrowserRouter>
-      <Toaster 
-        position="top-center"
-        toastOptions={{
-          duration: 4000,
-          style: {
-            fontFamily: 'Inter, Noto Sans Thai, sans-serif',
-            padding: '16px 24px',
-            borderRadius: '12px',
-            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.15)',
-          },
-          success: {
-            style: {
-              background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-              color: 'white',
-            },
-            iconTheme: {
-              primary: '#fff',
-              secondary: '#10B981',
-            },
-          },
-          error: {
-            style: {
-              background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
-              color: 'white',
-            },
-            iconTheme: {
-              primary: '#fff',
-              secondary: '#EF4444',
-            },
-          },
-        }}
-      />
-      </ConfirmProvider>
+        </ConfirmProvider>
       </RealtimeProvider>
     </AuthProvider>
   );

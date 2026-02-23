@@ -8,10 +8,10 @@ import { getDepartmentThaiCode } from '../utils/departmentMapping';
 import { leaveAPI } from '../api/leave.api';
 import { formatDate } from '../utils/formatDate';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/common/Card';
-import { 
-  Calendar, 
-  FileText, 
-  Clock, 
+import {
+  Calendar,
+  FileText,
+  Clock,
   CheckCircle,
   XCircle,
   AlertCircle,
@@ -109,9 +109,9 @@ export const DashboardPage = () => {
           <div className="flex items-center gap-4 mb-2">
             <div className="w-14 h-14 bg-gradient-to-br from-slate-700 to-slate-800 rounded-2xl flex items-center justify-center overflow-hidden shadow-lg">
               {user?.profileImageUrl ? (
-                <img 
-                  src={user.profileImageUrl} 
-                  alt="Profile" 
+                <img
+                  src={user.profileImageUrl}
+                  alt="Profile"
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -136,8 +136,8 @@ export const DashboardPage = () => {
             {stats.map((stat, index) => {
               const Icon = stat.icon;
               return (
-                <div 
-                  key={index} 
+                <div
+                  key={index}
                   className="bg-white rounded-xl p-5 border border-slate-200 hover:border-slate-300 transition-all"
                 >
                   <div className="flex items-start justify-between mb-4">
@@ -171,7 +171,7 @@ export const DashboardPage = () => {
         <div className="mb-8">
           <h2 className="text-sm font-medium text-slate-500 uppercase tracking-wider mb-4">ดำเนินการ</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button 
+            <button
               onClick={() => navigate('/create-leave')}
               className="group bg-slate-800 hover:bg-slate-900 text-white rounded-xl p-5 text-left transition-all"
             >
@@ -182,7 +182,7 @@ export const DashboardPage = () => {
               <p className="text-sm text-slate-400">ยื่นคำขอลาใหม่</p>
             </button>
 
-            <button 
+            <button
               onClick={() => navigate('/my-leaves')}
               className="group bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-xl p-5 text-left transition-all"
             >
@@ -193,7 +193,7 @@ export const DashboardPage = () => {
               <p className="text-sm text-slate-500">ดูรายการคำขอลาทั้งหมด</p>
             </button>
 
-            <button 
+            <button
               onClick={() => navigate('/leave-history')}
               className="group bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-xl p-5 text-left transition-all"
             >
@@ -214,7 +214,7 @@ export const DashboardPage = () => {
               <div className="flex items-center justify-between">
                 <h3 className="font-medium text-slate-800">คำขอลาล่าสุด</h3>
                 {recentLeaves.length > 0 && (
-                  <button 
+                  <button
                     onClick={() => navigate('/my-leaves')}
                     className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1"
                   >
@@ -234,7 +234,7 @@ export const DashboardPage = () => {
                     <FileText className="w-6 h-6 text-slate-400" />
                   </div>
                   <p className="text-sm text-slate-500">ยังไม่มีคำขอลา</p>
-                  <button 
+                  <button
                     onClick={() => navigate('/create-leave')}
                     className="text-sm text-slate-700 hover:text-slate-900 font-medium mt-2"
                   >
@@ -262,21 +262,20 @@ export const DashboardPage = () => {
                           {formatDate(leave.startDate)} - {formatDate(leave.endDate)} • {leave.totalDays} วัน
                         </p>
                       </div>
-                      <span className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-medium ${
-                        leave.status === 'approved' || leave.status === 'approved_final' 
-                          ? 'bg-emerald-50 text-emerald-700' 
-                          : leave.status === 'rejected' 
-                          ? 'bg-red-50 text-red-700' 
-                          : leave.status === 'cancelled' 
-                          ? 'bg-slate-100 text-slate-600' 
-                          : leave.status?.includes('cancel') 
-                          ? 'bg-orange-50 text-orange-700'
-                          : 'bg-amber-50 text-amber-700'
-                      }`}>
+                      <span className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-medium ${leave.status === 'approved' || leave.status === 'approved_final'
+                          ? 'bg-emerald-50 text-emerald-700'
+                          : leave.status === 'rejected'
+                            ? 'bg-red-50 text-red-700'
+                            : leave.status === 'cancelled'
+                              ? 'bg-slate-100 text-slate-600'
+                              : leave.status?.includes('cancel')
+                                ? 'bg-orange-50 text-orange-700'
+                                : 'bg-amber-50 text-amber-700'
+                        }`}>
                         {leave.status === 'approved' || leave.status === 'approved_final' ? 'อนุมัติ' :
-                         leave.status === 'rejected' ? 'ไม่อนุมัติ' :
-                         leave.status === 'cancelled' ? 'ยกเลิก' : 
-                         leave.status?.includes('cancel') ? 'รอพิจารณายกเลิก' : 'รอพิจารณา'}
+                          leave.status === 'rejected' ? 'ไม่อนุมัติ' :
+                            leave.status === 'cancelled' ? 'ยกเลิก' :
+                              leave.status?.includes('cancel') ? 'รอพิจารณายกเลิก' : 'รอพิจารณา'}
                       </span>
                     </div>
                   ))}
@@ -308,11 +307,10 @@ export const DashboardPage = () => {
                         key={leave.id}
                         className="flex items-start gap-3 p-3 hover:bg-slate-50 rounded-lg transition-colors"
                       >
-                        <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                          leave.status === 'approved' || leave.status === 'approved_final' 
-                            ? 'bg-emerald-100' 
+                        <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${leave.status === 'approved' || leave.status === 'approved_final'
+                            ? 'bg-emerald-100'
                             : 'bg-red-100'
-                        }`}>
+                          }`}>
                           {leave.status === 'approved' || leave.status === 'approved_final' ? (
                             <CheckCircle className="w-4 h-4 text-emerald-600" />
                           ) : (
@@ -324,8 +322,8 @@ export const DashboardPage = () => {
                             คำขอลา <span className="font-medium">{leave.LeaveNumber || leave.leaveNumber}</span>
                           </p>
                           <p className="text-xs text-slate-500 mt-0.5">
-                            {leave.status === 'approved' || leave.status === 'approved_final' 
-                              ? 'ได้รับการอนุมัติแล้ว' 
+                            {leave.status === 'approved' || leave.status === 'approved_final'
+                              ? 'ได้รับการอนุมัติแล้ว'
                               : 'ไม่ได้รับการอนุมัติ'}
                           </p>
                           <p className="text-xs text-slate-400 mt-1">

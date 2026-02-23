@@ -693,10 +693,10 @@ export const CreateLeavePage = () => {
                       <div
                         key={idx}
                         className={`p-4 rounded-lg border-2 ${warning.type === 'danger'
-                            ? 'bg-red-50 border-red-400'
-                            : warning.type === 'warning'
-                              ? 'bg-amber-50 border-amber-400'
-                              : 'bg-blue-50 border-blue-300'
+                          ? 'bg-red-50 border-red-400'
+                          : warning.type === 'warning'
+                            ? 'bg-amber-50 border-amber-400'
+                            : 'bg-blue-50 border-blue-300'
                           }`}
                       >
                         <div className="flex items-start gap-3">
