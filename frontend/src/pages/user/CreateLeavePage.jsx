@@ -391,6 +391,7 @@ export const CreateLeavePage = () => {
     }
   };
 
+
   const selectedLeaveType = leaveTypes.find(type => type.id === formData.leaveTypeId);
 
   // ฟังก์ชันคำนวณ 15 วันทำการ (ไม่นับเสาร์อาทิตย์)
@@ -399,11 +400,19 @@ export const CreateLeavePage = () => {
     let currentDate = new Date(startDateStr + 'T00:00:00');
     let workingDays = 0;
 
+    // Helper ในการ format วันที่ให้เป็น YYYY-MM-DD แบบ Local Time
+    const toLocalISOString = (date) => {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    };
+
     while (workingDays < 15) {
       const dayOfWeek = currentDate.getDay();
       // 0 = อาทิตย์, 6 = เสาร์
       if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-        const dateStr = currentDate.toISOString().split('T')[0];
+        const dateStr = toLocalISOString(currentDate);
         dates.push(dateStr);
         workingDays++;
       }
@@ -411,7 +420,6 @@ export const CreateLeavePage = () => {
     }
     return dates;
   };
-
   // ตรวจสอบว่าวันที่เลือกเป็นวันติดต่อกันหรือไม่ (สำหรับ ABSENT)
   const checkConsecutiveDays = (dates) => {
     if (dates.length < 2) return dates.length;
