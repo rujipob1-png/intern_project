@@ -9,7 +9,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { authAPI } from '../../api/auth.api';
-import { MainLayout } from '../../components/layout/MainLayout';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { getDepartmentThaiCode } from '../../utils/departmentMapping';
@@ -227,7 +226,7 @@ export const SettingsPage = () => {
   };
 
   return (
-    <MainLayout>
+    <>
       <div className="min-h-screen bg-slate-50">
         <div className="max-w-3xl mx-auto px-4 py-8">
 
@@ -627,7 +626,7 @@ export const SettingsPage = () => {
           </div>
         </div>
       )}
-    </MainLayout>
+    </>
   );
 };
 

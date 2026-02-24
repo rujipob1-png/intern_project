@@ -372,7 +372,7 @@ export const Sidebar = () => {
                                     {ItemIcon && <ItemIcon className="w-4 h-4 flex-shrink-0" />}
                                     <span className="flex-1 text-left text-sm">{item.title}</span>
                                     {showBadge && (
-                                      <span className="flex items-center justify-center min-w-5 h-5 px-1 bg-red-500 text-white text-xs font-bold rounded-full animate-pulse">
+                                      <span className="flex items-center justify-center min-w-5 h-5 px-1 bg-red-500 text-white text-[10px] font-bold rounded-full">
                                         {actingRequestCount}
                                       </span>
                                     )}

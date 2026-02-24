@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MainLayout } from '../../components/layout/MainLayout';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Timeline } from '../../components/leave/Timeline';
@@ -133,26 +132,22 @@ export const LeaveDetailPage = () => {
 
   if (loading) {
     return (
-      <MainLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-        </div>
-      </MainLayout>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      </div>
     );
   }
 
   if (!leave) {
     return (
-      <MainLayout>
-        <div className="text-center py-12">
-          <p className="text-gray-500">ไม่พบข้อมูลคำขอลา</p>
-        </div>
-      </MainLayout>
+      <div className="text-center py-12">
+        <p className="text-gray-500">ไม่พบข้อมูลคำขอลา</p>
+      </div>
     );
   }
 
   return (
-    <MainLayout>
+    <>
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -720,6 +715,6 @@ export const LeaveDetailPage = () => {
         <CancelLeaveFormPDF ref={pdfFormRef} leave={leave} user={user} />
         <LeaveFormPDF ref={leaveFormPdfRef} leave={leave} user={user} />
       </div>
-    </MainLayout>
+    </>
   );
 };

@@ -2,7 +2,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { useRealtime } from '../contexts/RealtimeContext';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { MainLayout } from '../components/layout/MainLayout';
 import { ROLES, LEAVE_TYPE_CODES } from '../utils/constants';
 import { getDepartmentThaiCode } from '../utils/departmentMapping';
 import { leaveAPI } from '../api/leave.api';
@@ -102,7 +101,7 @@ export const DashboardPage = () => {
   ];
 
   return (
-    <MainLayout>
+    <>
       <div className="max-w-6xl mx-auto px-4 py-6">
         {/* Welcome Section */}
         <div className="mb-8">
@@ -263,14 +262,14 @@ export const DashboardPage = () => {
                         </p>
                       </div>
                       <span className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-medium ${leave.status === 'approved' || leave.status === 'approved_final'
-                          ? 'bg-emerald-50 text-emerald-700'
-                          : leave.status === 'rejected'
-                            ? 'bg-red-50 text-red-700'
-                            : leave.status === 'cancelled'
-                              ? 'bg-slate-100 text-slate-600'
-                              : leave.status?.includes('cancel')
-                                ? 'bg-orange-50 text-orange-700'
-                                : 'bg-amber-50 text-amber-700'
+                        ? 'bg-emerald-50 text-emerald-700'
+                        : leave.status === 'rejected'
+                          ? 'bg-red-50 text-red-700'
+                          : leave.status === 'cancelled'
+                            ? 'bg-slate-100 text-slate-600'
+                            : leave.status?.includes('cancel')
+                              ? 'bg-orange-50 text-orange-700'
+                              : 'bg-amber-50 text-amber-700'
                         }`}>
                         {leave.status === 'approved' || leave.status === 'approved_final' ? 'อนุมัติ' :
                           leave.status === 'rejected' ? 'ไม่อนุมัติ' :
@@ -308,8 +307,8 @@ export const DashboardPage = () => {
                         className="flex items-start gap-3 p-3 hover:bg-slate-50 rounded-lg transition-colors"
                       >
                         <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${leave.status === 'approved' || leave.status === 'approved_final'
-                            ? 'bg-emerald-100'
-                            : 'bg-red-100'
+                          ? 'bg-emerald-100'
+                          : 'bg-red-100'
                           }`}>
                           {leave.status === 'approved' || leave.status === 'approved_final' ? (
                             <CheckCircle className="w-4 h-4 text-emerald-600" />
@@ -346,6 +345,6 @@ export const DashboardPage = () => {
           </div>
         </div>
       </div>
-    </MainLayout>
+    </>
   );
 };

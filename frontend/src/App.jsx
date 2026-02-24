@@ -27,6 +27,8 @@ import AdminCancelRequests from './pages/admin/AdminCancelRequests';
 import AdminCancelHistory from './pages/admin/AdminCancelHistory';
 import UserManagementPage from './pages/admin/UserManagementPage';
 
+import { MainLayout } from './components/layout/MainLayout';
+
 function App() {
   return (
     <AuthProvider>
@@ -35,182 +37,45 @@ function App() {
           <BrowserRouter>
             <Routes>
               <Route path="/login" element={<LoginPage />} />
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <DashboardPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/create-leave"
-                element={
-                  <ProtectedRoute>
-                    <CreateLeavePage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/my-leaves"
-                element={
-                  <ProtectedRoute>
-                    <MyLeavesPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/leave-detail/:id"
-                element={
-                  <ProtectedRoute>
-                    <LeaveDetailPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/leave-history"
-                element={
-                  <ProtectedRoute>
-                    <LeaveHistoryPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/acting-requests"
-                element={
-                  <ProtectedRoute>
-                    <ActingRequestsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/settings"
-                element={
-                  <ProtectedRoute>
-                    <SettingsPage />
-                  </ProtectedRoute>
-                }
-              />
 
-              {/* Director Routes */}
+              {/* Main Layout Protected Routes */}
               <Route
-                path="/director/dashboard"
                 element={
                   <ProtectedRoute>
-                    <DashboardDirector />
+                    <MainLayout />
                   </ProtectedRoute>
                 }
-              />
-              <Route
-                path="/director/history"
-                element={
-                  <ProtectedRoute>
-                    <ApprovalHistoryPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/director/cancel-requests"
-                element={
-                  <ProtectedRoute>
-                    <DirectorCancelRequests />
-                  </ProtectedRoute>
-                }
-              />
+              >
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/create-leave" element={<CreateLeavePage />} />
+                <Route path="/my-leaves" element={<MyLeavesPage />} />
+                <Route path="/leave-detail/:id" element={<LeaveDetailPage />} />
+                <Route path="/leave-history" element={<LeaveHistoryPage />} />
+                <Route path="/acting-requests" element={<ActingRequestsPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
 
-              {/* Central Office Staff Routes */}
-              <Route
-                path="/central-office/staff"
-                element={
-                  <ProtectedRoute>
-                    <CentralOfficeStaffDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/central-office/staff/cancel-requests"
-                element={
-                  <ProtectedRoute>
-                    <CentralOfficeStaffCancelRequests />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/central-office/staff/history"
-                element={
-                  <ProtectedRoute>
-                    <CentralOfficeStaffHistory />
-                  </ProtectedRoute>
-                }
-              />
+                {/* Director Routes */}
+                <Route path="/director/dashboard" element={<DashboardDirector />} />
+                <Route path="/director/history" element={<ApprovalHistoryPage />} />
+                <Route path="/director/cancel-requests" element={<DirectorCancelRequests />} />
 
-              {/* Central Office Head Routes */}
-              <Route
-                path="/central-office/head"
-                element={
-                  <ProtectedRoute>
-                    <CentralOfficeHeadDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/central-office/head/cancel-requests"
-                element={
-                  <ProtectedRoute>
-                    <CentralOfficeHeadCancelRequests />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/central-office/head/history"
-                element={
-                  <ProtectedRoute>
-                    <CentralOfficeHeadHistory />
-                  </ProtectedRoute>
-                }
-              />
+                {/* Central Office Staff Routes */}
+                <Route path="/central-office/staff" element={<CentralOfficeStaffDashboard />} />
+                <Route path="/central-office/staff/cancel-requests" element={<CentralOfficeStaffCancelRequests />} />
+                <Route path="/central-office/staff/history" element={<CentralOfficeStaffHistory />} />
 
-              {/* Admin Routes */}
-              <Route
-                path="/admin/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <AdminDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/approval-history"
-                element={
-                  <ProtectedRoute>
-                    <AdminApprovalHistory />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/cancel-requests"
-                element={
-                  <ProtectedRoute>
-                    <AdminCancelRequests />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/cancel-history"
-                element={
-                  <ProtectedRoute>
-                    <AdminCancelHistory />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/users"
-                element={
-                  <ProtectedRoute>
-                    <UserManagementPage />
-                  </ProtectedRoute>
-                }
-              />
+                {/* Central Office Head Routes */}
+                <Route path="/central-office/head" element={<CentralOfficeHeadDashboard />} />
+                <Route path="/central-office/head/cancel-requests" element={<CentralOfficeHeadCancelRequests />} />
+                <Route path="/central-office/head/history" element={<CentralOfficeHeadHistory />} />
+
+                {/* Admin Routes */}
+                <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                <Route path="/admin/approval-history" element={<AdminApprovalHistory />} />
+                <Route path="/admin/cancel-requests" element={<AdminCancelRequests />} />
+                <Route path="/admin/cancel-history" element={<AdminCancelHistory />} />
+                <Route path="/admin/users" element={<UserManagementPage />} />
+              </Route>
 
               <Route path="/" element={<Navigate to="/login" replace />} />
               <Route path="*" element={<Navigate to="/login" replace />} />

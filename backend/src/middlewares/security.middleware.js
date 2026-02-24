@@ -12,20 +12,20 @@
 export const csrfProtection = (req, res, next) => {
   // Methods ที่ต้องตรวจสอบ
   const protectedMethods = ['POST', 'PUT', 'DELETE', 'PATCH'];
-  
+
   // ถ้าไม่ใช่ protected method ให้ผ่าน
   if (!protectedMethods.includes(req.method)) {
     return next();
   }
-  
+
   // ข้าม CSRF check สำหรับ development mode
   if (process.env.NODE_ENV === 'development') {
     return next();
   }
-  
+
   // ดึง origin จาก request
   const origin = req.get('Origin') || req.get('Referer');
-  
+
   // ถ้าไม่มี origin header (เช่น direct API call) ให้ตรวจสอบ custom header
   if (!origin) {
     const customHeader = req.get('X-Requested-With');
@@ -33,7 +33,7 @@ export const csrfProtection = (req, res, next) => {
       return next(); // มี custom header ถือว่าปลอดภัย
     }
   }
-  
+
   // ตรวจสอบว่า origin ตรงกับ allowed origins หรือไม่
   const allowedOrigins = [
     process.env.FRONTEND_URL || 'http://localhost:5173',
@@ -41,17 +41,17 @@ export const csrfProtection = (req, res, next) => {
     'http://localhost:5173',
     'http://localhost:3000'
   ].filter(Boolean);
-  
+
   // ถ้า origin อยู่ใน allowed list
   if (origin) {
     const originUrl = new URL(origin);
     const originBase = `${originUrl.protocol}//${originUrl.host}`;
-    
+
     if (allowedOrigins.some(allowed => originBase.startsWith(allowed.replace(/\/$/, '')))) {
       return next();
     }
   }
-  
+
   // ถ้าไม่ผ่านเงื่อนไขใดๆ ให้ block
   console.log(`⚠️ CSRF protection blocked request from origin: ${origin || 'unknown'}`);
   return res.status(403).json({
@@ -68,19 +68,19 @@ export const securityHeaders = (req, res, next) => {
   // ป้องกัน XSS
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-XSS-Protection', '1; mode=block');
-  
+
   // ป้องกัน Clickjacking
   res.setHeader('X-Frame-Options', 'DENY');
-  
+
   // Content Security Policy
   res.setHeader('Content-Security-Policy', "default-src 'self'");
-  
+
   // Referrer Policy
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  
+
   // Remove X-Powered-By header
   res.removeHeader('X-Powered-By');
-  
+
   next();
 };
 
@@ -119,7 +119,7 @@ const sanitizeObject = (obj) => {
  */
 export const sanitizeString = (str) => {
   if (typeof str !== 'string') return str;
-  
+
   return str
     // ลบ HTML tags
     .replace(/<[^>]*>/g, '')
