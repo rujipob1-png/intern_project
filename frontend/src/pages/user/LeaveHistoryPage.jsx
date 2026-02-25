@@ -219,9 +219,9 @@ export const LeaveHistoryPage = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 py-4">
+    <div className="w-full space-y-0 py-0">
       {/* Header with Back Button */}
-      <div className="flex flex-col md:flex-row items-center justify-between mb-8 bg-white rounded-xl p-6 shadow-md border border-gray-200 gap-4">
+      <div className="flex flex-col md:flex-row items-center justify-between mb-0 bg-white rounded-none p-6 shadow-none border-b border-b-gray-200 gap-4 w-full">
         <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
           <button
             onClick={() => navigate('/dashboard')}
@@ -249,58 +249,58 @@ export const LeaveHistoryPage = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-md hover:shadow-lg transition-all">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-0 bg-gray-50 border-b border-b-gray-200 p-4 md:p-6 w-full">
+        <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-all">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs text-gray-500 mb-2 font-semibold uppercase tracking-wide">อนุมัติแล้ว</p>
-              <p className="text-4xl font-bold text-gray-800">{stats.approved}</p>
+              <p className="text-3xl font-bold text-gray-800">{stats.approved}</p>
             </div>
-            <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl">
-              <CheckCircle className="w-7 h-7 text-gray-500" />
+            <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+              <CheckCircle className="w-6 h-6 text-gray-500" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-md hover:shadow-lg transition-all">
+        <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-all">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs text-gray-500 mb-2 font-semibold uppercase tracking-wide">ไม่อนุมัติ</p>
-              <p className="text-4xl font-bold text-gray-800">{stats.rejected}</p>
+              <p className="text-3xl font-bold text-gray-800">{stats.rejected}</p>
             </div>
-            <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl">
-              <XCircle className="w-7 h-7 text-gray-500" />
+            <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+              <XCircle className="w-6 h-6 text-gray-500" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-md hover:shadow-lg transition-all">
+        <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-all">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs text-gray-500 mb-2 font-semibold uppercase tracking-wide">รออนุมัติ</p>
-              <p className="text-4xl font-bold text-gray-800">{stats.pending}</p>
+              <p className="text-3xl font-bold text-gray-800">{stats.pending}</p>
             </div>
-            <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl">
-              <Clock className="w-7 h-7 text-gray-500" />
+            <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+              <Clock className="w-6 h-6 text-gray-500" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-md hover:shadow-lg transition-all">
+        <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-all">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs text-gray-500 mb-2 font-semibold uppercase tracking-wide">ยกเลิกแล้ว</p>
-              <p className="text-4xl font-bold text-gray-800">{stats.cancelled}</p>
+              <p className="text-3xl font-bold text-gray-800">{stats.cancelled}</p>
             </div>
-            <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl">
-              <Ban className="w-7 h-7 text-gray-500" />
+            <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+              <Ban className="w-6 h-6 text-gray-500" />
             </div>
           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-md mb-6">
+      <div className="bg-white border-b border-b-gray-200 rounded-none p-6 shadow-none mb-0 w-full">
         <h3 className="text-sm font-bold text-gray-700 mb-4 uppercase tracking-wide flex items-center gap-2">
           <Filter className="w-4 h-4" />
           ค้นหาและกรอง
@@ -339,8 +339,8 @@ export const LeaveHistoryPage = () => {
         </div>
       </div>
       {/* Leave History List */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-visible shadow-lg">
-        <div className="bg-gray-800 px-6 py-4 border-b-2 border-gray-700">
+      <div className="bg-white border-b border-gray-200 rounded-none overflow-visible shadow-none w-full">
+        <div className="bg-gray-800 px-6 py-4 border-b border-gray-700">
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
             <FileText className="w-5 h-5" />
             รายการคำขอลา
