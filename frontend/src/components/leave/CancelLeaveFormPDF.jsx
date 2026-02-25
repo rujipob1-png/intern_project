@@ -185,7 +185,7 @@ export const CancelLeaveFormPDF = forwardRef(({ leave, user }, ref) => {
           </div>
           <div style={{ minWidth: 220, display: 'flex', flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', marginTop: 4, marginBottom: 0 }}>
             <span style={{ minWidth: 60 }}></span>
-            <span style={{ display: 'inline-block', width: '140px', textAlign: 'center', borderBottom: '1px dotted #000', paddingBottom: '2px', marginLeft: '6px' }}>({fullName})</span>
+              <span style={{ display: 'inline-block', width: '140px', textAlign: 'center', borderBottom: '1px dotted #000', paddingBottom: '2px', marginLeft: '6px', whiteSpace: 'nowrap' }}>({fullName})</span>
           </div>
         </div>
       </div>

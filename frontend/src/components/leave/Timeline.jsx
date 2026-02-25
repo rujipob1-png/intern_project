@@ -8,7 +8,7 @@ export const Timeline = ({ approvals, status, department, selectedDates = [] }) 
   const [selectedApproval, setSelectedApproval] = useState(null);
 
   // ตรวจสอบว่าเป็นสถานะยกเลิกหรือไม่
-  const isCancelFlow = status?.startsWith('pending_cancel') || status?.startsWith('cancel_level');
+  const isCancelFlow = status?.startsWith('pending_cancel') || status?.startsWith('cancel_level') || status === 'cancelled';
   // ตรวจสอบว่าเป็น GOK (ชั้น 3) หรือไม่ - ข้าม ผอ.กลุ่มงาน
   const isGOKDepartment = department === 'GOK';
 
@@ -294,27 +294,7 @@ export const Timeline = ({ approvals, status, department, selectedDates = [] }) 
                         )}
 
                         {/* สถานะ Badge */}
-                        <div className="flex items-center gap-2 mt-3">
-                          <span
-                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${
-                              approval.status === 'approved' || approval.action === 'approved'
-                                ? 'bg-green-500 text-white'
-                                : 'bg-red-500 text-white'
-                            }`}
-                          >
-                            {approval.status === 'approved' || approval.action === 'approved' ? (
-                              <>
-                                <Check className="w-3.5 h-3.5" />
-                                เห็นชอบแล้ว
-                              </>
-                            ) : (
-                              <>
-                                <X className="w-3.5 h-3.5" />
-                                ไม่อนุมัติ
-                              </>
-                            )}
-                          </span>
-                        </div>
+                        {/* ลบ badge สถานะออก เหลือแค่กล่องเหตุผล/หมายเหตุ */}
                       </div>
                     )}
 
