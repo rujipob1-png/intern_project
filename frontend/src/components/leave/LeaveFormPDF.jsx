@@ -40,7 +40,18 @@ const LeaveFormPDF = forwardRef(({ leave, user }, ref) => {
   const fullName = user?.fullName || (user?.firstName ? `${user?.title || ''}${user?.firstName} ${user?.lastName || ''}`.trim() : '') ||
     (leave?.users?.first_name ? `${leave.users.title || ''}${leave.users.first_name} ${leave.users.last_name}` : '');
   const position = user?.position || leave?.users?.position || '';
-  const department = user?.department || leave?.users?.department || '';
+  // Mapping ตัวย่อสังกัดเป็นตัวย่อภาษาไทย
+  const departmentMap = {
+    'GOK': 'กอก.',
+    'GYS': 'กยส.',
+    'GTS': 'กทส.',
+    'GTP': 'กตป.',
+    'GSS': 'กสส.',
+    'GKC': 'กคฐ.',
+    // เพิ่ม mapping ตามต้องการ
+  };
+  const rawDepartment = user?.department_th || user?.department || leave?.users?.department_th || leave?.users?.department || '';
+  const department = departmentMap[rawDepartment] || rawDepartment;
 
   // Checkbox helper
   const chk = (condition) => condition ? '✓' : '';
@@ -91,7 +102,7 @@ const LeaveFormPDF = forwardRef(({ leave, user }, ref) => {
       <div>เรื่อง<span style="${U}; width:220px;">&nbsp;</span></div>
       <div>เรียน<span style="${U}; width:220px;">&nbsp;</span></div>
       <div><span style="margin-left:45px;">ข้าพเจ้า</span><span style="${U}; width:270px; text-align:center;">${fullName}</span>ตำแหน่ง<span style="${U}; width:280px; text-align:center;">${position}</span></div>
-      <div>สังกัด<span style="${U}; width:400px; text-align:center;">${department}</span>ขอลา ( ${chk(leaveTypeId === 1)} ) ป่วย ( ${chk(leaveTypeId === 3)} ) กิจส่วนตัว ( ${chk(leaveTypeId === 2)} ) คลอดบุตร</div>
+      <div>สังกัด<span style="${U}; width:400px; text-align:center; padding-left:6px; padding-right:6px;">${department}</span>ขอลา ( ${chk(leaveTypeId === 1)} ) ป่วย ( ${chk(leaveTypeId === 3)} ) กิจส่วนตัว ( ${chk(leaveTypeId === 2)} ) คลอดบุตร</div>
       <div>เนื่องจาก<span style="${U}; width:200px; text-align:center;">${reason}</span>ตั้งแต่วันที่<span style="${U}; width:180px; text-align:center;">${startDate.day ? startDate.day+' '+startDate.month+' '+startDate.year : ''}</span>ถึงวันที่<span style="${U}; width:150px; text-align:center;">${endDate.day ? endDate.day+' '+endDate.month+' '+endDate.year : ''}</span></div>
       <div>มีกำหนดการ<span style="${U}; width:135px; text-align:center;">${totalDays}</span>วัน ข้าพเจ้าได้ลา ( ) ป่วย ( ) กิจส่วนตัว ( ) คลอดบุตร ครั้งสุดท้ายตั้งแต่</div>
       <div>
