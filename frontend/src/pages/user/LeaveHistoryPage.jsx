@@ -426,13 +426,25 @@ export const LeaveHistoryPage = () => {
                         {getStatusBadge(leave.status)}
                       </td>
                       <td className="px-8 py-5 whitespace-nowrap text-center">
-                        <button
-                          onClick={() => viewDetail(leave.id)}
-                          className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-gray-700 hover:text-white hover:bg-gray-800 bg-gray-50 border-2 border-gray-300 rounded-lg transition-all hover:shadow-md"
-                        >
-                          <Eye className="w-4 h-4" />
-                          ดูรายละเอียด
-                        </button>
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => viewDetail(leave.id)}
+                            className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-gray-700 hover:text-white hover:bg-gray-800 bg-gray-50 border-2 border-gray-300 rounded-lg transition-all hover:shadow-md"
+                          >
+                            <Eye className="w-4 h-4" />
+                            ดูรายละเอียด
+                          </button>
+                          {['pending', 'approved_level1', 'approved_level2', 'approved_level3'].includes((leave.status || '').toLowerCase()) && (
+                            <button
+                              onClick={() => handleCancelRequest(leave)}
+                              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-red-600 hover:text-white hover:bg-red-600 bg-red-50 border-2 border-red-300 rounded-lg transition-all hover:shadow-md"
+                              title="ยกเลิกการลา"
+                            >
+                              <XCircle className="w-4 h-4" />
+                              ยกเลิกการลา
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
