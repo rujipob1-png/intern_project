@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { authAPI } from '../api/auth.api';
 import { STORAGE_KEYS } from '../utils/constants';
+import { supabase } from '../config/supabase';
 
 const AuthContext = createContext(null);
 
@@ -24,6 +25,14 @@ export const AuthProvider = ({ children }) => {
             setToken(storedToken);
             setUser(response.data);
             sessionStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(response.data));
+
+            // Sync with Supabase client for realtime
+            if (supabase) {
+              supabase.auth.setSession({
+                access_token: storedToken,
+                refresh_token: '' // JWT doesn't have refresh token in this implementation
+              });
+            }
           } else {
             throw new Error('Invalid token');
           }
@@ -44,29 +53,37 @@ export const AuthProvider = ({ children }) => {
   const login = async (employeeCode, password) => {
     try {
       const data = await authAPI.login(employeeCode, password);
-      
+
       if (data.success) {
         const { token, user } = data.data;
-        
+
         // Save to state
         setToken(token);
         setUser(user);
-        
+
         // Save to sessionStorage
         sessionStorage.setItem(STORAGE_KEYS.TOKEN, token);
         sessionStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
-        
+
+        // Sync with Supabase client for realtime
+        if (supabase) {
+          supabase.auth.setSession({
+            access_token: token,
+            refresh_token: ''
+          });
+        }
+
         return { success: true };
       }
-      
-      return { 
-        success: false, 
+
+      return {
+        success: false,
         message: data.message,
-        errorCode: data.data?.errorCode 
+        errorCode: data.data?.errorCode
       };
     } catch (error) {
-      return { 
-        success: false, 
+      return {
+        success: false,
         message: error.message || 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ',
         errorCode: error.data?.errorCode
       };
@@ -79,6 +96,11 @@ export const AuthProvider = ({ children }) => {
     setToken(null);
     sessionStorage.removeItem(STORAGE_KEYS.TOKEN);
     sessionStorage.removeItem(STORAGE_KEYS.USER);
+
+    // Clear Supabase session
+    if (supabase) {
+      supabase.auth.signOut();
+    }
   };
 
   // Check if user is authenticated

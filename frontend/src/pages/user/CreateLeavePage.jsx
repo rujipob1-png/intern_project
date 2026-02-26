@@ -352,7 +352,7 @@ export const CreateLeavePage = () => {
             const formDataUpload = new FormData();
             formDataUpload.append('document', files[0]); // Upload first file only
 
-            const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+            const token = sessionStorage.getItem(STORAGE_KEYS.TOKEN);
             const uploadResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/uploads/leaves/${leaveId}/document`, {
               method: 'POST',
               headers: {
