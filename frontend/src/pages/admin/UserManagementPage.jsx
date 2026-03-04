@@ -1576,7 +1576,7 @@ const UserManagementPage = () => {
       {/* Delete/Disable User Modal */}
       {showDeleteModal && selectedUser && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col">
             <div className="bg-gray-800 px-6 py-4 flex items-center justify-between text-white">
               <h3 className="text-xl font-bold flex items-center gap-2">
                 <AlertCircle className="w-6 h-6" />
@@ -1587,7 +1587,7 @@ const UserManagementPage = () => {
               </button>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-4 overflow-y-auto flex-1">
               {/* User Info */}
               <div className="flex items-center gap-4 p-4 bg-slate-100 rounded-xl">
                 {selectedUser.profile_image_url ? (
