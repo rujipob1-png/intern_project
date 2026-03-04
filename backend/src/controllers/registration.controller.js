@@ -19,6 +19,7 @@ export const register = async (req, res) => {
       departmentCode,
       phone,
       email,
+      hireDate,
     } = req.body;
 
     // Validate required fields
@@ -88,6 +89,7 @@ export const register = async (req, res) => {
         department_code: departmentCode || null,
         phone: phone?.trim() || null,
         email: email?.trim() || null,
+        hire_date: hireDate || null,
         status: 'pending',
       })
       .select()
@@ -122,15 +124,15 @@ export const register = async (req, res) => {
 };
 
 /**
- * แจ้งเตือนไปยัง หัวหน้าฝ่ายกอก (central_office_head) และ ผอ./Admin
+ * แจ้งเตือนไปยัง หัวหน้าฝ่ายบริหาร (central_office_head) เท่านั้น
  */
 async function notifyAdmins(registration) {
   try {
-    // Find users with role central_office_head or admin
+    // Find users with role central_office_head only
     const { data: adminUsers } = await supabaseAdmin
       .from('users')
       .select('id, employee_code, first_name, last_name, roles!inner(role_name)')
-      .in('roles.role_name', ['central_office_head', 'admin'])
+      .in('roles.role_name', ['central_office_head'])
       .eq('is_active', true);
 
     if (!adminUsers || adminUsers.length === 0) return;
@@ -229,15 +231,15 @@ export const approveRegistration = async (req, res) => {
       return errorResponse(res, HTTP_STATUS.CONFLICT, 'รหัสพนักงานนี้มีอยู่ในระบบแล้ว');
     }
 
-    // Find department ID from department_code
-    let departmentId = null;
+    // Find department name from department_code
+    let departmentName = null;
     if (registration.department_code) {
       const { data: dept } = await supabaseAdmin
         .from('departments')
-        .select('id')
+        .select('department_name')
         .eq('department_code', registration.department_code)
         .single();
-      if (dept) departmentId = dept.id;
+      if (dept) departmentName = dept.department_name;
     }
 
     // Determine role — default to 'user' (role_id = 1) if not specified
@@ -261,11 +263,12 @@ export const approveRegistration = async (req, res) => {
         first_name: registration.first_name,
         last_name: registration.last_name,
         position: registration.position,
-        department_id: departmentId,
+        department: departmentName,
         phone: registration.phone,
         email: registration.email,
         role_id: finalRoleId,
         is_active: true,
+        hire_date: registration.hire_date || null,
         sick_leave_balance: 60,
         personal_leave_balance: 15,
         vacation_leave_balance: 10,

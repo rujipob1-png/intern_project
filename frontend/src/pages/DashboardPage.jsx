@@ -6,6 +6,7 @@ import { notificationAPI } from '../api/notification.api';
 import { ROLES, LEAVE_TYPE_CODES } from '../utils/constants';
 import { getDepartmentThaiCode } from '../utils/departmentMapping';
 import { leaveAPI } from '../api/leave.api';
+import { registrationAPI } from '../api/registration.api';
 import { formatDate } from '../utils/formatDate';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/common/Card';
 import DashboardCalendar from '../components/dashboard/DashboardCalendar';
@@ -24,7 +25,8 @@ import {
   HeartPulse,
   Palmtree,
   User,
-  BarChart3
+  BarChart3,
+  UserPlus
 } from 'lucide-react';
 
 export const DashboardPage = () => {
@@ -38,9 +40,11 @@ export const DashboardPage = () => {
   const [notiLoading, setNotiLoading] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [allLeaves, setAllLeaves] = useState([]);
+  const [pendingRegistrations, setPendingRegistrations] = useState(0);
 
   // Get role_name from user object
   const userRole = user?.role_name;
+  const isAdmin = userRole === ROLES.ADMIN || userRole === ROLES.CENTRAL_OFFICE_HEAD;
 
   useEffect(() => {
     loadRecentLeaves();
@@ -48,6 +52,7 @@ export const DashboardPage = () => {
     loadLeaveBalance();
     loadNotifications();
     fetchUnreadCount();
+    if (isAdmin) loadPendingRegistrations();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userRole, leaveUpdate, approvalUpdate, notificationUpdate]);
 
@@ -73,6 +78,18 @@ export const DashboardPage = () => {
       }
     } catch (error) {
       setUnreadCount(0);
+    }
+  };
+
+  const loadPendingRegistrations = async () => {
+    try {
+      const result = await registrationAPI.getRequests('pending');
+      if (result.success) {
+        const requests = result.data || [];
+        setPendingRegistrations(requests.length);
+      }
+    } catch (error) {
+      console.error('Load pending registrations error:', error);
     }
   };
 
@@ -220,6 +237,19 @@ export const DashboardPage = () => {
               <p className="font-medium text-slate-800 mb-1">ประวัติการลา</p>
               <p className="text-sm text-slate-500">ดูประวัติการลาย้อนหลัง</p>
             </button>
+
+            {isAdmin && (
+              <button onClick={() => navigate('/admin/registrations')} className="group bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-xl p-5 text-left transition-all relative">
+                <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-slate-200 transition-colors"><UserPlus className="w-5 h-5 text-slate-600" /></div>
+                <p className="font-medium text-slate-800 mb-1">คำขอลงทะเบียนใหม่</p>
+                <p className="text-sm text-slate-500">ตรวจสอบคำขอพนักงานใหม่</p>
+                {pendingRegistrations > 0 && (
+                  <span className="absolute top-3 right-3 px-2.5 py-0.5 rounded-full bg-red-500 text-white text-xs font-semibold">
+                    {pendingRegistrations} รอพิจารณา
+                  </span>
+                )}
+              </button>
+            )}
           </div>
         </div>
 

@@ -182,6 +182,9 @@ export const NotificationBell = () => {
       } else {
         navigate(`/leave-detail/${notification.reference_id}`);
       }
+    } else if (notificationType === 'new_registration') {
+      // พนักงานใหม่ลงทะเบียน - ไปหน้าจัดการคำขอลงทะเบียน
+      navigate('/admin/registrations');
     } else if (notification.reference_type === 'leave' && notification.reference_id) {
       // ประเภทอื่นๆ ที่เกี่ยวกับ leave
       navigate(`/leave-detail/${notification.reference_id}`);
@@ -213,6 +216,8 @@ export const NotificationBell = () => {
         return '✅';
       case 'cancel_rejected':
         return '❌';
+      case 'new_registration':
+        return '👤';
       default:
         return '🔔';
     }
@@ -241,6 +246,8 @@ export const NotificationBell = () => {
         return '👤 คำขอปฏิบัติหน้าที่แทน';
       case 'acting_approved':
         return '✅ อนุมัติปฏิบัติหน้าที่แทน';
+      case 'new_registration':
+        return '👤 พนักงานใหม่ลงทะเบียน';
       default:
         return notification.title || 'การแจ้งเตือน';
     }

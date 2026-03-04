@@ -46,6 +46,7 @@ export const RegisterPage = () => {
     departmentCode: '',
     phone: '',
     email: '',
+    hireDate: '',
   });
 
   const handleChange = (field) => (e) => {
@@ -111,6 +112,7 @@ export const RegisterPage = () => {
         departmentCode: form.departmentCode,
         phone: form.phone,
         email: form.email,
+        hireDate: form.hireDate || null,
       });
 
       if (result.success) {
@@ -323,6 +325,19 @@ export const RegisterPage = () => {
                   <p className="text-red-500 text-xs mt-1">{errors.email}</p>
                 )}
               </div>
+            </div>
+
+            {/* Hire Date */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">วันเข้ารับราชการ</label>
+              <input
+                type="date"
+                value={form.hireDate}
+                onChange={handleChange('hireDate')}
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+                disabled={loading}
+              />
+              <p className="text-gray-400 text-xs mt-1">ไม่บังคับกรอก — สามารถเพิ่มภายหลังได้</p>
             </div>
 
             {/* Password */}

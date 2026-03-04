@@ -43,7 +43,7 @@ const router = express.Router();
 
 // ใช้ authenticate กับทุก route
 router.use(authenticate);
-router.use(requireRole(['admin']));
+router.use(requireRole(['admin', 'central_office_head']));
 
 /**
  * @route   GET /api/admin/leaves/pending
