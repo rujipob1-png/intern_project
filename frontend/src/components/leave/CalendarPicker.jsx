@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { ChevronDown, X, Check } from 'lucide-react';
+import { isThaiHoliday, getHolidayInfo } from '../../utils/thaiHolidays';
 
 /**
  * CalendarPicker - ปฏิทินแบบคลิกเลือกหลายวันได้ (เหมือนเลือกที่นั่งโรงหนัง)
@@ -157,6 +158,11 @@ export const CalendarPicker = ({
     return dayOfWeek === 0 || dayOfWeek === 6;
   };
 
+  const isHoliday = (date) => {
+    if (!date) return false;
+    return isThaiHoliday(date);
+  };
+
   const isToday = (date) => {
     if (!date) return false;
     return formatDate(date) === formatDate(today);
@@ -261,6 +267,8 @@ export const CalendarPicker = ({
             const todayDate = isToday(date);
             const isSunday = date.getDay() === 0;
             const isSaturday = date.getDay() === 6;
+            const holiday = isHoliday(date);
+            const holidayInfo = holiday ? getHolidayInfo(date) : null;
 
             return (
               <button
@@ -275,16 +283,21 @@ export const CalendarPicker = ({
                     ? 'bg-gray-800 text-white shadow-lg scale-105'
                     : isDisabled
                       ? 'text-gray-300 cursor-not-allowed'
-                      : isSunday
-                        ? 'text-gray-400 hover:bg-gray-100'
-                        : isSaturday
+                      : holiday && !weekend
+                        ? 'bg-green-50 text-green-700 hover:bg-green-100 ring-1 ring-green-200'
+                        : isSunday
                           ? 'text-gray-400 hover:bg-gray-100'
-                          : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                          : isSaturday
+                            ? 'text-gray-400 hover:bg-gray-100'
+                            : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                   }
                   ${todayDate && !selected ? 'ring-2 ring-gray-400 ring-offset-1' : ''}
                 `}
               >
                 {date.getDate()}
+                {holiday && !selected && !isDisabled && (
+                  <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-green-500" />
+                )}
                 {selected && (
                   <span className="absolute -top-1 -right-1 w-3 h-3 bg-gray-500 rounded-full flex items-center justify-center">
                     <Check className="w-2 h-2 text-white" />
@@ -297,13 +310,19 @@ export const CalendarPicker = ({
 
         {/* Footer */}
         <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-t border-gray-100 rounded-b-2xl">
-          <button
-            type="button"
-            onClick={() => setCurrentMonth(new Date())}
-            className="text-sm text-gray-600 hover:text-gray-900 font-medium hover:underline"
-          >
-            วันนี้
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setCurrentMonth(new Date())}
+              className="text-sm text-gray-600 hover:text-gray-900 font-medium hover:underline"
+            >
+              วันนี้
+            </button>
+            <div className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-green-500" />
+              <span className="text-[10px] text-gray-400">วันหยุดราชการ</span>
+            </div>
+          </div>
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-gray-700">
               {selectedDates.length > 0 ? (

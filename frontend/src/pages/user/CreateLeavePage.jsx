@@ -9,6 +9,7 @@ import { leaveAPI } from '../../api/leave.api';
 import { calculateDays } from '../../utils/formatDate';
 import { LEAVE_TYPE_NAMES, STORAGE_KEYS } from '../../utils/constants';
 import { sanitizeString, leaveRequestSchema, validateData } from '../../utils/validation';
+import { isThaiHoliday } from '../../utils/thaiHolidays';
 import toast from 'react-hot-toast';
 import { FileText, Calendar, AlertCircle, Upload, X, Info, AlertTriangle, CheckCircle } from 'lucide-react';
 
@@ -282,10 +283,7 @@ export const CreateLeavePage = () => {
       toast.error('กรุณาเลือกวันที่ลาอย่างน้อย 1 วัน');
       return;
     }
-    if (!formData.reason.trim()) {
-      toast.error('กรุณากรอกเหตุผลการลา');
-      return;
-    }
+
 
     // ⚠️ เฉพาะลาพักผ่อน (VACATION) ต้องใส่ผู้ปฏิบัติหน้าที่แทน
     if (selectedLeaveType?.type_code === 'VACATION' && !formData.actingPersonId) {
@@ -393,7 +391,7 @@ export const CreateLeavePage = () => {
 
   const selectedLeaveType = leaveTypes.find(type => type.id === formData.leaveTypeId);
 
-  // ฟังก์ชันคำนวณ 15 วันทำการ (ไม่นับเสาร์อาทิตย์)
+  // ฟังก์ชันคำนวณ 15 วันทำการ (ไม่นับเสาร์อาทิตย์ และวันหยุดราชการ)
   const calculate15WorkingDays = (startDateStr) => {
     const dates = [];
     let currentDate = new Date(startDateStr + 'T00:00:00');
@@ -409,9 +407,9 @@ export const CreateLeavePage = () => {
 
     while (workingDays < 15) {
       const dayOfWeek = currentDate.getDay();
-      // 0 = อาทิตย์, 6 = เสาร์
-      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-        const dateStr = toLocalISOString(currentDate);
+      const dateStr = toLocalISOString(currentDate);
+      // 0 = อาทิตย์, 6 = เสาร์, และวันหยุดราชการ
+      if (dayOfWeek !== 0 && dayOfWeek !== 6 && !isThaiHoliday(dateStr)) {
         dates.push(dateStr);
         workingDays++;
       }
@@ -809,7 +807,7 @@ export const CreateLeavePage = () => {
               {/* Reason */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  เหตุผลการลา <span className="text-red-500">*</span>
+                  เหตุผลการลา
                 </label>
                 <textarea
                   name="reason"
@@ -818,7 +816,6 @@ export const CreateLeavePage = () => {
                   rows={4}
                   className="input-field"
                   placeholder="กรุณาระบุเหตุผลการลา..."
-                  required
                 />
               </div>
 
@@ -830,7 +827,6 @@ export const CreateLeavePage = () => {
                   value={formData.contactAddress}
                   onChange={handleInputChange}
                   placeholder="เช่น 123 ถ.สุขุมวิท กรุงเทพฯ"
-                  required
                 />
                 <Input
                   label="เบอร์โทรศัพท์"

@@ -94,9 +94,9 @@ export const createLeaveValidation = [
     }),
 
   body('reason')
-    .notEmpty().withMessage('กรุณากรอกเหตุผลการลา')
+    .optional({ nullable: true })
     .customSanitizer(customSanitize)
-    .isLength({ min: 5, max: 1000 }).withMessage('เหตุผลต้องมี 5-1000 ตัวอักษร'),
+    .isLength({ max: 1000 }).withMessage('เหตุผลต้องไม่เกิน 1000 ตัวอักษร'),
 
   body('actingPersonId')
     .optional({ nullable: true })
