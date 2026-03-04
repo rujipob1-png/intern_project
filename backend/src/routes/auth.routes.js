@@ -1,5 +1,5 @@
 import express from 'express';
-import { login, getProfile, changePassword, updateNotificationSettings, uploadProfileImage, deleteProfileImage } from '../controllers/auth.controller.js';
+import { login, getProfile, changePassword, updateNotificationSettings, uploadProfileImage, deleteProfileImage, forgotPassword, resetPassword } from '../controllers/auth.controller.js';
 import { authenticate } from '../middlewares/auth.middleware.js';
 import { loginValidation } from '../middlewares/validation.middleware.js';
 import { loginLimiter, passwordChangeLimiter } from '../middlewares/rateLimit.middleware.js';
@@ -31,6 +31,62 @@ const router = express.Router();
  *         description: พยายามเข้าสู่ระบบมากเกินไป
  */
 router.post('/login', loginLimiter, loginValidation, login);
+
+/**
+ * @swagger
+ * /auth/forgot-password:
+ *   post:
+ *     summary: ขอรีเซ็ตรหัสผ่าน
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - employeeCode
+ *               - email
+ *             properties:
+ *               employeeCode:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       200:
+ *         description: ส่งลิงก์รีเซ็ตรหัสผ่านแล้ว (ถ้าข้อมูลถูกต้อง)
+ */
+router.post('/forgot-password', loginLimiter, forgotPassword);
+
+/**
+ * @swagger
+ * /auth/reset-password:
+ *   post:
+ *     summary: ตั้งรหัสผ่านใหม่จาก reset token
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *               - newPassword
+ *             properties:
+ *               token:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
+ *                 minLength: 8
+ *     responses:
+ *       200:
+ *         description: รีเซ็ตรหัสผ่านสำเร็จ
+ *       400:
+ *         description: Token ไม่ถูกต้องหรือหมดอายุ
+ */
+router.post('/reset-password', resetPassword);
 
 /**
  * @swagger

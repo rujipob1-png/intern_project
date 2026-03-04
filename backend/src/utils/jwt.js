@@ -37,6 +37,15 @@ export const verifyToken = (token) => {
 };
 
 /**
+ * สร้าง Reset-Password Token (หมดอายุ 15 นาที)
+ */
+export const generateResetToken = (payload) => {
+  return jwt.sign(payload, JWT_SECRET, {
+    expiresIn: '15m'
+  });
+};
+
+/**
  * Decode Token โดยไม่ verify (ใช้สำหรับดูข้อมูลใน token)
  */
 export const decodeToken = (token) => {

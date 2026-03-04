@@ -11,7 +11,7 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'ระบบการลาออนไลน์ API',
+      title: 'ระบบการลาอิเล็กทรอนิกส์ API',
       version: '1.0.0',
       description: `
         API สำหรับระบบจัดการการลาออนไลน์

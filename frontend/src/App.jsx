@@ -5,6 +5,8 @@ import { RealtimeProvider } from './contexts/RealtimeContext';
 import { ConfirmProvider } from './components/common/ConfirmDialog';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 import { LoginPage } from './pages/auth/LoginPage';
+import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
+import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { CreateLeavePage } from './pages/user/CreateLeavePage';
 import { MyLeavesPage } from './pages/user/MyLeavesPage';
@@ -37,6 +39,8 @@ function App() {
           <BrowserRouter>
             <Routes>
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
 
               {/* Main Layout Protected Routes */}
               <Route

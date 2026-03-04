@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
@@ -212,6 +212,15 @@ export const LoginPage = () => {
               <LogIn className="w-5 h-5" />
               เข้าสู่ระบบ
             </Button>
+
+            <div className="text-right">
+              <Link
+                to="/forgot-password"
+                className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+              >
+                ลืมรหัสผ่าน?
+              </Link>
+            </div>
           </form>
 
           {/* Demo Accounts */}
@@ -258,7 +267,7 @@ export const LoginPage = () => {
 
         {/* Footer */}
         <p className="text-center text-sm text-gray-500 mt-8 opacity-75">
-          © 2026 ระบบการลาออนไลน์. All rights reserved.
+          © 2026 ระบบการลาอิเล็กทรอนิกส์. All rights reserved.
         </p>
       </div>
     </div>

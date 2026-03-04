@@ -69,7 +69,7 @@ async function sendEmail(to, template) {
   
   try {
     const info = await transporter.sendMail({
-      from: `"ระบบลาออนไลน์" <${process.env.SMTP_USER}>`,
+      from: `"ระบบการลาอิเล็กทรอนิกส์" <${process.env.SMTP_USER}>`,
       to,
       subject: template.subject,
       html: template.html
@@ -382,7 +382,7 @@ export const EmailService = {
                   </p>
                 </div>
                 <div style="background: #6B7280; color: white; padding: 10px; text-align: center; border-radius: 0 0 8px 8px; font-size: 12px;">
-                  ระบบลาออนไลน์ - อีเมลนี้ส่งโดยอัตโนมัติ กรุณาอย่าตอบกลับ
+                  ระบบการลาอิเล็กทรอนิกส์ - อีเมลนี้ส่งโดยอัตโนมัติ กรุณาอย่าตอบกลับ
                 </div>
               </div>
             `
@@ -501,7 +501,7 @@ export const EmailService = {
                   </p>
                 </div>
                 <div style="background: #6B7280; color: white; padding: 10px; text-align: center; border-radius: 0 0 8px 8px; font-size: 12px;">
-                  ระบบลาออนไลน์ - อีเมลนี้ส่งโดยอัตโนมัติ กรุณาอย่าตอบกลับ
+                  ระบบการลาอิเล็กทรอนิกส์ - อีเมลนี้ส่งโดยอัตโนมัติ กรุณาอย่าตอบกลับ
                 </div>
               </div>
             `

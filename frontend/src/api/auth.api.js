@@ -47,4 +47,22 @@ export const authAPI = {
     const response = await axios.delete('/auth/profile-image');
     return response.data;
   },
+
+  // Forgot password — ขอลิงก์รีเซ็ตรหัสผ่าน
+  forgotPassword: async (employeeCode, email) => {
+    const response = await axios.post('/auth/forgot-password', {
+      employeeCode,
+      email,
+    });
+    return response.data;
+  },
+
+  // Reset password — ตั้งรหัสผ่านใหม่
+  resetPassword: async (token, newPassword) => {
+    const response = await axios.post('/auth/reset-password', {
+      token,
+      newPassword,
+    });
+    return response.data;
+  },
 };

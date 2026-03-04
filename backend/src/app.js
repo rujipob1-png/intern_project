@@ -53,8 +53,8 @@ app.use(cors({
   credentials: true
 }));
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 
 // Sanitize request body
 app.use(sanitizeBody);
@@ -93,7 +93,7 @@ if (process.env.NODE_ENV !== 'production') {
     import('./config/swagger.js').then(({ swaggerSpec }) => {
       app.use('/api-docs', swaggerUi.default.serve, swaggerUi.default.setup(swaggerSpec, {
         customCss: '.swagger-ui .topbar { display: none }',
-        customSiteTitle: 'ระบบการลาออนไลน์ - API Documentation'
+        customSiteTitle: 'ระบบการลาอิเล็กทรอนิกส์ - API Documentation'
       }));
       console.log('📚 API Docs available at: http://localhost:3000/api-docs');
     });

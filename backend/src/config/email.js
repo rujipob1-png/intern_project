@@ -97,7 +97,7 @@ export const EmailTemplates = {
           </div>
         </div>
         <div style="background: #6B7280; color: white; padding: 10px; text-align: center; border-radius: 0 0 8px 8px; font-size: 12px;">
-          ระบบลาออนไลน์ - อีเมลนี้ส่งโดยอัตโนมัติ กรุณาอย่าตอบกลับ
+          ระบบการลาอิเล็กทรอนิกส์ - อีเมลนี้ส่งโดยอัตโนมัติ กรุณาอย่าตอบกลับ
         </div>
       </div>
     `
@@ -135,7 +135,7 @@ export const EmailTemplates = {
           <p style="color: #059669;">🎉 ขอให้มีความสุขในช่วงวันลาของคุณ!</p>
         </div>
         <div style="background: #6B7280; color: white; padding: 10px; text-align: center; border-radius: 0 0 8px 8px; font-size: 12px;">
-          ระบบลาออนไลน์ - อีเมลนี้ส่งโดยอัตโนมัติ กรุณาอย่าตอบกลับ
+          ระบบการลาอิเล็กทรอนิกส์ - อีเมลนี้ส่งโดยอัตโนมัติ กรุณาอย่าตอบกลับ
         </div>
       </div>
     `
@@ -185,7 +185,7 @@ export const EmailTemplates = {
           <p>หากมีข้อสงสัย กรุณาติดต่อ ผอ. กลุ่มงานของท่าน</p>
         </div>
         <div style="background: #6B7280; color: white; padding: 10px; text-align: center; border-radius: 0 0 8px 8px; font-size: 12px;">
-          ระบบลาออนไลน์ - อีเมลนี้ส่งโดยอัตโนมัติ กรุณาอย่าตอบกลับ
+          ระบบการลาอิเล็กทรอนิกส์ - อีเมลนี้ส่งโดยอัตโนมัติ กรุณาอย่าตอบกลับ
         </div>
       </div>
     `
@@ -226,11 +226,40 @@ export const EmailTemplates = {
           </div>
         </div>
         <div style="background: #6B7280; color: white; padding: 10px; text-align: center; border-radius: 0 0 8px 8px; font-size: 12px;">
-          ระบบลาออนไลน์ - อีเมลนี้ส่งโดยอัตโนมัติ กรุณาอย่าตอบกลับ
+          ระบบการลาอิเล็กทรอนิกส์ - อีเมลนี้ส่งโดยอัตโนมัติ กรุณาอย่าตอบกลับ
         </div>
       </div>
     `
   }),
+
+  /**
+   * รีเซ็ตรหัสผ่าน
+   */
+  passwordReset: (user, resetUrl) => `
+    <div style="font-family: 'Sarabun', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background: #3B82F6; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+        <h1 style="margin: 0; font-size: 20px;">🔑 รีเซ็ตรหัสผ่าน</h1>
+      </div>
+      <div style="background: #F9FAFB; padding: 20px; border: 1px solid #E5E7EB;">
+        <p>เรียน คุณ${user.first_name} ${user.last_name},</p>
+        <p>คุณได้ขอรีเซ็ตรหัสผ่านสำหรับระบบการลาอิเล็กทรอนิกส์</p>
+        <p>กรุณาคลิกปุ่มด้านล่างเพื่อตั้งรหัสผ่านใหม่ (ลิงก์นี้ใช้ได้ 15 นาที)</p>
+
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${resetUrl}"
+             style="display: inline-block; background: #3B82F6; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: bold;">
+            ตั้งรหัสผ่านใหม่
+          </a>
+        </div>
+
+        <p style="color: #6B7280; font-size: 13px;">หากคุณไม่ได้ขอรีเซ็ตรหัสผ่าน กรุณาเพิกเฉยอีเมลนี้</p>
+        <p style="color: #9CA3AF; font-size: 12px; word-break: break-all;">ลิงก์: ${resetUrl}</p>
+      </div>
+      <div style="background: #6B7280; color: white; padding: 10px; text-align: center; border-radius: 0 0 8px 8px; font-size: 12px;">
+        ระบบการลาอิเล็กทรอนิกส์ - อีเมลนี้ส่งโดยอัตโนมัติ กรุณาอย่าตอบกลับ
+      </div>
+    </div>
+  `,
 
   /**
    * แจ้งอัพเดทสถานะใบลา (สำหรับทุกระดับ)
@@ -284,7 +313,7 @@ export const EmailTemplates = {
           ${statusInfo.nextStep ? `<p style="color: #6B7280;">📌 ขั้นตอนถัดไป: ${statusInfo.nextStep}</p>` : ''}
         </div>
         <div style="background: #6B7280; color: white; padding: 10px; text-align: center; border-radius: 0 0 8px 8px; font-size: 12px;">
-          ระบบลาออนไลน์ - อีเมลนี้ส่งโดยอัตโนมัติ กรุณาอย่าตอบกลับ
+          ระบบการลาอิเล็กทรอนิกส์ - อีเมลนี้ส่งโดยอัตโนมัติ กรุณาอย่าตอบกลับ
         </div>
       </div>
     `

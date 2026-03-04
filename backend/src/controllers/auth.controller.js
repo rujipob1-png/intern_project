@@ -1,8 +1,9 @@
 import bcrypt from 'bcrypt';
 import { supabaseAdmin } from '../config/supabase.js';
-import { generateToken } from '../utils/jwt.js';
+import { generateToken, generateResetToken, verifyToken } from '../utils/jwt.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 import { HTTP_STATUS } from '../config/constants.js';
+import { getTransporter, EmailTemplates } from '../config/email.js';
 
 /**
  * Login ด้วยรหัสตำแหน่ง (employee_code) และรหัสผ่าน
@@ -514,6 +515,175 @@ export const deleteProfileImage = async (req, res) => {
     );
   } catch (error) {
     console.error('Delete profile image error:', error);
+    return errorResponse(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      'เกิดข้อผิดพลาด: ' + error.message
+    );
+  }
+};
+
+/**
+ * ลืมรหัสผ่าน — ส่งลิงก์รีเซ็ตไปยัง email
+ */
+export const forgotPassword = async (req, res) => {
+  try {
+    const { employeeCode, email } = req.body;
+
+    if (!employeeCode || !email) {
+      return errorResponse(
+        res,
+        HTTP_STATUS.BAD_REQUEST,
+        'กรุณากรอกรหัสพนักงานและ Email'
+      );
+    }
+
+    // หา user ที่ตรงทั้ง employee_code + email
+    const { data: user, error } = await supabaseAdmin
+      .from('users')
+      .select('id, employee_code, email, first_name, last_name, is_active')
+      .eq('employee_code', employeeCode)
+      .maybeSingle();
+
+    // ส่ง response เหมือนกันไม่ว่าจะพบหรือไม่ เพื่อป้องกัน enumeration
+    if (error || !user || !user.email || user.email.toLowerCase() !== email.toLowerCase()) {
+      // ยังคงตอบสำเร็จเพื่อไม่ให้รู้ว่ามี user หรือไม่
+      return successResponse(
+        res,
+        HTTP_STATUS.OK,
+        'หากข้อมูลถูกต้อง ระบบจะส่งลิงก์รีเซ็ตรหัสผ่านไปยัง Email ของคุณ'
+      );
+    }
+
+    if (!user.is_active) {
+      return successResponse(
+        res,
+        HTTP_STATUS.OK,
+        'หากข้อมูลถูกต้อง ระบบจะส่งลิงก์รีเซ็ตรหัสผ่านไปยัง Email ของคุณ'
+      );
+    }
+
+    // สร้าง reset token (หมดอายุ 15 นาที)
+    const resetToken = generateResetToken({
+      userId: user.id,
+      purpose: 'password_reset'
+    });
+
+    // สร้าง reset URL
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
+
+    // ส่ง email
+    const transporter = getTransporter();
+    if (transporter) {
+      try {
+        await transporter.sendMail({
+          from: `"ระบบการลาอิเล็กทรอนิกส์" <${process.env.SMTP_USER}>`,
+          to: user.email,
+          subject: '[ระบบลา] รีเซ็ตรหัสผ่าน',
+          html: EmailTemplates.passwordReset(user, resetUrl)
+        });
+        console.log(`✅ Password reset email sent to ${user.email}`);
+      } catch (emailError) {
+        console.error('❌ Failed to send reset email:', emailError.message);
+        return errorResponse(
+          res,
+          HTTP_STATUS.INTERNAL_SERVER_ERROR,
+          'ไม่สามารถส่ง Email ได้ กรุณาลองใหม่อีกครั้ง'
+        );
+      }
+    } else {
+      // ถ้า email ไม่ได้ตั้งค่า ส่ง token กลับเพื่อ dev/demo
+      console.warn('⚠️ Email not configured. Reset token:', resetToken);
+      return successResponse(
+        res,
+        HTTP_STATUS.OK,
+        'ระบบ Email ยังไม่ได้ตั้งค่า — ใช้ลิงก์นี้แทน (สำหรับทดสอบ)',
+        { resetUrl }
+      );
+    }
+
+    return successResponse(
+      res,
+      HTTP_STATUS.OK,
+      'หากข้อมูลถูกต้อง ระบบจะส่งลิงก์รีเซ็ตรหัสผ่านไปยัง Email ของคุณ'
+    );
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    return errorResponse(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      'เกิดข้อผิดพลาด: ' + error.message
+    );
+  }
+};
+
+/**
+ * รีเซ็ตรหัสผ่าน — ตั้งรหัสผ่านใหม่จาก reset token
+ */
+export const resetPassword = async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      return errorResponse(
+        res,
+        HTTP_STATUS.BAD_REQUEST,
+        'กรุณากรอกข้อมูลให้ครบถ้วน'
+      );
+    }
+
+    if (newPassword.length < 8) {
+      return errorResponse(
+        res,
+        HTTP_STATUS.BAD_REQUEST,
+        'รหัสผ่านใหม่ต้องมีอย่างน้อย 8 ตัวอักษร'
+      );
+    }
+
+    if (!/(?=.*[a-zA-Z])(?=.*\d)/.test(newPassword)) {
+      return errorResponse(
+        res,
+        HTTP_STATUS.BAD_REQUEST,
+        'รหัสผ่านต้องมีทั้งตัวอักษรและตัวเลข'
+      );
+    }
+
+    // Verify reset token
+    let decoded;
+    try {
+      decoded = verifyToken(token);
+    } catch (err) {
+      const msg = err.message === 'Token has expired'
+        ? 'ลิงก์รีเซ็ตหมดอายุแล้ว กรุณาขอลิงก์ใหม่'
+        : 'ลิงก์รีเซ็ตไม่ถูกต้อง';
+      return errorResponse(res, HTTP_STATUS.BAD_REQUEST, msg);
+    }
+
+    if (decoded.purpose !== 'password_reset') {
+      return errorResponse(res, HTTP_STATUS.BAD_REQUEST, 'Token ไม่ถูกต้อง');
+    }
+
+    // Hash รหัสผ่านใหม่
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+
+    // อัปเดตรหัสผ่าน
+    const { error } = await supabaseAdmin
+      .from('users')
+      .update({ password_hash: passwordHash })
+      .eq('id', decoded.userId);
+
+    if (error) {
+      throw error;
+    }
+
+    return successResponse(
+      res,
+      HTTP_STATUS.OK,
+      'รีเซ็ตรหัสผ่านสำเร็จ กรุณาเข้าสู่ระบบด้วยรหัสผ่านใหม่'
+    );
+  } catch (error) {
+    console.error('Reset password error:', error);
     return errorResponse(
       res,
       HTTP_STATUS.INTERNAL_SERVER_ERROR,
