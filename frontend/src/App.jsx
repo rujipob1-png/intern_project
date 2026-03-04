@@ -28,6 +28,8 @@ import AdminApprovalHistory from './pages/admin/AdminApprovalHistory';
 import AdminCancelRequests from './pages/admin/AdminCancelRequests';
 import AdminCancelHistory from './pages/admin/AdminCancelHistory';
 import UserManagementPage from './pages/admin/UserManagementPage';
+import RegistrationManagementPage from './pages/admin/RegistrationManagementPage';
+import { RegisterPage } from './pages/auth/RegisterPage';
 
 import { MainLayout } from './components/layout/MainLayout';
 
@@ -41,6 +43,7 @@ function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/register" element={<RegisterPage />} />
 
               {/* Main Layout Protected Routes */}
               <Route
@@ -79,6 +82,7 @@ function App() {
                 <Route path="/admin/cancel-requests" element={<AdminCancelRequests />} />
                 <Route path="/admin/cancel-history" element={<AdminCancelHistory />} />
                 <Route path="/admin/users" element={<UserManagementPage />} />
+                <Route path="/admin/registrations" element={<RegistrationManagementPage />} />
               </Route>
 
               <Route path="/" element={<Navigate to="/login" replace />} />

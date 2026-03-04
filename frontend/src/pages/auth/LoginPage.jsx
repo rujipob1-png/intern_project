@@ -213,7 +213,13 @@ export const LoginPage = () => {
               เข้าสู่ระบบ
             </Button>
 
-            <div className="text-right">
+            <div className="flex items-center justify-between">
+              <Link
+                to="/register"
+                className="text-sm text-gray-600 hover:text-gray-900 hover:underline"
+              >
+                ลงทะเบียนพนักงานใหม่
+              </Link>
               <Link
                 to="/forgot-password"
                 className="text-sm text-blue-600 hover:text-blue-800 hover:underline"

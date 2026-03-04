@@ -13,7 +13,8 @@ import {
   CheckCircle,
   TrendingUp,
   Clock,
-  XCircle
+  XCircle,
+  UserPlus
 } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { ROLES } from '../../utils/constants';
@@ -245,13 +246,19 @@ export const Sidebar = () => {
       title: 'จัดการระบบ',
       icon: Settings,
       collapsible: true,
-      roles: [ROLES.ADMIN],
+      roles: [ROLES.ADMIN, ROLES.CENTRAL_OFFICE_HEAD],
       items: [
         {
           title: 'จัดการผู้ใช้',
           icon: Users,
           path: '/admin/users',
           roles: [ROLES.ADMIN],
+        },
+        {
+          title: 'คำขอลงทะเบียนใหม่',
+          icon: UserPlus,
+          path: '/admin/registrations',
+          roles: [ROLES.ADMIN, ROLES.CENTRAL_OFFICE_HEAD],
         },
         {
           title: 'ตั้งค่าระบบ',

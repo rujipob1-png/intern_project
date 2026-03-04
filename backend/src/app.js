@@ -12,6 +12,7 @@ import uploadRoutes from './routes/upload.routes.js';
 import reportsRoutes from './routes/reports.routes.js';
 import actingRoutes from './routes/acting.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
+import registrationRoutes from './routes/registration.routes.js';
 import healthRoutes from './routes/health.routes.js';
 import { errorResponse } from './utils/response.js';
 import { HTTP_STATUS } from './config/constants.js';
@@ -86,6 +87,7 @@ app.use('/api/uploads', uploadRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/acting', actingRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/registration', registrationRoutes);
 
 // Swagger API Documentation (only in development)
 if (process.env.NODE_ENV !== 'production') {
