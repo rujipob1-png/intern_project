@@ -339,7 +339,7 @@ export const EmailService = {
       const results = await Promise.all(
         approvers.map(approver => {
           const template = {
-            subject: `[ระบบลา] 📋 ใบลารอพิจารณา - ${leave.requester.first_name} ${leave.requester.last_name}`,
+            subject: `[ระบบการลาอิเล็กทรอนิกส์] 📋 ใบลารอพิจารณา - ${leave.requester.first_name} ${leave.requester.last_name}`,
             html: `
               <div style="font-family: 'Sarabun', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                 <div style="background: #F59E0B; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
@@ -451,7 +451,7 @@ export const EmailService = {
       const results = await Promise.all(
         approvers.map(approver => {
           const template = {
-            subject: `[ระบบลา] 🔄 คำขอยกเลิกการลารอพิจารณา - ${leave.requester.first_name} ${leave.requester.last_name}`,
+            subject: `[ระบบการลาอิเล็กทรอนิกส์] 🔄 คำขอยกเลิกการลารอพิจารณา - ${leave.requester.first_name} ${leave.requester.last_name}`,
             html: `
               <div style="font-family: 'Sarabun', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                 <div style="background: #EF4444; color: white; padding: 20px; border-radius: 8px 8px 0 0;">

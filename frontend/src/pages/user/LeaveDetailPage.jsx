@@ -171,7 +171,7 @@ export const LeaveDetailPage = () => {
           </div>
           <div className="flex items-center gap-3">
             {getStatusBadge(leave.status)}
-            {['pending', 'approved_level1', 'approved_level2', 'approved_level3'].includes(leave.status) && (
+            {['pending', 'approved_level1', 'approved_level2', 'approved_level3', 'approved_final'].includes(leave.status) && (
               <Button
                 variant="outline"
                 onClick={() => setShowCancelModal(true)}

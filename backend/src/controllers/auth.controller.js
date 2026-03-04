@@ -580,7 +580,7 @@ export const forgotPassword = async (req, res) => {
         await transporter.sendMail({
           from: `"ระบบการลาอิเล็กทรอนิกส์" <${process.env.SMTP_USER}>`,
           to: user.email,
-          subject: '[ระบบลา] รีเซ็ตรหัสผ่าน',
+          subject: '[ระบบการลาอิเล็กทรอนิกส์] รีเซ็ตรหัสผ่าน',
           html: EmailTemplates.passwordReset(user, resetUrl)
         });
         console.log(`✅ Password reset email sent to ${user.email}`);

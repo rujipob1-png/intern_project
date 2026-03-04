@@ -60,7 +60,7 @@ export const EmailTemplates = {
    * ใบลารอพิจารณา (สำหรับ Approver)
    */
   leaveRequestPending: (leave, requester, approverName) => ({
-    subject: `[ระบบลา] ใบลาใหม่รอพิจารณา - ${requester.first_name} ${requester.last_name}`,
+    subject: `[ระบบการลาอิเล็กทรอนิกส์] ใบลาใหม่รอพิจารณา - ${requester.first_name} ${requester.last_name}`,
     html: `
       <div style="font-family: 'Sarabun', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: #3B82F6; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
@@ -107,7 +107,7 @@ export const EmailTemplates = {
    * ใบลาได้รับการอนุมัติ (สำหรับ Requester)
    */
   leaveApproved: (leave, requester) => ({
-    subject: `[ระบบลา] ✅ ใบลาของคุณได้รับการอนุมัติแล้ว`,
+    subject: `[ระบบการลาอิเล็กทรอนิกส์] ✅ ใบลาของคุณได้รับการอนุมัติแล้ว`,
     html: `
       <div style="font-family: 'Sarabun', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: #10B981; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
@@ -145,7 +145,7 @@ export const EmailTemplates = {
    * ใบลาถูกปฏิเสธ (สำหรับ Requester)
    */
   leaveRejected: (leave, requester, rejectReason, rejecterName) => ({
-    subject: `[ระบบลา] ❌ ใบลาของคุณไม่ได้รับการอนุมัติ`,
+    subject: `[ระบบการลาอิเล็กทรอนิกส์] ❌ ใบลาของคุณไม่ได้รับการอนุมัติ`,
     html: `
       <div style="font-family: 'Sarabun', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: #EF4444; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
@@ -195,7 +195,7 @@ export const EmailTemplates = {
    * แจ้งเตือนผู้ปฏิบัติหน้าที่แทน
    */
   actingPersonAssigned: (leave, requester, actingPerson) => ({
-    subject: `[ระบบลา] 📋 คุณถูกมอบหมายให้ปฏิบัติหน้าที่แทน`,
+    subject: `[ระบบการลาอิเล็กทรอนิกส์] 📋 คุณถูกมอบหมายให้ปฏิบัติหน้าที่แทน`,
     html: `
       <div style="font-family: 'Sarabun', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: #F59E0B; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
@@ -265,7 +265,7 @@ export const EmailTemplates = {
    * แจ้งอัพเดทสถานะใบลา (สำหรับทุกระดับ)
    */
   leaveStatusUpdate: (leave, requester, statusInfo) => ({
-    subject: `[ระบบลา] 🔔 อัพเดทสถานะใบลา: ${statusInfo.statusText}`,
+    subject: `[ระบบการลาอิเล็กทรอนิกส์] 🔔 อัพเดทสถานะใบลา: ${statusInfo.statusText}`,
     html: `
       <div style="font-family: 'Sarabun', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: ${statusInfo.color || '#3B82F6'}; color: white; padding: 20px; border-radius: 8px 8px 0 0;">

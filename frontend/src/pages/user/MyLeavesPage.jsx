@@ -376,7 +376,7 @@ export const MyLeavesPage = () => {
                             >
                               <Eye className="w-4 h-4" />
                             </Button>
-                            {['pending', 'approved_level1', 'approved_level2', 'approved_level3'].includes(leave.status) && (
+                            {['pending', 'approved_level1', 'approved_level2', 'approved_level3', 'approved_final'].includes(leave.status) && (
                               <Button
                                 size="sm"
                                 variant="outline"

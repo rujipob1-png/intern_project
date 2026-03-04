@@ -747,7 +747,7 @@ export const approveCancelLeave = async (req, res) => {
     // ตรวจสอบว่ามีคำขอลานี้หรือไม่
     const { data: leave, error: fetchError } = await supabaseAdmin
       .from('leaves')
-      .select('*, users!leaves_user_id_fkey(first_name, last_name, employee_code)')
+      .select('*, users!leaves_user_id_fkey(id, first_name, last_name, employee_code, sick_leave_balance, personal_leave_balance, vacation_leave_balance), leave_types(type_code)')
       .eq('id', id)
       .single();
 
@@ -819,6 +819,36 @@ export const approveCancelLeave = async (req, res) => {
 
     if (updateError) {
       throw updateError;
+    }
+
+    // คืนวันลาเมื่อยกเลิกสำเร็จ (สถานะ = cancelled)
+    if (newStatus === LEAVE_STATUS.CANCELLED && leave.leave_types && leave.users) {
+      const leaveType = leave.leave_types.type_code;
+      const totalDays = leave.total_days;
+      let balanceField = '';
+
+      switch (leaveType) {
+        case 'SICK': balanceField = 'sick_leave_balance'; break;
+        case 'PERSONAL': balanceField = 'personal_leave_balance'; break;
+        case 'VACATION': balanceField = 'vacation_leave_balance'; break;
+        default: balanceField = '';
+      }
+
+      if (balanceField && totalDays > 0) {
+        const currentBalance = leave.users[balanceField] || 0;
+        const newBalance = currentBalance + totalDays;
+
+        const { error: restoreError } = await supabaseAdmin
+          .from('users')
+          .update({ [balanceField]: newBalance, updated_at: new Date().toISOString() })
+          .eq('id', leave.user_id);
+
+        if (restoreError) {
+          console.error('Failed to restore leave balance:', restoreError);
+        } else {
+          console.log(`✅ Restored ${totalDays} days to ${balanceField} for user ${leave.user_id} (new balance: ${newBalance})`);
+        }
+      }
     }
 
     // บันทึก history
