@@ -20,6 +20,9 @@ export const validate = (req, res, next) => {
       message: err.msg
     }));
 
+    console.error('Validation errors:', JSON.stringify(errorMessages));
+    console.error('Request body:', JSON.stringify(req.body));
+
     return res.status(400).json({
       success: false,
       message: errorMessages[0]?.message || 'ข้อมูลไม่ถูกต้อง',
@@ -233,7 +236,7 @@ export const createUserValidation = [
     .customSanitizer(customSanitize),
 
   body('title')
-    .optional()
+    .optional({ values: 'falsy' })
     .isLength({ max: 20 }).withMessage('คำนำหน้าต้องไม่เกิน 20 ตัวอักษร')
     .customSanitizer(customSanitize),
 
@@ -242,12 +245,12 @@ export const createUserValidation = [
     .isLength({ max: 50 }).withMessage('แผนกต้องไม่เกิน 50 ตัวอักษร'),
 
   body('position')
-    .optional()
+    .optional({ values: 'falsy' })
     .isLength({ max: 100 }).withMessage('ตำแหน่งต้องไม่เกิน 100 ตัวอักษร')
     .customSanitizer(customSanitize),
 
   body('phone')
-    .optional()
+    .optional({ values: 'falsy' })
     .isLength({ max: 20 }).withMessage('เบอร์โทรต้องไม่เกิน 20 ตัวอักษร')
     .matches(/^[0-9\-+]*$/).withMessage('เบอร์โทรต้องเป็นตัวเลขเท่านั้น'),
 
@@ -268,22 +271,22 @@ export const updateUserValidation = [
     .isUUID().withMessage('ID ผู้ใช้ไม่ถูกต้อง'),
 
   body('first_name')
-    .optional()
+    .optional({ values: 'falsy' })
     .isLength({ max: 100 }).withMessage('ชื่อต้องไม่เกิน 100 ตัวอักษร')
     .customSanitizer(customSanitize),
 
   body('last_name')
-    .optional()
+    .optional({ values: 'falsy' })
     .isLength({ max: 100 }).withMessage('นามสกุลต้องไม่เกิน 100 ตัวอักษร')
     .customSanitizer(customSanitize),
 
   body('phone')
-    .optional()
+    .optional({ values: 'falsy' })
     .isLength({ max: 20 }).withMessage('เบอร์โทรต้องไม่เกิน 20 ตัวอักษร')
     .matches(/^[0-9\-+]*$/).withMessage('เบอร์โทรต้องเป็นตัวเลขเท่านั้น'),
 
   body('password')
-    .optional()
+    .optional({ values: 'falsy' })
     .isLength({ min: 8, max: 100 }).withMessage('รหัสผ่านต้องมี 8-100 ตัวอักษร')
     .matches(/^(?=.*[a-zA-Z])(?=.*\d)/).withMessage('รหัสผ่านต้องมีทั้งตัวอักษรและตัวเลข'),
 

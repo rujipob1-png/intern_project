@@ -9,7 +9,7 @@ import { useConfirm } from '../../components/common/ConfirmDialog';
 import { useRealtime } from '../../contexts/RealtimeContext';
 import DateEditModal from '../../components/common/DateEditModal';
 import toast from 'react-hot-toast';
-import { CheckCircle, XCircle, Clock, Calendar, FileText, Crown, AlertTriangle, User, Filter, Users, Building2, Edit3, ArrowLeft, Search } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Calendar, FileText, Shield, User, Filter, Users, Building2, Edit3, Search } from 'lucide-react';
 
 // Helper function to parse reason from JSON
 const parseReason = (reason) => {
@@ -181,39 +181,27 @@ export default function AdminDashboard() {
     <div className="space-y-6 p-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="bg-[#1a2744] rounded-xl p-6 text-white">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex justify-between items-center">
           <div>
             <h1 className="text-xl font-bold flex items-center gap-3">
-              <Crown className="w-7 h-7" />
+              <Shield className="w-7 h-7" />
               อนุมัติขั้นสุดท้าย
             </h1>
-            <p className="text-gray-400 mt-1">ผู้บริหารสูงสุด (Level 4) - หักวันลาทันที</p>
+            <p className="text-gray-400 mt-1">ผู้บริหารสูงสุด (Level 4)</p>
           </div>
-          <div className="bg-white/10 rounded-lg px-6 py-3 text-center border border-gray-600 w-full md:w-auto">
+          <div className="bg-white/10 rounded-lg px-6 py-3 text-center border border-gray-600">
             <div className="text-3xl font-bold">{pendingLeaves.length}</div>
             <div className="text-sm text-gray-400">รออนุมัติ</div>
           </div>
         </div>
       </div>
 
-      {/* Warning Banner */}
-      <div className="bg-gradient-to-r from-amber-50 to-amber-100 border-l-4 border-amber-500 rounded-r-xl p-4 shadow-sm">
-        <div className="flex items-center gap-3">
-          <AlertTriangle className="w-6 h-6 text-yellow-600 flex-shrink-0" />
-          <div>
-            <p className="font-semibold text-yellow-800">การอนุมัติขั้นสุดท้าย</p>
-            <p className="text-sm text-yellow-700">การอนุมัติในขั้นนี้จะหักวันลาของพนักงานทันที กรุณาตรวจสอบข้อมูลให้ถูกต้อง</p>
-          </div>
-        </div>
-      </div>
-
       {/* Department Filter Tabs */}
-      {pendingLeaves.length > 0 && (
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-          <div className="flex items-center gap-3 mb-3">
-            <Filter className="w-5 h-5 text-gray-500" />
-            <h2 className="font-semibold text-gray-700">กรองตามกอง/ฝ่าย</h2>
-          </div>
+      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+        <div className="flex items-center gap-3 mb-3">
+          <Filter className="w-5 h-5 text-gray-500" />
+          <h2 className="font-semibold text-gray-700">กรองตามกอง/ฝ่าย</h2>
+        </div>
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setSelectedDepartment('all')}
@@ -258,12 +246,10 @@ export default function AdminDashboard() {
               <span className="text-gray-400">({filteredLeaves.length} รายการ)</span>
             </div>
           )}
-        </div>
-      )}
+      </div>
 
       {/* Search Box */}
-      {pendingLeaves.length > 0 && (
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
@@ -287,8 +273,7 @@ export default function AdminDashboard() {
               พบ {filteredLeaves.length} รายการ
             </div>
           )}
-        </div>
-      )}
+      </div>
 
       {pendingLeaves.length === 0 ? (
         <Card className="text-center py-16">
@@ -303,7 +288,7 @@ export default function AdminDashboard() {
       ) : (
         <div className="grid gap-6">
           {filteredLeaves.map((leave) => (
-            <Card key={leave.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300 border-l-4 border-gray-500 border border-gray-200">
+            <Card key={leave.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
               <div className="flex flex-col lg:flex-row">
                 {/* Left: Employee Info */}
                 <div className="lg:w-1/4 bg-gray-50 p-6 border-b lg:border-b-0 lg:border-r border-gray-200">
@@ -321,23 +306,16 @@ export default function AdminDashboard() {
                       </span>
                     </div>
                   </div>
-                  {/* Full Approval Trail */}
-                  <div className="mt-4 space-y-1">
-                    <div className="p-2 bg-blue-50 rounded-lg flex items-center gap-2">
-                      <CheckCircle className="w-3 h-3 text-blue-600" />
-                      <p className="text-xs text-blue-600 font-medium">ผอ.อนุมัติ</p>
+                  {/* Approval Trail */}
+                  <div className="mt-4 space-y-2">
+                    <div className="p-2 bg-gray-100 rounded-lg">
+                      <p className="text-xs text-gray-600 font-medium">✓ ผอ.อนุมัติ</p>
                     </div>
-                    <div className="p-2 bg-teal-50 rounded-lg flex items-center gap-2">
-                      <CheckCircle className="w-3 h-3 text-teal-600" />
-                      <p className="text-xs text-teal-600 font-medium">เจ้าหน้าที่ตรวจสอบ</p>
+                    <div className="p-2 bg-gray-100 rounded-lg">
+                      <p className="text-xs text-gray-600 font-medium">✓ เจ้าหน้าที่ตรวจสอบแล้ว</p>
                     </div>
-                    <div className="p-2 bg-purple-50 rounded-lg flex items-center gap-2">
-                      <CheckCircle className="w-3 h-3 text-purple-600" />
-                      <p className="text-xs text-purple-600 font-medium">หัวหน้าสำนักงานกลาง</p>
-                    </div>
-                    <div className="p-2 bg-amber-100 rounded-lg flex items-center gap-2 animate-pulse">
-                      <Clock className="w-3 h-3 text-amber-600" />
-                      <p className="text-xs text-amber-700 font-bold">รอผู้บริหารอนุมัติ</p>
+                    <div className="p-2 bg-gray-100 rounded-lg">
+                      <p className="text-xs text-gray-600 font-medium">✓ หัวหน้าสำนักงานกลางอนุมัติ</p>
                     </div>
                   </div>
                 </div>
@@ -346,28 +324,28 @@ export default function AdminDashboard() {
                 <div className="lg:w-1/2 p-6">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                      <div className="flex items-center gap-2 text-gray-600 mb-1">
+                      <div className="flex items-center gap-2 text-gray-500 mb-1">
                         <FileText className="w-4 h-4" />
                         <span className="text-xs font-medium">ประเภทการลา</span>
                       </div>
                       <p className="font-bold text-gray-900">{leave.leaveType || leave.leave_type_name || 'N/A'}</p>
                     </div>
-                    <div className="bg-amber-50 rounded-xl p-4 border-2 border-amber-200">
-                      <div className="flex items-center gap-2 text-amber-600 mb-1">
+                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                      <div className="flex items-center gap-2 text-gray-500 mb-1">
                         <Clock className="w-4 h-4" />
-                        <span className="text-xs font-medium">จำนวนวันที่จะหัก</span>
+                        <span className="text-xs font-medium">จำนวนวัน</span>
                       </div>
-                      <p className="font-bold text-amber-700 text-xl">{leave.totalDays || leave.total_days} วัน</p>
+                      <p className="font-bold text-gray-900">{leave.totalDays || leave.total_days} วัน</p>
                     </div>
                     <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                      <div className="flex items-center gap-2 text-gray-600 mb-1">
+                      <div className="flex items-center gap-2 text-gray-500 mb-1">
                         <Calendar className="w-4 h-4" />
                         <span className="text-xs font-medium">วันที่เริ่มต้น</span>
                       </div>
                       <p className="font-bold text-gray-900">{formatDate(leave.startDate || leave.start_date)}</p>
                     </div>
                     <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                      <div className="flex items-center gap-2 text-gray-600 mb-1">
+                      <div className="flex items-center gap-2 text-gray-500 mb-1">
                         <Calendar className="w-4 h-4" />
                         <span className="text-xs font-medium">วันที่สิ้นสุด</span>
                       </div>
@@ -383,17 +361,6 @@ export default function AdminDashboard() {
                     </div>
                   )}
 
-                  {/* Leave Balance Warning */}
-                  {leave.current_balance !== undefined && (
-                    <div className="mt-4 bg-orange-50 border border-orange-200 rounded-xl p-4">
-                      <p className="text-sm font-semibold text-orange-800">
-                        วันลาคงเหลือ: <span className="text-lg">{leave.current_balance}</span> วัน
-                      </p>
-                      <p className="text-xs text-orange-600">
-                        หลังอนุมัติจะเหลือ: {leave.current_balance - (leave.totalDays || leave.total_days)} วัน
-                      </p>
-                    </div>
-                  )}
                 </div>
 
                 {/* Right: Actions */}
@@ -410,7 +377,7 @@ export default function AdminDashboard() {
                       <button
                         onClick={() => handleApprove(leave.id)}
                         disabled={actionLoading}
-                        className="w-full flex items-center justify-center gap-2 bg-green-600 text-white font-semibold py-3 rounded-xl hover:bg-green-700 transition-all disabled:opacity-50"
+                        className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white font-semibold py-3 rounded-xl hover:bg-gray-800 transition-all disabled:opacity-50"
                       >
                         <CheckCircle className="w-5 h-5" />
                         {actionLoading ? 'กำลังดำเนินการ...' : 'อนุมัติทั้งหมด'}
@@ -418,7 +385,7 @@ export default function AdminDashboard() {
                       <button
                         onClick={() => handleOpenEditModal(leave)}
                         disabled={actionLoading}
-                        className="w-full flex items-center justify-center gap-2 bg-amber-500 text-white font-semibold py-3 rounded-xl hover:bg-amber-600 transition-all disabled:opacity-50"
+                        className="w-full flex items-center justify-center gap-2 bg-white text-gray-700 border border-gray-300 font-semibold py-3 rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50"
                       >
                         <Edit3 className="w-5 h-5" />
                         แก้ไขวันลา
@@ -426,7 +393,7 @@ export default function AdminDashboard() {
                       <button
                         onClick={() => handleReject(leave.id)}
                         disabled={actionLoading}
-                        className="w-full flex items-center justify-center gap-2 bg-red-500 text-white font-semibold py-3 rounded-xl hover:bg-red-600 transition-all disabled:opacity-50"
+                        className="w-full flex items-center justify-center gap-2 bg-white text-gray-700 border border-gray-300 font-semibold py-3 rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50"
                       >
                         <XCircle className="w-5 h-5" />
                         ไม่อนุมัติ
@@ -449,7 +416,7 @@ export default function AdminDashboard() {
                         onClick={() => setSelectedLeave(leave.id)}
                         className="w-full bg-gray-900 text-white font-semibold py-3 rounded-xl hover:bg-gray-800 transition-all"
                       >
-                        พิจารณาอนุมัติขั้นสุดท้าย
+                        พิจารณาการลา
                       </button>
                     </div>
                   )}

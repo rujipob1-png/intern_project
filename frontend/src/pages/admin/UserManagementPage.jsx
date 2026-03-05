@@ -12,6 +12,17 @@ import { adminAPI } from '../../api/admin.api';
 import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
 
+// Helper: ดึง error message จาก error object (รองรับทั้ง axios interceptor format)
+const getErrorMessage = (error, fallback = 'เกิดข้อผิดพลาด') => {
+  // axios interceptor ส่ง response.data ตรงๆ
+  if (error?.message) return error.message;
+  if (error?.errors?.[0]?.message) return error.errors[0].message;
+  // กรณี axios error object ปกติ
+  if (error?.response?.data?.message) return error.response.data.message;
+  if (error?.response?.data?.errors?.[0]?.message) return error.response.data.errors[0].message;
+  return fallback;
+};
+
 // Role badge colors - โทนสีเรียบ minimal
 const ROLE_STYLES = {
   'user': { bg: 'bg-slate-100 border border-slate-300', text: 'text-slate-700', label: 'บุคลากร' },
@@ -322,15 +333,32 @@ const UserManagementPage = () => {
       return;
     }
 
+    // Validate password
+    if (formData.password.length < 8) {
+      toast.error('รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร');
+      return;
+    }
+    if (!/^(?=.*[a-zA-Z])(?=.*\d)/.test(formData.password)) {
+      toast.error('รหัสผ่านต้องมีทั้งตัวอักษรและตัวเลข');
+      return;
+    }
+
     try {
       setSubmitting(true);
-      await adminAPI.createUser(formData);
+      // ลบ field ที่ว่างออกก่อนส่ง
+      const cleanData = { ...formData };
+      if (!cleanData.phone) delete cleanData.phone;
+      if (!cleanData.email) delete cleanData.email;
+      if (!cleanData.hire_date) delete cleanData.hire_date;
+      if (!cleanData.position) delete cleanData.position;
+
+      await adminAPI.createUser(cleanData);
       toast.success('สร้างบุคลากรใหม่สำเร็จ');
       setShowCreateModal(false);
       fetchData();
     } catch (error) {
       console.error('Create user error:', error);
-      toast.error(error.response?.data?.message || 'ไม่สามารถสร้างบุคลากรได้');
+      toast.error(getErrorMessage(error, 'ไม่สามารถสร้างบุคลากรได้'));
     } finally {
       setSubmitting(false);
     }
@@ -346,7 +374,7 @@ const UserManagementPage = () => {
       fetchData();
     } catch (error) {
       console.error('Update user error:', error);
-      toast.error(error.response?.data?.message || 'ไม่สามารถอัพเดตข้อมูลได้');
+      toast.error(getErrorMessage(error, 'ไม่สามารถอัพเดตข้อมูลได้'));
     } finally {
       setSubmitting(false);
     }
@@ -369,7 +397,7 @@ const UserManagementPage = () => {
       fetchData();
     } catch (error) {
       console.error('Delete user error:', error);
-      toast.error(error.response?.data?.message || 'ไม่สามารถดำเนินการได้');
+      toast.error(getErrorMessage(error, 'ไม่สามารถดำเนินการได้'));
     } finally {
       setSubmitting(false);
     }
@@ -382,7 +410,7 @@ const UserManagementPage = () => {
       fetchData();
     } catch (error) {
       console.error('Activate user error:', error);
-      toast.error('ไม่สามารถเปิดการใช้งานได้');
+      toast.error(getErrorMessage(error, 'ไม่สามารถเปิดการใช้งานได้'));
     }
   };
 
@@ -400,7 +428,7 @@ const UserManagementPage = () => {
       setShowResetPasswordModal(false);
     } catch (error) {
       console.error('Reset password error:', error);
-      toast.error('ไม่สามารถรีเซ็ตรหัสผ่านได้');
+      toast.error(getErrorMessage(error, 'ไม่สามารถรีเซ็ตรหัสผ่านได้'));
     } finally {
       setSubmitting(false);
     }
@@ -420,7 +448,7 @@ const UserManagementPage = () => {
       fetchData();
     } catch (error) {
       console.error('Update leave balance error:', error);
-      toast.error('ไม่สามารถอัพเดตวันลาได้');
+      toast.error(getErrorMessage(error, 'ไม่สามารถอัพเดตวันลาได้'));
     } finally {
       setSubmitting(false);
     }
@@ -448,7 +476,7 @@ const UserManagementPage = () => {
       fetchData();
     } catch (error) {
       console.error('Process carryover error:', error);
-      toast.error(error.response?.data?.message || 'ไม่สามารถยกยอดวันลาได้');
+      toast.error(getErrorMessage(error, 'ไม่สามารถยกยอดวันลาได้'));
     } finally {
       setCarryoverProcessing(false);
     }
@@ -463,7 +491,7 @@ const UserManagementPage = () => {
       fetchData();
     } catch (error) {
       console.error('Reset annual leave error:', error);
-      toast.error(error.response?.data?.message || 'ไม่สามารถ Reset วันลาได้');
+      toast.error(getErrorMessage(error, 'ไม่สามารถ Reset วันลาได้'));
     } finally {
       setCarryoverProcessing(false);
     }
@@ -503,7 +531,7 @@ const UserManagementPage = () => {
           toast.error(
             <div className="flex items-center gap-2">
               <XCircle className="w-5 h-5 text-red-500" />
-              <span>{error.response?.data?.message || 'ไม่สามารถยกเลิกการยกยอดได้'}</span>
+              <span>{getErrorMessage(error, 'ไม่สามารถยกเลิกการยกยอดได้')}</span>
             </div>
           );
         } finally {
@@ -1192,8 +1220,10 @@ const UserManagementPage = () => {
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-gray-400"
                     required
-                    minLength={6}
+                    minLength={8}
+                    placeholder="8 ตัวขึ้นไป มีทั้งตัวอักษรและตัวเลข"
                   />
+                  <p className="text-xs text-gray-500 mt-1">ต้องมี 8 ตัวอักษรขึ้นไป มีทั้งตัวอักษร (a-z) และตัวเลข (0-9)</p>
                 </div>
               </div>
 

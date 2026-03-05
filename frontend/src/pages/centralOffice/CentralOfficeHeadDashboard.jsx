@@ -179,15 +179,6 @@ export default function CentralOfficeHeadDashboard() {
 
   return (
     <div className="space-y-6 p-6 bg-gray-50 min-h-screen">
-      {/* Back Button */}
-      <button
-        onClick={() => navigate('/dashboard')}
-        className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors group"
-      >
-        <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-        <span className="font-medium">กลับหน้าหลัก</span>
-      </button>
-
       {/* Header */}
       <div className="bg-[#1a2744] rounded-xl p-6 text-white">
         <div className="flex justify-between items-center">
@@ -206,12 +197,11 @@ export default function CentralOfficeHeadDashboard() {
       </div>
 
       {/* Department Filter Tabs */}
-      {pendingLeaves.length > 0 && (
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-          <div className="flex items-center gap-3 mb-3">
-            <Filter className="w-5 h-5 text-gray-500" />
-            <h2 className="font-semibold text-gray-700">กรองตามกอง/ฝ่าย</h2>
-          </div>
+      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+        <div className="flex items-center gap-3 mb-3">
+          <Filter className="w-5 h-5 text-gray-500" />
+          <h2 className="font-semibold text-gray-700">กรองตามกอง/ฝ่าย</h2>
+        </div>
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setSelectedDepartment('all')}
@@ -256,12 +246,10 @@ export default function CentralOfficeHeadDashboard() {
               <span className="text-gray-400">({filteredLeaves.length} รายการ)</span>
             </div>
           )}
-        </div>
-      )}
+      </div>
 
       {/* Search Box */}
-      {pendingLeaves.length > 0 && (
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
@@ -285,8 +273,7 @@ export default function CentralOfficeHeadDashboard() {
               พบ {filteredLeaves.length} รายการ
             </div>
           )}
-        </div>
-      )}
+      </div>
 
       {pendingLeaves.length === 0 ? (
         <Card className="text-center py-16">
