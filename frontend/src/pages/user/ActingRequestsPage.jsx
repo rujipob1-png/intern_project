@@ -85,13 +85,6 @@ export const ActingRequestsPage = () => {
     <div className="max-w-4xl mx-auto py-6 px-4">
       {/* Page Header */}
       <div className="mb-8">
-        <button
-          onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-1.5 text-sm text-gray-500 mb-4 group"
-        >
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-          ย้อนกลับ
-        </button>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gray-900 rounded-xl flex items-center justify-center">
             <Users className="w-5 h-5 text-white" />

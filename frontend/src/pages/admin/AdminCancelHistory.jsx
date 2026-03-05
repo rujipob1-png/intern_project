@@ -92,15 +92,6 @@ export default function AdminCancelHistory() {
 
   return (
     <div className="space-y-6 p-6 bg-slate-50 min-h-screen">
-      {/* Back Button */}
-      <button
-        onClick={() => navigate('/dashboard')}
-        className="flex items-center gap-2 text-slate-600 hover:text-slate-800 transition-colors"
-      >
-        <ArrowLeft className="w-5 h-5" />
-        <span>กลับหน้าหลัก</span>
-      </button>
-
       {/* Header */}
       <div className="bg-[#1a2744] rounded-xl p-6 text-white shadow-lg">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
