@@ -579,11 +579,13 @@ const UserManagementPage = () => {
     const BOM = '\uFEFF';
     const lines = [];
 
+    const deptName = getDeptInfo(employee.department).full;
+
     lines.push('รายงานการลาของบุคลากร');
     lines.push(`ชื่อ-สกุล,${employee.name}`);
     lines.push(`รหัสพนักงาน,${employee.employeeCode || '-'}`);
     lines.push(`ตำแหน่ง,${employee.position || '-'}`);
-    lines.push(`แผนก,${employee.department || '-'}`);
+    lines.push(`แผนก,${deptName}`);
     lines.push(`ปี พ.ศ.,${reportData.year}`);
     lines.push('');
 

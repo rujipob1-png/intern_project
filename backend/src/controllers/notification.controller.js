@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '../config/supabase.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 import { HTTP_STATUS, LEAVE_STATUS } from '../config/constants.js';
+import { getTransporter } from '../config/email.js';
 
 /**
  * ดึงรายการแจ้งเตือนของผู้ใช้
@@ -345,38 +346,95 @@ export const autoCleanupNotifications = async () => {
 };
 
 /**
- * แจ้งเตือนซ้ำสำหรับใบลาที่ค้างอนุมัติ (เรียกจาก cron ทุกวัน)
- * ตรวจสอบใบลาที่ค้างในแต่ละ level แล้วส่ง notification ให้ผู้อนุมัติที่เกี่ยวข้อง
+ * ส่ง email แจ้งเตือนใบลาค้างอนุมัติ (internal helper)
+ */
+async function sendReminderEmail(to, approverName, leaveNumber, requesterName, dateStr) {
+  const transporter = getTransporter();
+  if (!transporter || !to) return;
+
+  await transporter.sendMail({
+    from: `"ระบบการลาอิเล็กทรอนิกส์" <${process.env.SMTP_USER}>`,
+    to,
+    subject: `[แจ้งเตือน] ใบลา ${leaveNumber} จะเริ่มพรุ่งนี้แต่ยังไม่ได้อนุมัติ`,
+    html: `
+      <div style="font-family: 'Sarabun', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: #334155; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+          <h1 style="margin: 0; font-size: 20px;">⏰ แจ้งเตือน: ใบลาค้างอนุมัติ</h1>
+        </div>
+        <div style="background: #F9FAFB; padding: 20px; border: 1px solid #E5E7EB;">
+          <p>เรียน คุณ${approverName},</p>
+          <p>ใบลาหมายเลข <strong>${leaveNumber}</strong> ของ <strong>${requesterName}</strong> จะเริ่มในวันพรุ่งนี้ (${dateStr}) แต่ยังไม่ได้รับการอนุมัติ</p>
+          <div style="background: #FEF3C7; border-left: 4px solid #F59E0B; padding: 12px; margin: 15px 0;">
+            กรุณาเข้าสู่ระบบเพื่อตรวจสอบและดำเนินการอนุมัติ
+          </div>
+          <p style="color: #6B7280; font-size: 14px;">📌 อีเมลนี้ส่งโดยอัตโนมัติเพื่อป้องกันการลืมอนุมัติใบลา</p>
+        </div>
+        <div style="background: #6B7280; color: white; padding: 10px; text-align: center; border-radius: 0 0 8px 8px; font-size: 12px;">
+          ระบบการลาอิเล็กทรอนิกส์ - กรุณาอย่าตอบกลับอีเมลนี้
+        </div>
+      </div>
+    `
+  });
+}
+
+/**
+ * แจ้งเตือนล่วงหน้า 1 วัน สำหรับใบลาที่จะเริ่มพรุ่งนี้แต่ยังไม่ได้อนุมัติ
+ * เรียกจาก cron ทุกวัน 08:00 น. — จะแจ้งเฉพาะใบลาที่ start_date = พรุ่งนี้
  */
 export const sendPendingApprovalReminders = async () => {
   try {
-    console.log('[Reminder] ตรวจสอบใบลาที่ค้างอนุมัติ...');
+    // คำนวณวันพรุ่งนี้ (เวลาไทย)
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split('T')[0]; // YYYY-MM-DD
 
-    // กำหนด mapping: สถานะใบลา → role ที่ต้องอนุมัติ
-    const approvalMap = [
-      { status: LEAVE_STATUS.PENDING, roleName: 'director', label: 'ผู้อำนวยการกอง' },
-      { status: LEAVE_STATUS.APPROVED_LEVEL1, roleName: 'central_office_staff', label: 'หัวหน้าฝ่ายบริหารทั่วไป' },
-      { status: LEAVE_STATUS.APPROVED_LEVEL2, roleName: 'central_office_head', label: 'ผอ.กลุ่มงานอำนวยการ' },
-      { status: LEAVE_STATUS.APPROVED_LEVEL3, roleName: 'admin', label: 'ผู้ดูแลระบบ' },
+    console.log(`[Reminder] ตรวจสอบใบลาที่เริ่มวันพรุ่งนี้ (${tomorrowStr}) แต่ยังไม่อนุมัติ...`);
+
+    // สถานะที่ยังไม่อนุมัติสมบูรณ์ทั้งหมด
+    const pendingStatuses = [
+      LEAVE_STATUS.PENDING,
+      LEAVE_STATUS.APPROVED_LEVEL1,
+      LEAVE_STATUS.APPROVED_LEVEL2,
+      LEAVE_STATUS.APPROVED_LEVEL3,
     ];
+
+    // ดึงใบลาที่เริ่มพรุ่งนี้แต่ยังค้างอนุมัติ
+    const { data: leaves, error: leavesError } = await supabaseAdmin
+      .from('leaves')
+      .select(`
+        id, leave_number, start_date, status,
+        users!leaves_user_id_fkey ( title, first_name, last_name )
+      `)
+      .eq('start_date', tomorrowStr)
+      .in('status', pendingStatuses);
+
+    if (leavesError) {
+      console.error('[Reminder] Error fetching leaves:', leavesError);
+      return;
+    }
+
+    if (!leaves || leaves.length === 0) {
+      console.log('[Reminder] ไม่มีใบลาค้างที่เริ่มพรุ่งนี้');
+      return;
+    }
+
+    console.log(`[Reminder] พบ ${leaves.length} ใบลาที่เริ่มพรุ่งนี้แต่ยังค้าง`);
+
+    // mapping: สถานะ → role ที่ต้องอนุมัติ
+    const statusToRole = {
+      [LEAVE_STATUS.PENDING]: 'director',
+      [LEAVE_STATUS.APPROVED_LEVEL1]: 'central_office_staff',
+      [LEAVE_STATUS.APPROVED_LEVEL2]: 'central_office_head',
+      [LEAVE_STATUS.APPROVED_LEVEL3]: 'admin',
+    };
 
     let totalReminders = 0;
 
-    for (const { status, roleName, label } of approvalMap) {
-      // นับจำนวนใบลาที่ค้างในสถานะนี้
-      const { count, error: countError } = await supabaseAdmin
-        .from('leaves')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', status);
+    for (const leave of leaves) {
+      const roleName = statusToRole[leave.status];
+      if (!roleName) continue;
 
-      if (countError) {
-        console.error(`[Reminder] Error counting ${status}:`, countError);
-        continue;
-      }
-
-      if (!count || count === 0) continue;
-
-      // หา role_id ของ role ที่ต้องอนุมัติ
+      // หา role_id
       const { data: roleData } = await supabaseAdmin
         .from('roles')
         .select('id')
@@ -385,29 +443,40 @@ export const sendPendingApprovalReminders = async () => {
 
       if (!roleData) continue;
 
-      // หา users ที่มี role นั้น
+      // หาผู้อนุมัติที่มี role นั้น
       const { data: approvers } = await supabaseAdmin
         .from('users')
-        .select('id')
+        .select('id, email, first_name')
         .eq('role_id', roleData.id)
         .eq('is_active', true);
 
       if (!approvers || approvers.length === 0) continue;
 
-      // ส่ง notification ให้แต่ละ approver
+      const userName = `${leave.users?.title || ''}${leave.users?.first_name || ''} ${leave.users?.last_name || ''}`.trim();
+
       for (const approver of approvers) {
         await createNotification(
           approver.id,
           'reminder',
-          'แจ้งเตือน: มีใบลาค้างอนุมัติ',
-          `มีใบลารออนุมัติจำนวน ${count} ใบ กรุณาตรวจสอบและดำเนินการ`,
-          null,
+          'แจ้งเตือน: ใบลาจะเริ่มพรุ่งนี้',
+          `ใบลา ${leave.leave_number} ของ${userName} จะเริ่มวันพรุ่งนี้ (${tomorrowStr}) แต่ยังไม่ได้อนุมัติ กรุณาตรวจสอบ`,
+          leave.id,
           'leave'
         );
+
+        // ส่ง email ด้วย (ถ้ามี email)
+        if (approver.email) {
+          sendReminderEmail(
+            approver.email,
+            approver.first_name,
+            leave.leave_number,
+            userName,
+            tomorrowStr
+          ).catch(err => console.error('[Reminder] Email error:', err.message));
+        }
+
         totalReminders++;
       }
-
-      console.log(`[Reminder] ${label}: ${count} ใบค้าง → แจ้ง ${approvers.length} คน`);
     }
 
     console.log(`[Reminder] ส่งแจ้งเตือนทั้งหมด ${totalReminders} รายการ`);
