@@ -1,7 +1,8 @@
 import app from './app.js';
 import { testConnection } from './config/supabase.js';
 import { startFiscalYearScheduler, checkAndProcessCarryoverIfNeeded } from './services/fiscalYearScheduler.js';
-import { autoCleanupNotifications } from './controllers/notification.controller.js';
+import { autoCleanupNotifications, sendPendingApprovalReminders } from './controllers/notification.controller.js';
+import cron from 'node-cron';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -51,6 +52,13 @@ const startServer = async () => {
 
       // ตั้ง interval ล้าง notifications ทุก 24 ชม.
       setInterval(autoCleanupNotifications, 24 * 60 * 60 * 1000);
+
+      // แจ้งเตือนใบลาค้างอนุมัติ ทุกวัน 08:00 น.
+      cron.schedule('0 8 * * *', () => {
+        console.log('[Cron] ส่งแจ้งเตือนใบลาค้างอนุมัติ...');
+        sendPendingApprovalReminders();
+      }, { timezone: 'Asia/Bangkok' });
+      console.log('⏰ Pending approval reminder scheduled daily at 08:00');
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);

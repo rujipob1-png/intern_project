@@ -119,6 +119,12 @@ const UserManagementPage = () => {
   const [leaveBalanceData, setLeaveBalanceData] = useState({ sick: 0, personal: 0, vacation: 0 });
   const [submitting, setSubmitting] = useState(false);
 
+  // Report modal state
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportData, setReportData] = useState(null);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [reportYear, setReportYear] = useState(new Date().getFullYear());
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -541,6 +547,76 @@ const UserManagementPage = () => {
     });
   };
 
+  // ================================
+  // User Report Functions
+  // ================================
+
+  const handleOpenReport = async (user) => {
+    setSelectedUser(user);
+    setShowReportModal(true);
+    setReportData(null);
+    setReportYear(new Date().getFullYear());
+    await fetchReport(user.id, new Date().getFullYear());
+  };
+
+  const fetchReport = async (userId, year) => {
+    try {
+      setReportLoading(true);
+      const result = await adminAPI.getEmployeeReport(userId, year);
+      setReportData(result.data);
+    } catch (error) {
+      console.error('Fetch report error:', error);
+      toast.error(getErrorMessage(error, 'ไม่สามารถโหลดรายงานได้'));
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
+  const handleExportCSV = () => {
+    if (!reportData) return;
+
+    const { employee, statistics, leaves } = reportData;
+    const BOM = '\uFEFF';
+    const lines = [];
+
+    lines.push('รายงานการลาของบุคลากร');
+    lines.push(`ชื่อ-สกุล,${employee.name}`);
+    lines.push(`รหัสพนักงาน,${employee.employeeCode || '-'}`);
+    lines.push(`ตำแหน่ง,${employee.position || '-'}`);
+    lines.push(`แผนก,${employee.department || '-'}`);
+    lines.push(`ปี พ.ศ.,${reportData.year}`);
+    lines.push('');
+
+    lines.push('--- สรุปวันลาคงเหลือ ---');
+    lines.push(`ลาป่วย,${employee.leaveBalance.sick} วัน`);
+    lines.push(`ลากิจ,${employee.leaveBalance.personal} วัน`);
+    lines.push(`ลาพักผ่อน,${employee.leaveBalance.vacation} วัน`);
+    lines.push('');
+
+    lines.push('--- สถิติ ---');
+    lines.push(`จำนวนใบลาทั้งหมด,${statistics.totalLeaves}`);
+    lines.push(`จำนวนวันลาทั้งหมด,${statistics.totalDays}`);
+    lines.push(`อนุมัติแล้ว,${statistics.approvedLeaves} ใบ (${statistics.approvedDays} วัน)`);
+    lines.push('');
+
+    lines.push('--- รายการลา ---');
+    lines.push('เลขที่ใบลา,ประเภท,วันที่เริ่ม,วันที่สิ้นสุด,จำนวนวัน,เหตุผล,สถานะ');
+    leaves.forEach(l => {
+      const reason = (l.reason || '').replace(/,/g, ' ').replace(/\n/g, ' ');
+      lines.push(`${l.leaveNumber || '-'},${l.leaveType || '-'},${l.startDate},${l.endDate},${l.totalDays},${reason},${l.status}`);
+    });
+
+    const csvContent = BOM + lines.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `report_${employee.employeeCode || 'user'}_${reportData.year}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success('ดาวน์โหลดรายงาน CSV สำเร็จ');
+  };
+
   const getRoleStyle = (roleName) => {
     return ROLE_STYLES[roleName] || ROLE_STYLES['user'];
   };
@@ -887,6 +963,13 @@ const UserManagementPage = () => {
                                 title="แก้ไขวันลา"
                               >
                                 <Calendar className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleOpenReport(user)}
+                                className="p-1.5 text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                title="รายงานการลา"
+                              >
+                                <Download className="w-3.5 h-3.5" />
                               </button>
                               {user.id === currentUser?.id ? (
                                 <span className="p-1.5 text-gray-200 cursor-not-allowed" title="บัญชีตัวเอง">
@@ -2271,6 +2354,190 @@ const UserManagementPage = () => {
                   {confirmModal.confirmText}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Report Modal */}
+      {showReportModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-slate-50">
+              <div>
+                <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-slate-600" />
+                  รายงานการลา
+                </h3>
+                {selectedUser && (
+                  <p className="text-sm text-slate-500 mt-1">
+                    {selectedUser.title}{selectedUser.first_name} {selectedUser.last_name} ({selectedUser.employee_code})
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <select
+                  value={reportYear}
+                  onChange={(e) => {
+                    const y = parseInt(e.target.value);
+                    setReportYear(y);
+                    if (selectedUser) fetchReport(selectedUser.id, y);
+                  }}
+                  className="px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400"
+                >
+                  {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(y => (
+                    <option key={y} value={y}>{y + 543}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => setShowReportModal(false)}
+                  className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 overflow-y-auto flex-1">
+              {reportLoading ? (
+                <div className="flex items-center justify-center py-16">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-600"></div>
+                  <span className="ml-3 text-slate-500">กำลังโหลดรายงาน...</span>
+                </div>
+              ) : reportData ? (
+                <div className="space-y-6">
+                  {/* Leave Balance */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-slate-700 mb-3">วันลาคงเหลือ</h4>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center">
+                        <p className="text-2xl font-bold text-slate-700">{reportData.employee.leaveBalance.sick}</p>
+                        <p className="text-xs text-slate-500 mt-1">ลาป่วย</p>
+                      </div>
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center">
+                        <p className="text-2xl font-bold text-slate-700">{reportData.employee.leaveBalance.personal}</p>
+                        <p className="text-xs text-slate-500 mt-1">ลากิจ</p>
+                      </div>
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center">
+                        <p className="text-2xl font-bold text-slate-700">{reportData.employee.leaveBalance.vacation}</p>
+                        <p className="text-xs text-slate-500 mt-1">ลาพักผ่อน</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Statistics */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-slate-700 mb-3">สถิติการลา ปี {reportData.year + 543}</h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center">
+                        <p className="text-xl font-bold text-slate-700">{reportData.statistics.totalLeaves}</p>
+                        <p className="text-xs text-slate-500">ใบลาทั้งหมด</p>
+                      </div>
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center">
+                        <p className="text-xl font-bold text-slate-700">{reportData.statistics.totalDays}</p>
+                        <p className="text-xs text-slate-500">จำนวนวัน</p>
+                      </div>
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center">
+                        <p className="text-xl font-bold text-slate-700">{reportData.statistics.approvedLeaves}</p>
+                        <p className="text-xs text-slate-500">อนุมัติแล้ว</p>
+                      </div>
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center">
+                        <p className="text-xl font-bold text-slate-700">{reportData.statistics.approvedDays}</p>
+                        <p className="text-xs text-slate-500">วันที่อนุมัติ</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Leave type breakdown */}
+                  {reportData.statistics.byType && Object.keys(reportData.statistics.byType).length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-slate-700 mb-3">แยกตามประเภท</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {Object.entries(reportData.statistics.byType).map(([type, count]) => (
+                          <span key={type} className="px-3 py-1.5 bg-slate-100 border border-slate-200 rounded-full text-xs text-slate-700">
+                            {type}: <strong>{count}</strong> ใบ
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Leave History Table */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-slate-700 mb-3">ประวัติการลา ({reportData.leaves.length} รายการ)</h4>
+                    {reportData.leaves.length === 0 ? (
+                      <div className="text-center py-8 text-slate-400">
+                        <FileText className="w-10 h-10 mx-auto mb-2" />
+                        <p className="text-sm">ไม่มีประวัติการลาในปีนี้</p>
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto border border-slate-200 rounded-xl">
+                        <table className="w-full text-sm">
+                          <thead className="bg-slate-50">
+                            <tr>
+                              <th className="text-left px-3 py-2 text-slate-600 font-medium">เลขที่</th>
+                              <th className="text-left px-3 py-2 text-slate-600 font-medium">ประเภท</th>
+                              <th className="text-left px-3 py-2 text-slate-600 font-medium">วันที่</th>
+                              <th className="text-center px-3 py-2 text-slate-600 font-medium">จำนวนวัน</th>
+                              <th className="text-center px-3 py-2 text-slate-600 font-medium">สถานะ</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {reportData.leaves.map((leave, idx) => (
+                              <tr key={idx} className="hover:bg-slate-50">
+                                <td className="px-3 py-2 text-slate-600">{leave.leaveNumber || '-'}</td>
+                                <td className="px-3 py-2 text-slate-700">{leave.leaveType}</td>
+                                <td className="px-3 py-2 text-slate-600 whitespace-nowrap">
+                                  {leave.startDate} ~ {leave.endDate}
+                                </td>
+                                <td className="px-3 py-2 text-center text-slate-700 font-medium">{leave.totalDays}</td>
+                                <td className="px-3 py-2 text-center">
+                                  <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
+                                    leave.status === 'approved_final' ? 'bg-slate-200 text-slate-700' :
+                                    leave.status === 'rejected' ? 'bg-slate-100 text-slate-500' :
+                                    leave.status === 'cancelled' ? 'bg-slate-100 text-slate-400' :
+                                    'bg-slate-300 text-slate-800'
+                                  }`}>
+                                    {leave.status === 'approved_final' ? 'อนุมัติ' :
+                                     leave.status === 'rejected' ? 'ไม่อนุมัติ' :
+                                     leave.status === 'cancelled' ? 'ยกเลิก' :
+                                     'รออนุมัติ'}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-16 text-slate-400">
+                  <AlertCircle className="w-10 h-10 mx-auto mb-2" />
+                  <p>ไม่สามารถโหลดรายงานได้</p>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex gap-3 p-6 border-t border-slate-200 bg-slate-50">
+              <button
+                onClick={() => setShowReportModal(false)}
+                className="flex-1 px-4 py-2.5 border-2 border-slate-200 text-slate-600 rounded-xl hover:bg-slate-100 transition-all font-semibold"
+              >
+                ปิด
+              </button>
+              <button
+                onClick={handleExportCSV}
+                disabled={!reportData || reportLoading}
+                className="flex-1 px-4 py-2.5 bg-slate-800 text-white rounded-xl hover:bg-slate-900 transition-all font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                ดาวน์โหลด CSV
+              </button>
             </div>
           </div>
         </div>

@@ -1,6 +1,6 @@
 import { supabaseAdmin } from '../config/supabase.js';
 import { successResponse, errorResponse } from '../utils/response.js';
-import { HTTP_STATUS } from '../config/constants.js';
+import { HTTP_STATUS, LEAVE_STATUS } from '../config/constants.js';
 
 /**
  * ดึงรายการแจ้งเตือนของผู้ใช้
@@ -341,5 +341,77 @@ export const autoCleanupNotifications = async () => {
     }
   } catch (error) {
     console.error('Auto cleanup notifications error:', error);
+  }
+};
+
+/**
+ * แจ้งเตือนซ้ำสำหรับใบลาที่ค้างอนุมัติ (เรียกจาก cron ทุกวัน)
+ * ตรวจสอบใบลาที่ค้างในแต่ละ level แล้วส่ง notification ให้ผู้อนุมัติที่เกี่ยวข้อง
+ */
+export const sendPendingApprovalReminders = async () => {
+  try {
+    console.log('[Reminder] ตรวจสอบใบลาที่ค้างอนุมัติ...');
+
+    // กำหนด mapping: สถานะใบลา → role ที่ต้องอนุมัติ
+    const approvalMap = [
+      { status: LEAVE_STATUS.PENDING, roleName: 'director', label: 'ผู้อำนวยการกอง' },
+      { status: LEAVE_STATUS.APPROVED_LEVEL1, roleName: 'central_office_staff', label: 'หัวหน้าฝ่ายบริหารทั่วไป' },
+      { status: LEAVE_STATUS.APPROVED_LEVEL2, roleName: 'central_office_head', label: 'ผอ.กลุ่มงานอำนวยการ' },
+      { status: LEAVE_STATUS.APPROVED_LEVEL3, roleName: 'admin', label: 'ผู้ดูแลระบบ' },
+    ];
+
+    let totalReminders = 0;
+
+    for (const { status, roleName, label } of approvalMap) {
+      // นับจำนวนใบลาที่ค้างในสถานะนี้
+      const { count, error: countError } = await supabaseAdmin
+        .from('leaves')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', status);
+
+      if (countError) {
+        console.error(`[Reminder] Error counting ${status}:`, countError);
+        continue;
+      }
+
+      if (!count || count === 0) continue;
+
+      // หา role_id ของ role ที่ต้องอนุมัติ
+      const { data: roleData } = await supabaseAdmin
+        .from('roles')
+        .select('id')
+        .eq('role_name', roleName)
+        .single();
+
+      if (!roleData) continue;
+
+      // หา users ที่มี role นั้น
+      const { data: approvers } = await supabaseAdmin
+        .from('users')
+        .select('id')
+        .eq('role_id', roleData.id)
+        .eq('is_active', true);
+
+      if (!approvers || approvers.length === 0) continue;
+
+      // ส่ง notification ให้แต่ละ approver
+      for (const approver of approvers) {
+        await createNotification(
+          approver.id,
+          'reminder',
+          'แจ้งเตือน: มีใบลาค้างอนุมัติ',
+          `มีใบลารออนุมัติจำนวน ${count} ใบ กรุณาตรวจสอบและดำเนินการ`,
+          null,
+          'leave'
+        );
+        totalReminders++;
+      }
+
+      console.log(`[Reminder] ${label}: ${count} ใบค้าง → แจ้ง ${approvers.length} คน`);
+    }
+
+    console.log(`[Reminder] ส่งแจ้งเตือนทั้งหมด ${totalReminders} รายการ`);
+  } catch (error) {
+    console.error('[Reminder] Error sending reminders:', error);
   }
 };

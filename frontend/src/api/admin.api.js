@@ -162,4 +162,11 @@ export const adminAPI = {
     const response = await axios.delete(`/admin/archived-users/${archivedUserId}`);
     return response.data;
   },
+
+  // ============= REPORTS (รายงาน) =============
+  // Get individual employee report
+  getEmployeeReport: async (employeeId, year) => {
+    const response = await axios.get(`/reports/employees/${employeeId}`, { params: { year } });
+    return response.data;
+  },
 };
