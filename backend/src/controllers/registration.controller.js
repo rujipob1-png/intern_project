@@ -23,11 +23,11 @@ export const register = async (req, res) => {
     } = req.body;
 
     // Validate required fields
-    if (!employeeCode || !password || !firstName || !lastName) {
+    if (!employeeCode || !password || !firstName || !lastName || !hireDate) {
       return errorResponse(
         res,
         HTTP_STATUS.BAD_REQUEST,
-        'กรุณากรอกข้อมูลที่จำเป็น (รหัสพนักงาน, รหัสผ่าน, ชื่อ, นามสกุล)'
+        'กรุณากรอกข้อมูลที่จำเป็น (รหัสพนักงาน, รหัสผ่าน, ชื่อ, นามสกุล, วันเข้ารับราชการ)'
       );
     }
 
@@ -196,7 +196,7 @@ export const getRegistrationRequests = async (req, res) => {
 export const approveRegistration = async (req, res) => {
   try {
     const { id } = req.params;
-    const { roleId, note } = req.body;
+    const { roleId, note, editedData } = req.body;
     const reviewerId = req.user.id;
 
     // Get registration request
@@ -212,6 +212,25 @@ export const approveRegistration = async (req, res) => {
 
     if (registration.status !== 'pending') {
       return errorResponse(res, HTTP_STATUS.BAD_REQUEST, 'คำขอนี้ได้รับการพิจารณาแล้ว');
+    }
+
+    // ถ้ามีข้อมูลที่แก้ไข ให้อัพเดตใน registration_requests ก่อน
+    if (editedData && typeof editedData === 'object') {
+      const allowedFields = ['employee_code', 'title', 'first_name', 'last_name', 'position', 'department_code', 'phone', 'email', 'hire_date'];
+      const updateData = {};
+      for (const key of allowedFields) {
+        if (editedData[key] !== undefined) {
+          updateData[key] = editedData[key];
+        }
+      }
+      if (Object.keys(updateData).length > 0) {
+        await supabaseAdmin
+          .from('registration_requests')
+          .update(updateData)
+          .eq('id', id);
+        // Merge ข้อมูลที่แก้ไขกลับ
+        Object.assign(registration, updateData);
+      }
     }
 
     // Check employee code doesn't already exist

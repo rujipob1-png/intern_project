@@ -27,7 +27,14 @@ const DEPARTMENT_NAMES = {
   GTP: 'กลุ่มงานติดตามประเมินผลฯ (กตป.)',
   GSS: 'กลุ่มงานเทคโนโลยีการสื่อสาร (กสส.)',
   GKC: 'กลุ่มงานโครงสร้างพื้นฐานฯ (กคฐ.)',
+  GPS: 'กลุ่มงานป้องกันและปราบปราม (กปส.)',
+  GKM: 'กลุ่มงานกฎหมาย (กกม.)',
+  SLK: 'สำนักงานเลขานุการกรม (สลก.)',
+  TSN: 'ที่ปรึกษา (ทปษ.)',
+  KPR: 'กลุ่มพัฒนาระบบบริหาร (กพร.)',
 };
+
+const TITLE_OPTIONS = ['นาย', 'นาง', 'นางสาว'];
 
 const RegistrationManagementPage = () => {
   const [requests, setRequests] = useState([]);
@@ -39,6 +46,19 @@ const RegistrationManagementPage = () => {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectNote, setRejectNote] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+  const [editData, setEditData] = useState({});
+
+  const initEditData = (request) => ({
+    employee_code: request.employee_code || '',
+    title: request.title || '',
+    first_name: request.first_name || '',
+    last_name: request.last_name || '',
+    position: request.position || '',
+    department_code: request.department_code || '',
+    phone: request.phone || '',
+    email: request.email || '',
+    hire_date: request.hire_date || '',
+  });
 
   useEffect(() => {
     loadRequests();
@@ -61,7 +81,7 @@ const RegistrationManagementPage = () => {
     if (actionLoading) return;
     setActionLoading(true);
     try {
-      const result = await registrationAPI.approve(request.id);
+      const result = await registrationAPI.approve(request.id, { editedData: editData });
       if (result.success) {
         toast.success(result.message || 'อนุมัติเรียบร้อย');
         setShowDetailModal(false);
@@ -247,7 +267,7 @@ const RegistrationManagementPage = () => {
                 <div
                   key={request.id}
                   className="group bg-white rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all cursor-pointer"
-                  onClick={() => { setSelectedRequest(request); setShowDetailModal(true); }}
+                  onClick={() => { setSelectedRequest(request); setEditData(initEditData(request)); setShowDetailModal(true); }}
                 >
                   <div className="flex items-center gap-3 p-4">
                     {/* Avatar */}
@@ -356,48 +376,157 @@ const RegistrationManagementPage = () => {
                 {getStatusBadge(selectedRequest.status)}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs text-gray-400 mb-0.5">รหัสพนักงาน</p>
-                  <p className="text-sm font-semibold text-gray-900">{selectedRequest.employee_code}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-400 mb-0.5">ชื่อ-นามสกุล</p>
-                  <p className="text-sm font-semibold text-gray-900">
-                    {selectedRequest.title || ''}{selectedRequest.first_name} {selectedRequest.last_name}
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs text-gray-400 mb-0.5">ตำแหน่ง</p>
-                  <p className="text-sm text-gray-700">{selectedRequest.position || '-'}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-400 mb-0.5">กลุ่มงาน/สังกัด</p>
-                  <p className="text-sm text-gray-700">
-                    {DEPARTMENT_NAMES[selectedRequest.department_code] || selectedRequest.department_code || '-'}
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-gray-400" />
+              {selectedRequest.status === 'pending' ? (
+                <>
                   <div>
-                    <p className="text-xs text-gray-400">โทรศัพท์</p>
-                    <p className="text-sm text-gray-700">{selectedRequest.phone || '-'}</p>
+                    <p className="text-xs text-gray-400 mb-1">รหัสพนักงาน <span className="text-red-400">*</span></p>
+                    <input
+                      type="text"
+                      value={editData.employee_code || ''}
+                      onChange={(e) => setEditData(prev => ({ ...prev, employee_code: e.target.value }))}
+                      className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+                    />
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-gray-400" />
+
+                  <div className="grid grid-cols-[100px_1fr_1fr] gap-3">
+                    <div>
+                      <p className="text-xs text-gray-400 mb-1">คำนำหน้า</p>
+                      <select
+                        value={editData.title || ''}
+                        onChange={(e) => setEditData(prev => ({ ...prev, title: e.target.value }))}
+                        className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+                      >
+                        <option value="">เลือก</option>
+                        {TITLE_OPTIONS.map(t => (
+                          <option key={t} value={t}>{t}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400 mb-1">ชื่อ <span className="text-red-400">*</span></p>
+                      <input
+                        type="text"
+                        value={editData.first_name || ''}
+                        onChange={(e) => setEditData(prev => ({ ...prev, first_name: e.target.value }))}
+                        className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400 mb-1">นามสกุล <span className="text-red-400">*</span></p>
+                      <input
+                        type="text"
+                        value={editData.last_name || ''}
+                        onChange={(e) => setEditData(prev => ({ ...prev, last_name: e.target.value }))}
+                        className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-gray-400 mb-1">ตำแหน่ง</p>
+                      <input
+                        type="text"
+                        value={editData.position || ''}
+                        onChange={(e) => setEditData(prev => ({ ...prev, position: e.target.value }))}
+                        className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+                        placeholder="เช่น นักวิชาการ"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400 mb-1">กลุ่มงาน/สังกัด</p>
+                      <select
+                        value={editData.department_code || ''}
+                        onChange={(e) => setEditData(prev => ({ ...prev, department_code: e.target.value }))}
+                        className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+                      >
+                        <option value="">เลือกกลุ่มงาน</option>
+                        {Object.entries(DEPARTMENT_NAMES).map(([code, name]) => (
+                          <option key={code} value={code}>{name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-gray-400 mb-1">เบอร์โทรศัพท์</p>
+                      <input
+                        type="text"
+                        value={editData.phone || ''}
+                        onChange={(e) => setEditData(prev => ({ ...prev, phone: e.target.value }))}
+                        className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+                        placeholder="08X-XXX-XXXX"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400 mb-1">อีเมล</p>
+                      <input
+                        type="text"
+                        value={editData.email || ''}
+                        onChange={(e) => setEditData(prev => ({ ...prev, email: e.target.value }))}
+                        className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+                        placeholder="example@email.com"
+                      />
+                    </div>
+                  </div>
+
                   <div>
-                    <p className="text-xs text-gray-400">อีเมล</p>
-                    <p className="text-sm text-gray-700">{selectedRequest.email || '-'}</p>
+                    <p className="text-xs text-gray-400 mb-1">วันเข้ารับราชการ <span className="text-red-400">*</span></p>
+                    <input
+                      type="date"
+                      value={editData.hire_date || ''}
+                      onChange={(e) => setEditData(prev => ({ ...prev, hire_date: e.target.value }))}
+                      className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+                    />
                   </div>
-                </div>
-              </div>
+                </>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-gray-400 mb-0.5">รหัสพนักงาน</p>
+                      <p className="text-sm font-semibold text-gray-900">{selectedRequest.employee_code}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400 mb-0.5">ชื่อ-นามสกุล</p>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {selectedRequest.title || ''}{selectedRequest.first_name} {selectedRequest.last_name}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-gray-400 mb-0.5">ตำแหน่ง</p>
+                      <p className="text-sm text-gray-700">{selectedRequest.position || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400 mb-0.5">กลุ่มงาน/สังกัด</p>
+                      <p className="text-sm text-gray-700">
+                        {DEPARTMENT_NAMES[selectedRequest.department_code] || selectedRequest.department_code || '-'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-4 h-4 text-gray-400" />
+                      <div>
+                        <p className="text-xs text-gray-400">โทรศัพท์</p>
+                        <p className="text-sm text-gray-700">{selectedRequest.phone || '-'}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-gray-400" />
+                      <div>
+                        <p className="text-xs text-gray-400">อีเมล</p>
+                        <p className="text-sm text-gray-700">{selectedRequest.email || '-'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
 
               {selectedRequest.review_note && (
                 <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
