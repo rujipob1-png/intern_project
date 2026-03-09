@@ -150,38 +150,38 @@ const DashboardCalendar = ({ leaves = [] }) => {
   return (
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
       {/* Header */}
-      <div className="px-3 py-2.5 border-b border-slate-100">
+      <div className="bg-[#1a2744] px-4 py-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <CalendarIcon className="w-3.5 h-3.5 text-slate-400" />
-            <h3 className="text-sm font-medium text-slate-800">ปฏิทินการลา</h3>
+          <div className="flex items-center gap-2">
+            <CalendarIcon className="w-4 h-4 text-white/70" />
+            <h3 className="text-sm font-semibold text-white">ปฏิทินการลา</h3>
           </div>
           <button
             onClick={goToday}
-            className="text-[10px] text-slate-500 hover:text-slate-700 px-1.5 py-0.5 rounded hover:bg-slate-100 transition-colors"
+            className="text-[11px] text-white/80 hover:text-white px-2.5 py-1 rounded-md bg-white/10 hover:bg-white/20 transition-colors font-medium"
           >
             วันนี้
           </button>
         </div>
       </div>
 
-      <div className="px-3 py-2">
+      <div className="px-3 py-2.5">
         {/* Month Navigation */}
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-2.5 bg-slate-50 rounded-lg px-2 py-1.5">
           <button
             onClick={prevMonth}
-            className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-600"
+            className="w-7 h-7 flex items-center justify-center rounded-md bg-white border border-slate-200 hover:bg-slate-100 hover:border-slate-300 transition-all text-slate-600 hover:text-slate-800 shadow-sm"
           >
-            <ChevronLeft className="w-3.5 h-3.5" />
+            <ChevronLeft className="w-4 h-4" />
           </button>
-          <h4 className="text-xs font-semibold text-slate-600">
+          <h4 className="text-sm font-bold text-slate-700">
             {THAI_MONTHS[month]} {thaiYear}
           </h4>
           <button
             onClick={nextMonth}
-            className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-600"
+            className="w-7 h-7 flex items-center justify-center rounded-md bg-white border border-slate-200 hover:bg-slate-100 hover:border-slate-300 transition-all text-slate-600 hover:text-slate-800 shadow-sm"
           >
-            <ChevronRight className="w-3.5 h-3.5" />
+            <ChevronRight className="w-4 h-4" />
           </button>
         </div>
 
