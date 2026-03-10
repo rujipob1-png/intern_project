@@ -193,15 +193,6 @@ export default function DashboardDirector() {
 
   return (
     <div className="space-y-6 p-6 bg-slate-50 min-h-screen">
-      {/* Back Button */}
-      <button
-        onClick={() => navigate('/dashboard')}
-        className="flex items-center gap-2 text-slate-600 hover:text-slate-800 transition-colors group"
-      >
-        <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-        <span className="font-medium">กลับหน้าหลัก</span>
-      </button>
-
       {/* Header */}
       <div className="bg-[#1a2744] rounded-xl p-6 text-white shadow-lg">
         <div className="flex justify-between items-center">
