@@ -9,6 +9,7 @@ import { ArrowLeft, UserCheck, Calendar, FileText, Check, Clock, Users, Info, Ch
 import { getActingRequests, approveActingRequest } from '../../api/acting.api';
 import { Button } from '../../components/common/Button';
 import { getDepartmentThaiCode } from '../../utils/departmentMapping';
+import { getInitial } from '../../utils/nameUtils';
 import toast from 'react-hot-toast';
 
 export const ActingRequestsPage = () => {
@@ -132,11 +133,11 @@ export const ActingRequestsPage = () => {
                   <div className="flex items-center gap-3">
                     <div className="w-11 h-11 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
                       <span className="text-sm font-bold text-gray-500">
-                        {request.users?.first_name?.charAt(0) || '?'}
+                        {getInitial(null, request.users?.first_name)}
                       </span>
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900 text-[15px]">
+                      <h3 className="font-semibold text-gray-900 text-[15px] whitespace-nowrap">
                         {request.users?.title}{request.users?.first_name} {request.users?.last_name}
                       </h3>
                       <p className="text-xs text-gray-500">

@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { adminAPI } from '../../api/admin.api';
 import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
+import { getInitial } from '../../utils/nameUtils';
 
 // Helper: ดึง error message จาก error object (รองรับทั้ง axios interceptor format)
 const getErrorMessage = (error, fallback = 'เกิดข้อผิดพลาด') => {
@@ -864,7 +865,7 @@ const UserManagementPage = () => {
                                 />
                               ) : (
                                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-100 to-blue-200 flex items-center justify-center text-indigo-600 font-bold text-xl border-2 border-indigo-50">
-                                  {user.first_name?.charAt(0) || 'U'}
+                                  {getInitial(null, user.first_name)}
                                 </div>
                               )}
                               {/* Online Status Dot */}
@@ -1052,7 +1053,7 @@ const UserManagementPage = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold">
-                              {user.first_name?.charAt(0) || 'U'}
+                              {getInitial(null, user.first_name)}
                             </div>
                             <div>
                               <p className="font-semibold text-slate-900">{user.title}{user.first_name} {user.last_name}</p>
@@ -1135,7 +1136,7 @@ const UserManagementPage = () => {
                   />
                 ) : (
                   <div className="w-20 h-20 rounded-full bg-gradient-to-br from-slate-500 to-slate-600 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
-                    {selectedUser.first_name?.charAt(0) || 'U'}
+                    {getInitial(null, selectedUser.first_name)}
                   </div>
                 )}
                 <div className="flex-1">
@@ -1709,7 +1710,7 @@ const UserManagementPage = () => {
                   <img src={selectedUser.profile_image_url} alt="Profile" className="w-14 h-14 rounded-full object-cover" />
                 ) : (
                   <div className="w-14 h-14 rounded-full bg-slate-500 flex items-center justify-center text-white text-xl font-bold">
-                    {selectedUser.first_name?.charAt(0) || 'U'}
+                    {getInitial(null, selectedUser.first_name)}
                   </div>
                 )}
                 <div>
@@ -1869,7 +1870,7 @@ const UserManagementPage = () => {
                   <img src={selectedUser.profile_image_url} alt="Profile" className="w-14 h-14 rounded-full object-cover" />
                 ) : (
                   <div className="w-14 h-14 rounded-full bg-slate-500 flex items-center justify-center text-white text-xl font-bold">
-                    {selectedUser.first_name?.charAt(0) || 'U'}
+                    {getInitial(null, selectedUser.first_name)}
                   </div>
                 )}
                 <div>
@@ -1933,7 +1934,7 @@ const UserManagementPage = () => {
                   <img src={selectedUser.profile_image_url} alt="Profile" className="w-14 h-14 rounded-full object-cover" />
                 ) : (
                   <div className="w-14 h-14 rounded-full bg-slate-500 flex items-center justify-center text-white text-xl font-bold">
-                    {selectedUser.first_name?.charAt(0) || 'U'}
+                    {getInitial(null, selectedUser.first_name)}
                   </div>
                 )}
                 <div>
@@ -2205,7 +2206,7 @@ const UserManagementPage = () => {
               {/* User Info */}
               <div className="flex items-center gap-4 p-4 bg-slate-100 rounded-xl mb-6">
                 <div className="w-16 h-16 rounded-full bg-slate-300 flex items-center justify-center text-slate-700 text-2xl font-bold">
-                  {selectedArchivedUser.first_name?.charAt(0) || 'U'}
+                  {getInitial(null, selectedArchivedUser.first_name)}
                 </div>
                 <div>
                   <p className="text-xl font-bold text-slate-900">{selectedArchivedUser.title}{selectedArchivedUser.first_name} {selectedArchivedUser.last_name}</p>

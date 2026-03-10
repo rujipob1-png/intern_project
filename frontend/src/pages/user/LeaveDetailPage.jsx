@@ -11,6 +11,7 @@ import { LEAVE_TYPE_NAMES, LEAVE_STATUS_TEXT } from '../../utils/constants';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRealtime } from '../../contexts/RealtimeContext';
 import toast from 'react-hot-toast';
+import { getInitial } from '../../utils/nameUtils';
 import {
   ArrowLeft,
   Calendar,
@@ -418,7 +419,7 @@ export const LeaveDetailPage = () => {
                   <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                        {(leave.actingPerson?.name || leave.acting_person?.first_name)?.charAt(0) || 'U'}
+                        {getInitial(leave.actingPerson?.name, leave.acting_person?.first_name)}
                       </div>
                       <div>
                         <p className="font-semibold text-gray-900">

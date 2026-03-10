@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { centralOfficeAPI } from '../../api/centralOffice.api';
 import { getDepartmentThaiCode } from '../../utils/departmentMapping';
+import { getInitial } from '../../utils/nameUtils';
 
 const CentralOfficeHeadHistory = () => {
   const navigate = useNavigate();
@@ -213,7 +214,7 @@ const CentralOfficeHeadHistory = () => {
                   <div className="flex flex-col lg:flex-row lg:items-center gap-4">
                     <div className="flex items-start gap-4 lg:w-[280px] lg:flex-shrink-0">
                       <div className="w-12 h-12 bg-gray-400 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-                        {leave.employee?.name?.charAt(0) || 'U'}
+                        {getInitial(leave.employee?.name)}
                       </div>
                       <div className="min-w-0">
                         <h3 className="font-semibold text-gray-900 truncate">{leave.employee?.name}</h3>
@@ -317,10 +318,10 @@ const CentralOfficeHeadHistory = () => {
                 <div className="bg-gray-50 rounded-xl p-4">
                   <div className="flex items-center gap-4">
                     <div className="w-14 h-14 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold text-xl">
-                      {selectedLeave.employee?.name?.charAt(0) || 'U'}
+                      {getInitial(selectedLeave.employee?.name)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-base font-semibold text-gray-900">{selectedLeave.employee?.name}</h4>
+                      <h4 className="text-base font-semibold text-gray-900 whitespace-nowrap">{selectedLeave.employee?.name}</h4>
                       <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1">
                         <p className="text-sm text-gray-500 flex items-center gap-1">
                           <Hash className="w-3.5 h-3.5" />

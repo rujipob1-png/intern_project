@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { adminAPI } from '../../api/admin.api';
 import { formatDate } from '../../utils/formatDate';
 import { getDepartmentThaiAbbr } from '../../utils/departmentMapping';
+import { getInitial } from '../../utils/nameUtils';
 import { Card } from '../../components/common/Card';
 import { useConfirm } from '../../components/common/ConfirmDialog';
 import toast from 'react-hot-toast';
@@ -250,11 +251,11 @@ export default function AdminCancelRequests() {
                 {/* Left Section - Employee Info */}
                 <div className="p-6 lg:w-1/4 bg-gray-50">
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-gray-400 rounded-full flex items-center justify-center text-white font-bold text-xl">
-                      {leave.employee?.name?.charAt(0) || 'U'}
+                    <div className="w-14 h-14 bg-gray-400 rounded-full flex items-center justify-center text-white font-bold text-xl flex-shrink-0">
+                      {getInitial(leave.employee?.name)}
                     </div>
-                    <div>
-                      <h3 className="font-bold text-gray-800">{leave.employee?.name || 'ไม่ระบุ'}</h3>
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-gray-800 whitespace-nowrap">{leave.employee?.name || 'ไม่ระบุ'}</h3>
                       <p className="text-sm text-gray-500">รหัส: {leave.employee?.employeeCode}</p>
                       <span className="inline-block mt-1 px-3 py-1 bg-gray-200 text-gray-700 text-xs font-medium rounded-full">
                         {getDepartmentThaiAbbr(leave.employee?.department)}

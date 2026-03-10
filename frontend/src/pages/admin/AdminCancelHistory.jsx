@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { adminAPI } from '../../api/admin.api';
 import { formatDate } from '../../utils/formatDate';
 import { getDepartmentThaiAbbr } from '../../utils/departmentMapping';
+import { getInitial } from '../../utils/nameUtils';
 import toast from 'react-hot-toast';
 import { XCircle, Clock, Calendar, FileText, History, Filter, Building2, Users, Search, ArrowLeft } from 'lucide-react';
 
@@ -204,11 +205,11 @@ export default function AdminCancelHistory() {
                   <div className="flex items-center gap-4 min-w-[250px]">
                     <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
                       <span className="text-gray-600 font-semibold text-lg">
-                        {leave.employee?.name?.charAt(0) || 'U'}
+                        {getInitial(leave.employee?.name)}
                       </span>
                     </div>
                     <div>
-                      <h3 className="font-semibold text-slate-800">{leave.employee?.name}</h3>
+                      <h3 className="font-semibold text-slate-800 whitespace-nowrap">{leave.employee?.name}</h3>
                       <p className="text-sm text-slate-500">รหัส: {leave.employee?.employeeCode}</p>
                       <span className="inline-block mt-1 px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded-full">
                         {getDepartmentThaiAbbr(leave.employee?.department)}

@@ -4,6 +4,7 @@ import { centralOfficeAPI } from '../../api/centralOffice.api';
 import { LEAVE_STATUS } from '../../utils/constants';
 import { formatDate } from '../../utils/formatDate';
 import { getDepartmentThaiAbbr } from '../../utils/departmentMapping';
+import { getInitial } from '../../utils/nameUtils';
 import { Card } from '../../components/common/Card';
 import { useConfirm } from '../../components/common/ConfirmDialog';
 import { useRealtime } from '../../contexts/RealtimeContext';
@@ -293,11 +294,11 @@ export default function CentralOfficeHeadDashboard() {
                 {/* Left: Employee Info */}
                 <div className="lg:w-1/4 bg-gray-50 p-6 border-b lg:border-b-0 lg:border-r border-gray-200">
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-gray-400 rounded-full flex items-center justify-center text-white font-bold text-xl">
-                      {(leave.employee?.name || leave.user_name || 'U').charAt(0)}
+                    <div className="w-14 h-14 bg-gray-400 rounded-full flex items-center justify-center text-white font-bold text-xl flex-shrink-0">
+                      {getInitial(leave.employee?.name)}
                     </div>
-                    <div>
-                      <h3 className="font-bold text-gray-900 text-lg">
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-gray-900 text-lg whitespace-nowrap">
                         {leave.employee?.name || leave.user_name || 'ไม่ระบุชื่อ'}
                       </h3>
                       <p className="text-sm text-gray-500">รหัส: {leave.employee?.employeeCode}</p>
