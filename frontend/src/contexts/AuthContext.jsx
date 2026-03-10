@@ -49,6 +49,27 @@ export const AuthProvider = ({ children }) => {
     initAuth();
   }, []);
 
+  // Auto-refresh profile ทุก 60 วิ สำหรับ user ที่มี/เคยมี delegation (เพื่อ sync role กลับ)
+  useEffect(() => {
+    if (!token) return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await authAPI.getProfile();
+        if (res.success) {
+          setUser(prev => {
+            const changed = prev?.role_name !== res.data.role_name || prev?.isDelegated !== res.data.isDelegated;
+            if (changed) {
+              sessionStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(res.data));
+              return res.data;
+            }
+            return prev;
+          });
+        }
+      } catch { /* ignore */ }
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [token]);
+
   // Login function
   const login = async (employeeCode, password) => {
     try {
@@ -71,6 +92,17 @@ export const AuthProvider = ({ children }) => {
             access_token: token,
             refresh_token: ''
           });
+        }
+
+        // Fetch profile to get delegation info (middleware runs on getProfile)
+        try {
+          const profileRes = await authAPI.getProfile();
+          if (profileRes.success) {
+            setUser(profileRes.data);
+            sessionStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(profileRes.data));
+          }
+        } catch {
+          // ไม่เป็นไร ใช้ data จาก login ก่อน
         }
 
         return { success: true };

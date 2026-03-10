@@ -185,6 +185,9 @@ export const NotificationBell = () => {
     } else if (notificationType === 'new_registration') {
       // พนักงานใหม่ลงทะเบียน - ไปหน้าจัดการคำขอลงทะเบียน
       navigate('/admin/registrations');
+    } else if (notificationType === 'delegation_received' || notificationType === 'delegation_cancelled') {
+      // การโอนสิทธิ์ - ไปหน้าโอนสิทธิ์
+      navigate('/delegation');
     } else if (notification.reference_type === 'leave' && notification.reference_id) {
       // ประเภทอื่นๆ ที่เกี่ยวกับ leave
       navigate(`/leave-detail/${notification.reference_id}`);
@@ -218,6 +221,10 @@ export const NotificationBell = () => {
         return '❌';
       case 'new_registration':
         return '👤';
+      case 'delegation_received':
+        return '🔄';
+      case 'delegation_cancelled':
+        return '🚫';
       default:
         return '🔔';
     }
@@ -248,6 +255,10 @@ export const NotificationBell = () => {
         return '✅ อนุมัติปฏิบัติหน้าที่แทน';
       case 'new_registration':
         return '👤 พนักงานใหม่ลงทะเบียน';
+      case 'delegation_received':
+        return '🔄 ได้รับมอบสิทธิ์การอนุมัติ';
+      case 'delegation_cancelled':
+        return '🚫 การมอบสิทธิ์ถูกยกเลิก';
       default:
         return notification.title || 'การแจ้งเตือน';
     }

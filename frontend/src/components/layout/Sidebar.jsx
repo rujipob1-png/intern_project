@@ -14,7 +14,8 @@ import {
   TrendingUp,
   Clock,
   XCircle,
-  UserPlus
+  UserPlus,
+  ArrowRightLeft
 } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { ROLES } from '../../utils/constants';
@@ -238,6 +239,21 @@ export const Sidebar = () => {
           title: 'ประวัติการยกเลิก',
           path: '/admin/cancel-history',
           roles: [ROLES.ADMIN],
+        },
+      ],
+    },
+    {
+      id: 'delegation',
+      title: 'โอนสิทธิ์อนุมัติ',
+      icon: ArrowRightLeft,
+      collapsible: false,
+      roles: [ROLES.DIRECTOR, ROLES.CENTRAL_OFFICE_STAFF, ROLES.CENTRAL_OFFICE_HEAD, ROLES.ADMIN],
+      items: [
+        {
+          title: 'โอนสิทธิ์การอนุมัติ',
+          path: '/delegation',
+          icon: ArrowRightLeft,
+          roles: [ROLES.DIRECTOR, ROLES.CENTRAL_OFFICE_STAFF, ROLES.CENTRAL_OFFICE_HEAD, ROLES.ADMIN],
         },
       ],
     },

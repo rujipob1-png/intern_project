@@ -201,11 +201,8 @@ export const getProfile = async (req, res) => {
       );
     }
 
-    return successResponse(
-      res,
-      HTTP_STATUS.OK,
-      'Profile retrieved successfully',
-      {
+    // เช็ค delegation ที่ active อยู่
+    const profileData = {
         id: user.id,
         employeeCode: user.employee_code,
         title: user.title,
@@ -219,8 +216,8 @@ export const getProfile = async (req, res) => {
         emailNotifications: user.email_notifications ?? true,
         profileImageUrl: user.profile_image_url,
         startDate: user.hire_date,
-        role_name: user.roles.role_name, // เพิ่ม role_name สำหรับ Sidebar
-        roleLevel: user.roles.role_level, // เพิ่ม roleLevel สำหรับ permission check
+        role_name: user.roles.role_name,
+        roleLevel: user.roles.role_level,
         role: {
           id: user.roles.id,
           name: user.roles.role_name,
@@ -232,8 +229,23 @@ export const getProfile = async (req, res) => {
           personal: user.personal_leave_balance,
           vacation: user.vacation_leave_balance
         },
-        createdAt: user.created_at
-      }
+        createdAt: user.created_at,
+        isDelegated: false,
+        delegatedFrom: null,
+    };
+
+    // ถ้ามี delegation active → override role_name ให้ frontend เห็นเมนูที่ถูกต้อง
+    if (req.user.isDelegated && req.user.delegatedFrom) {
+      profileData.role_name = req.user.roleName;
+      profileData.isDelegated = true;
+      profileData.delegatedFrom = req.user.delegatedFrom;
+    }
+
+    return successResponse(
+      res,
+      HTTP_STATUS.OK,
+      'Profile retrieved successfully',
+      profileData
     );
   } catch (error) {
     console.error('Get profile error:', error);

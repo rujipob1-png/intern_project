@@ -84,8 +84,39 @@ export const authenticate = async (req, res, next) => {
         sick: user.sick_leave_balance,
         personal: user.personal_leave_balance,
         vacation: user.vacation_leave_balance
-      }
+      },
+      isDelegated: false,
+      delegatedFrom: null,
     };
+
+    // ตรวจสอบ active delegation — ถ้ามีให้ยกระดับสิทธิ์ชั่วคราว
+    const today = new Date().toISOString().split('T')[0];
+    const { data: delegation } = await supabaseAdmin
+      .from('approval_delegations')
+      .select(`
+        id, delegated_role, delegated_department,
+        delegator:users!approval_delegations_delegator_id_fkey (
+          id, title, first_name, last_name, employee_code
+        )
+      `)
+      .eq('delegate_id', user.id)
+      .eq('is_active', true)
+      .lte('start_date', today)
+      .gte('end_date', today)
+      .maybeSingle();
+
+    if (delegation) {
+      // ยกระดับสิทธิ์ชั่วคราวตาม delegation
+      req.user.roleName = delegation.delegated_role;
+      req.user.department = delegation.delegated_department || user.department;
+      req.user.isDelegated = true;
+      req.user.delegatedFrom = {
+        id: delegation.delegator?.id,
+        name: `${delegation.delegator?.title || ''}${delegation.delegator?.first_name} ${delegation.delegator?.last_name}`,
+        employeeCode: delegation.delegator?.employee_code,
+        delegationId: delegation.id,
+      };
+    }
 
     next();
   } catch (error) {

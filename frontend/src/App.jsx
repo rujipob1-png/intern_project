@@ -30,6 +30,7 @@ import AdminCancelHistory from './pages/admin/AdminCancelHistory';
 import UserManagementPage from './pages/admin/UserManagementPage';
 import RegistrationManagementPage from './pages/admin/RegistrationManagementPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
+import DelegationPage from './pages/delegation/DelegationPage';
 
 import { MainLayout } from './components/layout/MainLayout';
 
@@ -83,6 +84,9 @@ function App() {
                 <Route path="/admin/cancel-history" element={<AdminCancelHistory />} />
                 <Route path="/admin/users" element={<UserManagementPage />} />
                 <Route path="/admin/registrations" element={<RegistrationManagementPage />} />
+
+                {/* Delegation Routes */}
+                <Route path="/delegation" element={<DelegationPage />} />
               </Route>
 
               <Route path="/" element={<Navigate to="/login" replace />} />
