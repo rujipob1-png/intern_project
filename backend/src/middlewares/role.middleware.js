@@ -62,10 +62,13 @@ export const authorizeLevel = (minLevel) => {
 };
 
 /**
- * Middleware สำหรับตรวจสอบว่าเป็น User ทั่วไปเท่านั้น
- * อัปเดต: ทุก role สามารถสร้างใบลาและดูยอดวันลาได้
+ * Middleware สำหรับตรวจสอบว่าเป็นผู้ใช้ที่มี role ใดๆ ในระบบ
+ * ใช้กับ route ที่ทุก role สามารถเข้าถึงได้ เช่น สร้างใบลา, ดูยอดวันลา
  */
-export const userOnly = requireRole(['user', 'director', 'central_office_staff', 'central_office_head', 'admin']);
+export const requireAuth = requireRole(['user', 'director', 'central_office_staff', 'central_office_head', 'admin']);
+
+// Backward compatibility — จะถูกลบใน version ถัดไป
+export const userOnly = requireAuth;
 
 /**
  * Middleware สำหรับตรวจสอบว่าเป็น Director ขึ้นไป

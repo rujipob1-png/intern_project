@@ -170,7 +170,7 @@ const DashboardCalendar = ({ leaves = [] }) => {
         <div className="flex items-center justify-between mb-2.5 bg-slate-50 rounded-lg px-2 py-1.5">
           <button
             onClick={prevMonth}
-            className="w-7 h-7 flex items-center justify-center rounded-md bg-white border border-slate-200 hover:bg-slate-100 hover:border-slate-300 transition-all text-slate-600 hover:text-slate-800 shadow-sm"
+            className="w-7 h-7 flex items-center justify-center rounded-md bg-[#1a2744] hover:bg-[#263a5e] transition-all text-white shadow-sm"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -179,7 +179,7 @@ const DashboardCalendar = ({ leaves = [] }) => {
           </h4>
           <button
             onClick={nextMonth}
-            className="w-7 h-7 flex items-center justify-center rounded-md bg-white border border-slate-200 hover:bg-slate-100 hover:border-slate-300 transition-all text-slate-600 hover:text-slate-800 shadow-sm"
+            className="w-7 h-7 flex items-center justify-center rounded-md bg-[#1a2744] hover:bg-[#263a5e] transition-all text-white shadow-sm"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
