@@ -138,7 +138,7 @@ export const DashboardPage = () => {
       total: null,
       suffix: 'วัน',
       icon: HeartPulse,
-      description: 'ใช้ได้ตามจริง',
+      description: 'ลาป่วยมาแล้ว',
     },
     {
       title: 'ลาพักผ่อน',
