@@ -262,7 +262,7 @@ export const Sidebar = () => {
       title: 'จัดการระบบ',
       icon: Settings,
       collapsible: true,
-      roles: [ROLES.ADMIN, ROLES.CENTRAL_OFFICE_HEAD],
+      roles: [ROLES.ADMIN, ROLES.CENTRAL_OFFICE_HEAD, ROLES.CENTRAL_OFFICE_STAFF],
       items: [
         {
           title: 'จัดการผู้ใช้',
@@ -274,7 +274,7 @@ export const Sidebar = () => {
           title: 'คำขอลงทะเบียนใหม่',
           icon: UserPlus,
           path: '/admin/registrations',
-          roles: [ROLES.ADMIN, ROLES.CENTRAL_OFFICE_HEAD],
+          roles: [ROLES.ADMIN, ROLES.CENTRAL_OFFICE_HEAD, ROLES.CENTRAL_OFFICE_STAFF],
         },
         {
           title: 'ตั้งค่าระบบ',

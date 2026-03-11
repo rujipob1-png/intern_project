@@ -23,11 +23,11 @@ export const register = async (req, res) => {
     } = req.body;
 
     // Validate required fields
-    if (!employeeCode || !password || !firstName || !lastName || !hireDate) {
+    if (!employeeCode || !password || !firstName || !lastName || !hireDate || !email) {
       return errorResponse(
         res,
         HTTP_STATUS.BAD_REQUEST,
-        'กรุณากรอกข้อมูลที่จำเป็น (รหัสพนักงาน, รหัสผ่าน, ชื่อ, นามสกุล, วันเข้ารับราชการ)'
+        'กรุณากรอกข้อมูลที่จำเป็น (รหัสพนักงาน, รหัสผ่าน, ชื่อ, นามสกุล, วันเข้ารับราชการ, อีเมล)'
       );
     }
 
@@ -124,15 +124,15 @@ export const register = async (req, res) => {
 };
 
 /**
- * แจ้งเตือนไปยัง หัวหน้าฝ่ายบริหาร (central_office_head) เท่านั้น
+ * แจ้งเตือนไปยัง หัวหน้าฝ่ายบริหาร (central_office_head) และ เจ้าหน้าที่ กอก. (central_office_staff)
  */
 async function notifyAdmins(registration) {
   try {
-    // Find users with role central_office_head only
+    // Find users with role central_office_head or central_office_staff
     const { data: adminUsers } = await supabaseAdmin
       .from('users')
       .select('id, employee_code, first_name, last_name, roles!inner(role_name)')
-      .in('roles.role_name', ['central_office_head'])
+      .in('roles.role_name', ['central_office_head', 'central_office_staff'])
       .eq('is_active', true);
 
     if (!adminUsers || adminUsers.length === 0) return;

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { registrationAPI } from '../../api/registration.api';
+import { useRealtime } from '../../contexts/RealtimeContext';
 import toast from 'react-hot-toast';
 import {
   UserPlus,
@@ -47,6 +48,7 @@ const RegistrationManagementPage = () => {
   const [rejectNote, setRejectNote] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [editData, setEditData] = useState({});
+  const { notificationUpdate } = useRealtime();
 
   const initEditData = (request) => ({
     employee_code: request.employee_code || '',
@@ -62,7 +64,7 @@ const RegistrationManagementPage = () => {
 
   useEffect(() => {
     loadRequests();
-  }, [statusFilter]);
+  }, [statusFilter, notificationUpdate]);
 
   const loadRequests = async () => {
     try {

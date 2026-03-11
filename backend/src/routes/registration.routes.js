@@ -23,7 +23,7 @@ router.post('/register', loginLimiter, register);
 router.get(
   '/requests',
   authenticate,
-  requireRole(['admin', 'central_office_head']),
+  requireRole(['admin', 'central_office_head', 'central_office_staff']),
   getRegistrationRequests
 );
 
@@ -31,7 +31,7 @@ router.get(
 router.put(
   '/requests/:id/approve',
   authenticate,
-  requireRole(['admin', 'central_office_head']),
+  requireRole(['admin', 'central_office_head', 'central_office_staff']),
   approveRegistration
 );
 
@@ -39,7 +39,7 @@ router.put(
 router.put(
   '/requests/:id/reject',
   authenticate,
-  requireRole(['admin', 'central_office_head']),
+  requireRole(['admin', 'central_office_head', 'central_office_staff']),
   rejectRegistration
 );
 
@@ -47,7 +47,7 @@ router.put(
 router.delete(
   '/requests/:id',
   authenticate,
-  requireRole(['admin', 'central_office_head']),
+  requireRole(['admin', 'central_office_head', 'central_office_staff']),
   deleteRegistration
 );
 

@@ -44,7 +44,7 @@ export const DashboardPage = () => {
 
   // Get role_name from user object
   const userRole = user?.role_name;
-  const isAdmin = userRole === ROLES.ADMIN || userRole === ROLES.CENTRAL_OFFICE_HEAD;
+  const isAdmin = userRole === ROLES.ADMIN || userRole === ROLES.CENTRAL_OFFICE_HEAD || userRole === ROLES.CENTRAL_OFFICE_STAFF;
 
   useEffect(() => {
     loadRecentLeaves();

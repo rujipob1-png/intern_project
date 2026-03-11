@@ -82,7 +82,9 @@ export const RegisterPage = () => {
     if (form.password !== form.confirmPassword) {
       newErrors.confirmPassword = 'รหัสผ่านไม่ตรงกัน';
     }
-    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+    if (!form.email) {
+      newErrors.email = 'กรุณากรอกอีเมล (ใช้สำหรับรีเซ็ตรหัสผ่าน)';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       newErrors.email = 'รูปแบบอีเมลไม่ถูกต้อง';
     }
     if (form.phone && !/^[0-9-]{9,15}$/.test(form.phone.replace(/\s/g, ''))) {
@@ -313,7 +315,7 @@ export const RegisterPage = () => {
                 )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">อีเมล</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">อีเมล <span className="text-red-500">*</span></label>
                 <input
                   type="email"
                   placeholder="example@email.com"
