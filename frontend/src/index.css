@@ -323,3 +323,66 @@ button:focus-visible {
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* ===== Login Page Premium Animations ===== */
+@keyframes login-gradient {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes float-orb {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(30px, -40px) scale(1.1); }
+  50% { transform: translate(-20px, -70px) scale(0.95); }
+  75% { transform: translate(40px, -30px) scale(1.05); }
+}
+
+@keyframes float-orb-slow {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-40px, -50px) scale(1.08); }
+  66% { transform: translate(25px, -80px) scale(0.92); }
+}
+
+@keyframes float-orb-reverse {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(-25px, 35px) scale(1.06); }
+  50% { transform: translate(35px, 55px) scale(0.94); }
+  75% { transform: translate(-15px, 25px) scale(1.03); }
+}
+
+@keyframes login-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes login-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.login-gradient-bg {
+  background-size: 400% 400%;
+  animation: login-gradient 15s ease infinite;
+}
+
+.login-orb { animation: float-orb 12s ease-in-out infinite; }
+.login-orb-slow { animation: float-orb-slow 18s ease-in-out infinite; }
+.login-orb-reverse { animation: float-orb-reverse 15s ease-in-out infinite; }
+
+.login-slide-up {
+  animation: login-slide-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.login-fade-in {
+  animation: login-fade-in 1s ease both;
+}
+
+.login-slide-up-delay-1 { animation-delay: 0.1s; }
+.login-slide-up-delay-2 { animation-delay: 0.2s; }
+.login-slide-up-delay-3 { animation-delay: 0.3s; }
